@@ -1,0 +1,36 @@
+Percentage: 5, Discriminating Tests: 5832
+Percentage: 10, Discriminating Tests: 19294
+Percentage: 15, Discriminating Tests: 27134
+Percentage: 20, Discriminating Tests: 34572
+Percentage: 25, Discriminating Tests: 37886
+Percentage: 30, Discriminating Tests: 37390
+Percentage: 35, Discriminating Tests: 39461
+Percentage: 40, Discriminating Tests: 43102
+Percentage: 45, Discriminating Tests: 41597
+Percentage: 50, Discriminating Tests: 43375
+
+
+Percentage: 1, Discriminating Tests: 5714
+Percentage: 2, Discriminating Tests: 2384
+Percentage: 3, Discriminating Tests: 1821
+Percentage: 4, Discriminating Tests: 3804
+Percentage: 5, Discriminating Tests: 5832
+Percentage: 6, Discriminating Tests: 8734
+Percentage: 7, Discriminating Tests: 10558
+Percentage: 8, Discriminating Tests: 12934
+Percentage: 9, Discriminating Tests: 15566
+Percentage: 10, Discriminating Tests: 19294
+
+
+Percentage: 2.5, Discriminating Tests: 68
+Percentage: 3.0, Discriminating Tests: 1821
+Percentage: 3.5, Discriminating Tests: 3326
+Percentage: 4.0, Discriminating Tests: 3804
+
+
+Percentage: 2.1, Discriminating Tests: 2384
+Percentage: 2.3, Discriminating Tests: 888
+Percentage: 2.5, Discriminating Tests: 68
+Percentage: 2.7, Discriminating Tests: 1186
+Percentage: 2.9, Discriminating Tests: 1882
+Percentage: 2.1, Discriminating Tests: 24

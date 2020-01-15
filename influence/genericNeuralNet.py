@@ -402,7 +402,7 @@ class GenericNeuralNet(object):
             self.print_model_eval()
 
 
-    def find_discm_examples(self, class0_data, class1_data, print_file):
+    def find_discm_examples(self, class0_data, class1_data, print_file, scheme):
         length = class0_data.shape[0]
         assert length == class1_data.shape[0]
 
@@ -430,7 +430,6 @@ class GenericNeuralNet(object):
             return num_discriminating
         
         idx = np.where(predictions_class0 != predictions_class1)[0]
-        # import ipdb; ipdb.set_trace()
         discm_class0 = class0_data[idx]
         discm_class1 = class1_data[idx]
         write = False
@@ -445,27 +444,68 @@ class GenericNeuralNet(object):
         zero_labels_loss = loss_class0_label_0[idx] + loss_class1_label_0[idx]
         ones_labels_loss = loss_class0_label_1[idx] + loss_class1_label_1[idx]
         # keep the lower loss for each pair of discriminating tests. 
-        # lower_loss_labelling = list(map(lambda x: x[1] if x[0] > x[1] else x[0], zip(zero_labels_loss, ones_labels_loss)))
+        # selection of the labels is due to the sum of losses of the pair, 
+        # but the final ranking should be only based on the loss of the data-point 
+        # and the model's prediction for it. Therfore no use of lower_loss_labelling
+        lower_loss = list(map(lambda x: x[1] if x[0] > x[1] else x[0], zip(zero_labels_loss, ones_labels_loss)))
         desired_labels = list(map(lambda x: 1 if x[0] > x[1] else 0, zip(zero_labels_loss, ones_labels_loss)))
-        # actual_predictions = list(map(lambda x: 0 if x == 1 else 1, desired_labels))      # """Just the inverse of desired_labels. This is by definition of individual discrimination"""
+        actual_predictions = list(map(lambda x: 0 if x == 1 else 1, desired_labels))      # """Just the inverse of desired_labels. This is by definition of individual discrimination"""
 
         # print(len(actual_predictions), len(zero_labels_loss), len(ones_labels_loss))
-        X_discm, Y_discm = [], []
+        if scheme == 1:
+            X_discm, Y_discm = [], []
+            with open("scheme1_labelled_generated_tests.csv", "w") as f:
+                f.write("Checking-ccount,Months,Credit-history,Purpose,Credit-mount,Savings-ccount,Present-employment-since,Instllment-rte,Gender,Other-debtors,Present-residence-since,Property,age,Other-instllment-plns,Housing,Number-of-existing-credits,Job,Number-of-people-being-lible,Telephone,Foreign-worker, Final-label\n")
+                for dt0, dt1, label in zip(discm_class0, discm_class1, desired_labels):
+                    f.write(str(dt0.tolist())[1:-1] + ", " + str(label) + "\n")
+                    f.write(str(dt1.tolist())[1:-1] + ", " + str(label) + "\n")
+                    X_discm.append(dt0)
+                    X_discm.append(dt1)
+                    Y_discm.append(label)
+                    Y_discm.append(label)
+            
+            X_discm = np.array(X_discm)
+            Y_discm = np.array(Y_discm)
+            self.discm_data_set = DataSet(X_discm, Y_discm)
         
-        with open("scheme1_labelled_generated_tests.csv", "w") as f:
-            f.write("Checking-ccount,Months,Credit-history,Purpose,Credit-mount,Savings-ccount,Present-employment-since,Instllment-rte,Gender,Other-debtors,Present-residence-since,Property,age,Other-instllment-plns,Housing,Number-of-existing-credits,Job,Number-of-people-being-lible,Telephone,Foreign-worker, Final-label\n")
-            for dt0, dt1, label in zip(discm_class0, discm_class1, desired_labels):
-                f.write(str(dt0.tolist())[1:-1] + ", " + str(label) + "\n")
-                f.write(str(dt1.tolist())[1:-1] + ", " + str(label) + "\n")
-                X_discm.append(dt0)
-                X_discm.append(dt1)
-                Y_discm.append(label)
-                Y_discm.append(label)
+        elif scheme == 8:
+            l00 = loss_class0_label_0[idx]
+            l10 = loss_class1_label_0[idx]
+            l11 = loss_class1_label_1[idx]
+            l01 = loss_class0_label_1[idx]
+
+            # for the data point whose prediction == label, return its complement data-point (gender flipped) and its gender in a tuple
+            which_data_point = list(map(lambda x: (x[3], 1) if int(x[0]) == int(x[1]) else (x[2], 0), zip(predictions_class0[idx], desired_labels, discm_class0, discm_class1)))
+
+            gender = [i[1] for i in which_data_point]
+            which_data_point = [i[0] for i in which_data_point]
+
+            losses_at_this_point = list(map(lambda x: x[2] if x[0] == 0 and x[1] == 0 else (x[3] if x[0] == 0 and x[1] == 1 else (x[4] if x[0] == 1 and x[1] == 0 else x[5])) , zip(gender, actual_predictions, l00, l01, l10, l11)))
+
+            # arg_ = np.argsort(loss_labelling).tolist()
+            arg_ = np.argsort(losses_at_this_point).tolist()[::-1]       # decreasing order of loss as the point with highest loss is easiest to flip prediction
+            actual_predictions_sorted = [actual_predictions[i] for i in arg_]
+            which_data_point_sorted = [which_data_point[i] for i in arg_]
+            
+            # this should not be desired labels as the prediction of the trained model is not the desired label and we want the point responsible for the current prediction of the trained model
+            # with open("scheme8_labelled_generated_tests.csv", "w") as f:
+            #     for dt, la in zip(which_data_point_sorted, desired_labels_sorted):
+            #         f.write(str(dt.astype(int).tolist())[1:-1] + ", " + str(la) + "\n")       # don't take the scaled and modified input
+            X_discm, Y_discm = [], []
+            with open("scheme8_labelled_generated_tests.csv", "w") as f:
+                f.write("Checking-ccount,Months,Credit-history,Purpose,Credit-mount,Savings-ccount,Present-employment-since,Instllment-rte,Gender,Other-debtors,Present-residence-since,Property,age,Other-instllment-plns,Housing,Number-of-existing-credits,Job,Number-of-people-being-lible,Telephone,Foreign-worker, Final-label\n")
+                for dt, label in zip(which_data_point_sorted, actual_predictions_sorted):
+                    f.write(str(dt.tolist())[1:-1] + ", " + str(label) + "\n")
+                    X_discm.append(dt)
+                    Y_discm.append(label)
+            
+            X_discm = np.array(X_discm)
+            Y_discm = np.array(Y_discm)
+            self.discm_data_set = DataSet(X_discm, Y_discm)
+
+        else:
+            assert False
         
-        X_discm = np.array(X_discm)
-        Y_discm = np.array(Y_discm)
-        self.discm_data_set = DataSet(X_discm, Y_discm)
-        # self.data_sets.test = None
         self.mini_batch = False
         # return discm_class0, discm_class1, desired_labels
 

@@ -32,7 +32,7 @@ hidden2_units = 8
 num_classes = 2
 keep_probs = [1.0, 1.0]
 
-
+scheme = 8
 model = Fully_Connected(
     input_dim=input_dim, 
     hidden1_units=hidden1_units, 
@@ -47,9 +47,9 @@ model = Fully_Connected(
     mini_batch=True,
     train_dir='output', 
     log_dir='log',
-    hvp_files = "inverse_HVP_scheme1",
+    hvp_files = "inverse_HVP_scheme{}".format(scheme),
     model_name='german_credit_try1',
-    scheme = "scheme1")
+    scheme = "scheme{}".format(scheme))
 
 num_steps = batch_size * 1000
 # model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000)
@@ -57,7 +57,7 @@ iter_to_load = num_steps - 1
 iter_to_load = 46999
 model.load_checkpoint(iter_to_load=iter_to_load, do_checks=False)
 class0_data, class1_data = entire_test_suite(False)     # False means loads entire data
-model.find_discm_examples(class0_data, class1_data, print_file=True)
+model.find_discm_examples(class0_data, class1_data, print_file=True, scheme=scheme)
 
 # test_idx = 0
 
@@ -72,9 +72,11 @@ assert(len(sorted_training_points) == 750)
 
 del model   # so that weights of the original model are not used. This will not help
 
-for percentage in range(5, 51, 5):
+# for percentage in range(5, 4, 0.5):
+for percentage in np.arange(2.1, 3.0, 0.2):
     tf.reset_default_graph()
     p = int(750 * percentage / 100)
+    # p = 19
     remaining_indexes = np.array(sorted_training_points[p:])
     data_sets_partial = load_german_credit_partial(remaining_indexes)
     assert(data_sets_partial.train.num_examples == 750 - p)
@@ -97,9 +99,9 @@ for percentage in range(5, 51, 5):
         scheme = "scheme1_")
     print("Training")
     model_partial_data.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, verbose=False)
-    print("Percentage: ", percentage)
-    num = model_partial_data.find_discm_examples(class0_data, class1_data, print_file=False)
-    with open("scheme1_results.txt", "a") as f:
+    print("Percentage: ", percentage, " Points removed: ", p)
+    num = model_partial_data.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
+    with open("scheme{}_results.txt".format(scheme), "a") as f:
         f.write("Percentage: " + str(percentage) + ", Discriminating Tests: " + str(num) + "\n")
     del model_partial_data          # to remove any chance of reusing variables and reduce memory
 
