@@ -84,9 +84,13 @@ class GenericNeuralNet(object):
         
         self.batch_size = kwargs.pop('batch_size')
         self.data_sets = kwargs.pop('data_sets')
+        self.discm_data_set = None
         self.train_dir = kwargs.pop('train_dir', 'output')
+        self.hvp_files = kwargs.pop('hvp_files')
+        self.hvp_iterations = 0
         log_dir = kwargs.pop('log_dir', 'log')
         self.model_name = kwargs.pop('model_name')
+        self.scheme_name = kwargs.pop('scheme')
         self.num_classes = kwargs.pop('num_classes')
         self.initial_learning_rate = kwargs.pop('initial_learning_rate')        
         self.decay_epochs = kwargs.pop('decay_epochs')
@@ -261,7 +265,7 @@ class GenericNeuralNet(object):
 
 
     def minibatch_mean_eval(self, ops, data_set):
-
+    
         num_examples = data_set.num_examples
         assert num_examples % self.batch_size == 0
         num_iter = int(num_examples / self.batch_size)
@@ -321,14 +325,13 @@ class GenericNeuralNet(object):
         print('Norm of the params: %s' % np.linalg.norm(np.concatenate(params_val)))
 
 
-
     def retrain(self, num_steps, feed_dict):        
         for step in xrange(num_steps):   
             self.sess.run(self.train_op, feed_dict=feed_dict)
 
 
     def update_learning_rate(self, step):
-        assert self.num_train_examples % self.batch_size == 0
+        # assert self.num_train_examples % self.batch_size == 0
         num_steps_in_epoch = self.num_train_examples / self.batch_size
         epoch = step // num_steps_in_epoch
 
@@ -340,6 +343,7 @@ class GenericNeuralNet(object):
         else:
             multiplier = 0.01
         
+        assert(multiplier == 1)
         self.sess.run(
             self.update_learning_rate_op, 
             feed_dict={self.learning_rate_placeholder: multiplier * self.initial_learning_rate})        
@@ -379,9 +383,12 @@ class GenericNeuralNet(object):
                 if step % 1000 == 0:
                     # Print status to stdout.
                     print('Step %d: loss = %.8f (%.3f sec)' % (step, loss_val, duration))
+            else:
+                if step % 10000 == 0:
+                    print(step)
 
             # Save a checkpoint and evaluate the model periodically.
-            if (step + 1) % 100000 == 0 or (step + 1) == num_steps:
+            if (step + 1) % 1000 == 0 or (step + 1) == num_steps:
                 if save_checkpoints: self.saver.save(sess, self.checkpoint_file, global_step=step)
                 if verbose: self.print_model_eval()
 
@@ -393,6 +400,74 @@ class GenericNeuralNet(object):
         if do_checks:
             print('Model %s loaded. Sanity checks ---' % checkpoint_to_load)
             self.print_model_eval()
+
+
+    def find_discm_examples(self, class0_data, class1_data, print_file):
+        length = class0_data.shape[0]
+        assert length == class1_data.shape[0]
+
+        l_zero = np.zeros(length, dtype=np.int)
+        l_one = np.ones(length, dtype=np.int)
+        
+        feed_dict_class0_label0 = self.fill_feed_dict_manual(class0_data, l_zero)
+        feed_dict_class0_label1 = self.fill_feed_dict_manual(class0_data, l_one)
+        feed_dict_class1_label0 = self.fill_feed_dict_manual(class1_data, l_zero)
+        feed_dict_class1_label1 = self.fill_feed_dict_manual(class1_data, l_one)
+        
+        ops = [self.preds, self.indiv_loss_no_reg]
+        
+        predictions_class0_, loss_class0_label_0 = self.sess.run(ops, feed_dict=feed_dict_class0_label0)
+        predictions_class0, loss_class0_label_1 = self.sess.run(ops, feed_dict=feed_dict_class0_label1)
+        assert (predictions_class0_ == predictions_class0).all()    #"""This is my belief"""
+        predictions_class1_, loss_class1_label_0 = self.sess.run(ops, feed_dict=feed_dict_class1_label0)
+        predictions_class1, loss_class1_label_1 = self.sess.run(ops, feed_dict=feed_dict_class1_label1)
+        assert (predictions_class1_ == predictions_class1).all()    #"""This is my belief"""
+        
+        num_discriminating = sum(predictions_class0 != predictions_class1)    # Gives the number of discriminating examples
+        print("Number of discriminating examples: ", num_discriminating)
+
+        if not print_file:
+            return num_discriminating
+        
+        idx = np.where(predictions_class0 != predictions_class1)[0]
+        # import ipdb; ipdb.set_trace()
+        discm_class0 = class0_data[idx]
+        discm_class1 = class1_data[idx]
+        write = False
+        if write:
+            with open("discriminating_tests_german.csv", "w") as f:
+                for x, y in zip(discm_class0, discm_class1):
+                    x = str(tuple(x))[1:-1]
+                    y = str(tuple(y))[1:-1]
+                    z = (x, y)
+                    f.write(str(z) + "\n")
+
+        zero_labels_loss = loss_class0_label_0[idx] + loss_class1_label_0[idx]
+        ones_labels_loss = loss_class0_label_1[idx] + loss_class1_label_1[idx]
+        # keep the lower loss for each pair of discriminating tests. 
+        # lower_loss_labelling = list(map(lambda x: x[1] if x[0] > x[1] else x[0], zip(zero_labels_loss, ones_labels_loss)))
+        desired_labels = list(map(lambda x: 1 if x[0] > x[1] else 0, zip(zero_labels_loss, ones_labels_loss)))
+        # actual_predictions = list(map(lambda x: 0 if x == 1 else 1, desired_labels))      # """Just the inverse of desired_labels. This is by definition of individual discrimination"""
+
+        # print(len(actual_predictions), len(zero_labels_loss), len(ones_labels_loss))
+        X_discm, Y_discm = [], []
+        
+        with open("scheme1_labelled_generated_tests.csv", "w") as f:
+            f.write("Checking-ccount,Months,Credit-history,Purpose,Credit-mount,Savings-ccount,Present-employment-since,Instllment-rte,Gender,Other-debtors,Present-residence-since,Property,age,Other-instllment-plns,Housing,Number-of-existing-credits,Job,Number-of-people-being-lible,Telephone,Foreign-worker, Final-label\n")
+            for dt0, dt1, label in zip(discm_class0, discm_class1, desired_labels):
+                f.write(str(dt0.tolist())[1:-1] + ", " + str(label) + "\n")
+                f.write(str(dt1.tolist())[1:-1] + ", " + str(label) + "\n")
+                X_discm.append(dt0)
+                X_discm.append(dt1)
+                Y_discm.append(label)
+                Y_discm.append(label)
+        
+        X_discm = np.array(X_discm)
+        Y_discm = np.array(Y_discm)
+        self.discm_data_set = DataSet(X_discm, Y_discm)
+        # self.data_sets.test = None
+        self.mini_batch = False
+        # return discm_class0, discm_class1, desired_labels
 
 
     def get_train_op(self, total_loss, global_step, learning_rate):
@@ -429,9 +504,10 @@ class GenericNeuralNet(object):
 
     def loss(self, logits, labels):
 
-        labels = tf.one_hot(labels, depth=self.num_classes)
-        # correct_prob = tf.reduce_sum(tf.multiply(labels, tf.nn.softmax(logits)), reduction_indices=1)
-        cross_entropy = - tf.reduce_sum(tf.multiply(labels, tf.nn.log_softmax(logits)), reduction_indices=1)
+        labels = tf.one_hot(labels, depth=self.num_classes, dtype=tf.int32)
+        """This returns a tensor of the shape labels (tantamount to a vector of size equal to one mini-batch)"""
+        cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits)
+        # cross_entropy = -tf.reduce_sum(tf.multiply(labels, tf.nn.log_softmax(logits)), reduction_indices=1)
 
         indiv_loss_no_reg = cross_entropy
         loss_no_reg = tf.reduce_mean(cross_entropy, name='xentropy_mean')
@@ -564,32 +640,42 @@ class GenericNeuralNet(object):
         return np.concatenate(hessian_vector_val)
 
 
-    def get_cg_callback(self, v, verbose):
-        fmin_loss_fn = self.get_fmin_loss_fn(v)
+    # def get_cg_callback(self, v, verbose):
+    #     fmin_loss_fn = self.get_fmin_loss_fn(v)
         
-        def fmin_loss_split(x):
-            hessian_vector_val = self.minibatch_hessian_vector_val(self.vec_to_list(x))
+    #     def fmin_loss_split(x):
+    #         hessian_vector_val = self.minibatch_hessian_vector_val(self.vec_to_list(x))
 
-            return 0.5 * np.dot(np.concatenate(hessian_vector_val), x), -np.dot(np.concatenate(v), x)
+    #         return 0.5 * np.dot(np.concatenate(hessian_vector_val), x), -np.dot(np.concatenate(v), x)
 
+    #     def cg_callback(x):
+    #         # x is current params
+    #         v = self.vec_to_list(x)
+    #         idx_to_remove = 5
+
+    #         single_train_feed_dict = self.fill_feed_dict_with_one_ex(self.data_sets.train, idx_to_remove)      
+    #         train_grad_loss_val = self.sess.run(self.grad_total_loss_op, feed_dict=single_train_feed_dict)
+    #         predicted_loss_diff = np.dot(np.concatenate(v), np.concatenate(train_grad_loss_val)) / self.num_train_examples
+
+    #         if verbose:
+    #             print('Function value: %s' % fmin_loss_fn(x))
+    #             quad, lin = fmin_loss_split(x)
+    #             print('Split function value: %s, %s' % (quad, lin))
+    #             print('Predicted loss diff on train_idx %s: %s' % (idx_to_remove, predicted_loss_diff))
+
+    #     return cg_callback
+
+
+    def get_cg_callback(self, v, verbose):
+        self.hvp_iterations = 0
         def cg_callback(x):
-            # x is current params
-            v = self.vec_to_list(x)
-            idx_to_remove = 5
-
-            single_train_feed_dict = self.fill_feed_dict_with_one_ex(self.data_sets.train, idx_to_remove)      
-            train_grad_loss_val = self.sess.run(self.grad_total_loss_op, feed_dict=single_train_feed_dict)
-            predicted_loss_diff = np.dot(np.concatenate(v), np.concatenate(train_grad_loss_val)) / self.num_train_examples
-
-            if verbose:
-                print('Function value: %s' % fmin_loss_fn(x))
-                quad, lin = fmin_loss_split(x)
-                print('Split function value: %s, %s' % (quad, lin))
-                print('Predicted loss diff on train_idx %s: %s' % (idx_to_remove, predicted_loss_diff))
+            # nonlocal iteration
+            self.hvp_iterations +=1
+            print(self.hvp_iterations, "Iteration completed")
 
         return cg_callback
 
-
+    
     def get_inverse_hvp_cg(self, v, verbose):
         fmin_loss_fn = self.get_fmin_loss_fn(v)
         fmin_grad_fn = self.get_fmin_grad_fn(v)
@@ -614,7 +700,7 @@ class GenericNeuralNet(object):
         elif loss_type == 'adversarial_loss':
             op = self.grad_adversarial_loss_op
         else:
-            raise ValueError, 'Loss must be specified'
+            raise(ValueError, 'Loss must be specified')
 
         if test_indices is not None:
             num_iter = int(np.ceil(len(test_indices) / batch_size))
@@ -624,7 +710,7 @@ class GenericNeuralNet(object):
                 start = i * batch_size
                 end = int(min((i+1) * batch_size, len(test_indices)))
 
-                test_feed_dict = self.fill_feed_dict_with_some_ex(self.data_sets.test, test_indices[start:end])
+                test_feed_dict = self.fill_feed_dict_with_some_ex(self.discm_data_set, test_indices[start:end])
 
                 temp = self.sess.run(op, feed_dict=test_feed_dict)
 
@@ -636,7 +722,7 @@ class GenericNeuralNet(object):
             test_grad_loss_no_reg_val = [a/len(test_indices) for a in test_grad_loss_no_reg_val]
 
         else:
-            test_grad_loss_no_reg_val = self.minibatch_mean_eval([op], self.data_sets.test)[0]
+            test_grad_loss_no_reg_val = self.minibatch_mean_eval([op], self.discm_data_set)[0]
         
         return test_grad_loss_no_reg_val
 
@@ -650,10 +736,10 @@ class GenericNeuralNet(object):
         # because mini-batching permutes dataset order
 
         if train_idx is None: 
-            if (X is None) or (Y is None): raise ValueError, 'X and Y must be specified if using phantom points.'
-            if X.shape[0] != len(Y): raise ValueError, 'X and Y must have the same length.'
+            if (X is None) or (Y is None): raise(ValueError, 'X and Y must be specified if using phantom points.')
+            if X.shape[0] != len(Y): raise(ValueError, 'X and Y must have the same length.')
         else:
-            if (X is not None) or (Y is not None): raise ValueError, 'X and Y cannot be specified if train_idx is specified.'
+            if (X is not None) or (Y is not None): raise(ValueError, 'X and Y cannot be specified if train_idx is specified.')
 
         test_grad_loss_no_reg_val = self.get_test_grad_loss_no_reg_val(test_indices, loss_type=loss_type)
 
@@ -662,9 +748,14 @@ class GenericNeuralNet(object):
         start_time = time.time()
 
         if test_description is None:
-            test_description = test_indices
+            if len(test_indices) < 10:
+                test_description = test_indices
+            elif len(test_indices) == self.discm_data_set.num_examples:
+                test_description = "all"
+            else:
+                assert False
 
-        approx_filename = os.path.join(self.train_dir, '%s-%s-%s-test-%s.npz' % (self.model_name, approx_type, loss_type, test_description))
+        approx_filename = os.path.join(self.hvp_files, '%s-%s-%s-%s-test-%s.npz' % (self.model_name, self.scheme_name, approx_type, loss_type, test_description))
         if os.path.exists(approx_filename) and force_refresh == False:
             inverse_hvp = list(np.load(approx_filename)['inverse_hvp'])
             print('Loaded inverse HVP from %s' % approx_filename)
@@ -673,13 +764,12 @@ class GenericNeuralNet(object):
                 test_grad_loss_no_reg_val,
                 approx_type,
                 approx_params)
+            
             np.savez(approx_filename, inverse_hvp=inverse_hvp)
             print('Saved inverse HVP to %s' % approx_filename)
 
         duration = time.time() - start_time
         print('Inverse HVP took %s sec' % duration)
-
-
 
         start_time = time.time()
         if train_idx is None:
@@ -702,7 +792,6 @@ class GenericNeuralNet(object):
         print('Multiplying by %s train examples took %s sec' % (num_to_remove, duration))
 
         return predicted_loss_diffs
-
 
 
     def find_eigvals_of_hessian(self, num_iter=100, num_prints=10):
