@@ -28,11 +28,19 @@ keep_probs = [1.0, 1.0]
 scheme = 8
 assert(scheme == 8)     # now always
 
+setting_now = int(sys.argv[1])
+
 model_count = 0
 for perm in range(20):
     for h1units in [16, 24, 32]:
         for h2units in [8, 12]:
             for batch in [50, 100]:
+                # print(perm, h1units, h2units, batch)
+                if model_count < setting_now:
+                    model_count += 1
+                    continue
+                # print(setting_now, "done", perm, h1units, h2units, batch)
+                # exit(0)
                 data_sets = load_german_credit(perm)
                 hidden1_units = h1units
                 hidden2_units = h2units
@@ -41,7 +49,7 @@ for perm in range(20):
                 num_steps = 50000
                 decay_epochs = [int(0.7 * num_steps)]
                 
-                model_count += 1
+                
                 model = Fully_Connected(
                     input_dim=input_dim, 
                     hidden1_units=hidden1_units, 
@@ -65,4 +73,5 @@ for perm in range(20):
                 del model
                 tf.reset_default_graph()
                 print("DONE: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
+                
             
