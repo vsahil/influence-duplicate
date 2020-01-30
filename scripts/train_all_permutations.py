@@ -50,7 +50,7 @@ hidden1_units = h1units
 hidden2_units = h2units
 batch_size = batch
 
-print("DONE: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
+print("Start: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
 # num_steps = batch_size * 1000
 num_steps = 50000
 decay_epochs = [int(0.7 * num_steps)]
@@ -75,7 +75,12 @@ model = Fully_Connected(
     scheme = f"{scheme}"
     )
 
-model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, verbose=False)
+# model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, verbose=False)
+iter_to_load = num_steps - 1
+train_acc, test_acc = model.load_checkpoint(iter_to_load=iter_to_load)
+if not (train_acc > 0.7 and test_acc > 0.7):
+    print("BAD: ", setting_now)
+
 del model
 tf.reset_default_graph()
 print("DONE: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
