@@ -18,8 +18,8 @@ def entire_test_suite(mini=True):
     if mini:
         gender0 += "_mini"
         gender1 += "_mini"
-    class0_ = np.genfromtxt("../german-credit-dataset/{}.csv".format(gender0), delimiter=",")
-    class1_ = np.genfromtxt("../german-credit-dataset/{}.csv".format(gender1), delimiter=",")
+    class0_ = np.genfromtxt(f"../german-credit-dataset/{gender0}.csv", delimiter=",")
+    class1_ = np.genfromtxt(f"../german-credit-dataset/{gender1}.csv", delimiter=",")
     class0 = rescale_input_numpy(class0_)
     class1 = rescale_input_numpy(class1_)
 
