@@ -16,13 +16,13 @@ from load_german_credit import load_german_credit#, load_german_credit_partial
 
 input_dim = 20
 weight_decay = 0.001
-batch_size = 50
-data_sets = None
+#batch_size = 50
+#data_sets = None
 
 initial_learning_rate = 0.005 
 decay_epochs = [40000]
-hidden1_units = 16
-hidden2_units = 8
+#hidden1_units = 16
+#hidden2_units = 8
 num_classes = 2
 keep_probs = [1.0, 1.0]
 
@@ -49,8 +49,8 @@ data_sets = load_german_credit(perm)
 hidden1_units = h1units
 hidden2_units = h2units
 batch_size = batch
-
-print("DONE: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
+assert(model_count == setting_now)
+print("Start: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
 # num_steps = batch_size * 1000
 num_steps = 50000
 decay_epochs = [int(0.7 * num_steps)]
