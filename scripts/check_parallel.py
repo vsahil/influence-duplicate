@@ -41,8 +41,8 @@ def run_command(index):
     os.system(f"python train_all_permutations.py {index}")
     # process = subprocess.check_output(['python', 'train_all_permutations.py', str(index)], stdout=subprocess.PIPE)
 
-pool = multiprocessing.Pool(10)
-l = 20 * 3 * 2 * 2
+pool = multiprocessing.Pool(11)
+l = 20 * 3 * 2 * 2 
 mr = pool.map_async(run_command, range(l))
 while not mr.ready():
     sys.stdout.flush()

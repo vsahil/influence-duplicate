@@ -1,0 +1,8 @@
+Possible modifications to make to the overall process:
+1. Change the data distribution: Generate 20 random samplings of the data, keep all the mappings from the inital datset though
+2. Change the neural network architecture:
+    a. Hidden 1 layer: 16 24, 32  : 3 
+    b. Hidden 2 layer: 8, 12  : 2
+3. Training batch size: 50, 100 : 2
+6. Filter by 70% training accuracy. 
+4. We have only one scheme now which is scheme 8: 1
