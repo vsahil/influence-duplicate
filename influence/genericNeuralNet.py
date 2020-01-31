@@ -9,7 +9,7 @@ import sys
 import numpy as np
 import pandas as pd
 from sklearn import linear_model, preprocessing, cluster
-
+from pathlib import Path
 import scipy.linalg as slin
 import scipy.sparse.linalg as sparselin
 import scipy.sparse as sparse
@@ -294,7 +294,7 @@ class GenericNeuralNet(object):
         return ret
 
 
-    def print_model_eval(self):
+    def print_model_eval(self, no_print=False):
         params_val = self.sess.run(self.params)
 
         if self.mini_batch == True:
@@ -315,15 +315,16 @@ class GenericNeuralNet(object):
                 [self.loss_no_reg, self.accuracy_op], 
                 feed_dict=self.all_test_feed_dict)
 
-        print('Train loss (w reg) on all data: %s' % loss_val)
-        print('Train loss (w/o reg) on all data: %s' % loss_no_reg_val)
+        if not no_print:
+            print('Train loss (w reg) on all data: %s' % loss_val)
+            print('Train loss (w/o reg) on all data: %s' % loss_no_reg_val)
 
-        print('Test loss (w/o reg) on all data: %s' % test_loss_val)
-        print('Train acc on all data:  %s' % train_acc_val)
-        print('Test acc on all data:   %s' % test_acc_val)
+            print('Test loss (w/o reg) on all data: %s' % test_loss_val)
+            print('Train acc on all data:  %s' % train_acc_val)
+            print('Test acc on all data:   %s' % test_acc_val)
 
-        print('Norm of the mean of gradients: %s' % np.linalg.norm(np.concatenate(grad_loss_val)))
-        print('Norm of the params: %s' % np.linalg.norm(np.concatenate(params_val)))
+            print('Norm of the mean of gradients: %s' % np.linalg.norm(np.concatenate(grad_loss_val)))
+            print('Norm of the params: %s' % np.linalg.norm(np.concatenate(params_val)))
         return train_acc_val, test_acc_val
 
 
@@ -401,8 +402,8 @@ class GenericNeuralNet(object):
         self.saver.restore(self.sess, checkpoint_to_load)
 
         if do_checks:
-            print('Model %s loaded. Sanity checks ---' % checkpoint_to_load)
-            return(self.print_model_eval())
+            # print('Model %s loaded. Sanity checks ---' % checkpoint_to_load)
+            return self.print_model_eval(no_print=True)
 
 
     def find_discm_examples(self, class0_data, class1_data, print_file, scheme):
@@ -454,6 +455,7 @@ class GenericNeuralNet(object):
         desired_labels = list(map(lambda x: 1 if x[0] > x[1] else 0, zip(zero_labels_loss, ones_labels_loss)))
         actual_predictions = list(map(lambda x: 0 if x == 1 else 1, desired_labels))      # """Just the inverse of desired_labels. This is by definition of individual discrimination"""
 
+        assert(scheme == 8)
         # print(len(actual_predictions), len(zero_labels_loss), len(ones_labels_loss))
         if scheme == 1:
             X_discm, Y_discm = [], []
@@ -495,10 +497,12 @@ class GenericNeuralNet(object):
             #     for dt, la in zip(which_data_point_sorted, desired_labels_sorted):
             #         f.write(str(dt.astype(int).tolist())[1:-1] + ", " + str(la) + "\n")       # don't take the scaled and modified input
             X_discm, Y_discm = [], []
+            write = False
+            # if write
             with open("scheme8_labelled_generated_tests.csv", "w") as f:
-                f.write("Checking-ccount,Months,Credit-history,Purpose,Credit-mount,Savings-ccount,Present-employment-since,Instllment-rte,Gender,Other-debtors,Present-residence-since,Property,age,Other-instllment-plns,Housing,Number-of-existing-credits,Job,Number-of-people-being-lible,Telephone,Foreign-worker, Final-label\n")
+                # f.write("Checking-ccount,Months,Credit-history,Purpose,Credit-mount,Savings-ccount,Present-employment-since,Instllment-rte,Gender,Other-debtors,Present-residence-since,Property,age,Other-instllment-plns,Housing,Number-of-existing-credits,Job,Number-of-people-being-lible,Telephone,Foreign-worker, Final-label\n")
                 for dt, label in zip(which_data_point_sorted, actual_predictions_sorted):
-                    f.write(str(dt.tolist())[1:-1] + ", " + str(label) + "\n")
+                    # f.write(str(dt.tolist())[1:-1] + ", " + str(label) + "\n")
                     X_discm.append(dt)
                     Y_discm.append(label)
             
@@ -731,7 +735,7 @@ class GenericNeuralNet(object):
             fhess_p=self.get_fmin_hvp,
             callback=cg_callback,
             avextol=1e-8,
-            maxiter=100) 
+            maxiter=500) 
 
         return self.vec_to_list(fmin_results)
 
@@ -798,7 +802,9 @@ class GenericNeuralNet(object):
             else:
                 assert False
 
-        approx_filename = os.path.join(self.hvp_files, '%s-%s-%s-%s-test-%s.npz' % (self.model_name, self.scheme_name, approx_type, loss_type, test_description))
+        # creates directory if it doesn't exist
+        Path(self.hvp_files).mkdir(parents=True, exist_ok=True)
+        approx_filename = os.path.join(self.hvp_files, '%s-schm%s-%s-%s-test-%s.npz' % (self.model_name, self.scheme_name, approx_type, loss_type, test_description))
         if os.path.exists(approx_filename) and force_refresh == False:
             inverse_hvp = list(np.load(approx_filename)['inverse_hvp'])
             print('Loaded inverse HVP from %s' % approx_filename)
@@ -813,7 +819,7 @@ class GenericNeuralNet(object):
 
         duration = time.time() - start_time
         print('Inverse HVP took %s sec' % duration)
-
+        # exit(0)
         start_time = time.time()
         if train_idx is None:
             num_to_remove = len(Y)
