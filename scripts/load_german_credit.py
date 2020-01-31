@@ -10,8 +10,10 @@ from influence.dataset import DataSet
 def load_german_credit(perm, validation_size=0):
 	total_dataset = genfromtxt("../german-credit-dataset/normalised-features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
 	total_labels = genfromtxt("../german-credit-dataset/labels.csv", delimiter=",")
-	ordering = permutations(perm)
-	total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
+	assert(perm < 20)		# we only have 20 permutations
+	if perm >= 0:	# for negative number don't do
+		ordering = permutations(perm)
+		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
 	train_examples = 800		# size changed from 750 to 800, testing set is 200
 	X_train = total_dataset[:train_examples]
