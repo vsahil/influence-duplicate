@@ -48,16 +48,6 @@ Points removed: 46, Discriminating Tests: 6346
 Points removed: 47, Discriminating Tests: 7595
 Points removed: 48, Discriminating Tests: 7561
 Points removed: 49, Discriminating Tests: 7741
-Points removed: 40, Discriminating Tests: 3970
-Points removed: 41, Discriminating Tests: 5046
-Points removed: 42, Discriminating Tests: 5173
-Points removed: 43, Discriminating Tests: 5464
-Points removed: 44, Discriminating Tests: 6883
-Points removed: 45, Discriminating Tests: 7097
-Points removed: 46, Discriminating Tests: 6346
-Points removed: 47, Discriminating Tests: 7595
-Points removed: 48, Discriminating Tests: 7561
-Points removed: 49, Discriminating Tests: 7741
 Points removed: 50, Discriminating Tests: 8280
 Points removed: 51, Discriminating Tests: 9293
 Points removed: 52, Discriminating Tests: 8510

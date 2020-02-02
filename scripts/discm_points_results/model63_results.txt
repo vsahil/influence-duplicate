@@ -43,11 +43,6 @@ Points removed: 41, Discriminating Tests: 15547
 Points removed: 42, Discriminating Tests: 15569
 Points removed: 43, Discriminating Tests: 16003
 Points removed: 44, Discriminating Tests: 16151
-Points removed: 40, Discriminating Tests: 14559
-Points removed: 41, Discriminating Tests: 15547
-Points removed: 42, Discriminating Tests: 15569
-Points removed: 43, Discriminating Tests: 16003
-Points removed: 44, Discriminating Tests: 16151
 Points removed: 45, Discriminating Tests: 16628
 Points removed: 46, Discriminating Tests: 16464
 Points removed: 47, Discriminating Tests: 17448
