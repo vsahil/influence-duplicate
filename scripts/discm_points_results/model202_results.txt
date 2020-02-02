@@ -78,3 +78,13 @@ Points removed: 76, Discriminating Tests: 14955
 Points removed: 77, Discriminating Tests: 15184
 Points removed: 78, Discriminating Tests: 15741
 Points removed: 79, Discriminating Tests: 15280
+Points removed: 8, Discriminating Tests: 7529
+Points removed: 48, Discriminating Tests: 13140
+Points removed: 88, Discriminating Tests: 17717
+Points removed: 128, Discriminating Tests: 19490
+Points removed: 168, Discriminating Tests: 21984
+Points removed: 208, Discriminating Tests: 23316
+Points removed: 248, Discriminating Tests: 27583
+Points removed: 288, Discriminating Tests: 25663
+Points removed: 328, Discriminating Tests: 28532
+Points removed: 368, Discriminating Tests: 28724
