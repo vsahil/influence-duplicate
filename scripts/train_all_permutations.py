@@ -68,22 +68,16 @@ model = Fully_Connected(
     damping=1e-2,
     decay_epochs=decay_epochs,
     mini_batch=True,
-    train_dir=f'trained_models/output_count{model_count}', 
+    train_dir=f'output_count{model_count}', 
     log_dir=f'log{model_count}',
     hvp_files = f"inverse_HVP_schm{scheme}_count{model_count}",
     model_name=f"german_credit_count{model_count}",
     scheme = f"{scheme}"
     )
-# all 240 models are good. It's fine.
-# model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, verbose=False)
-iter_to_load = num_steps - 1
-train_acc, test_acc = model.load_checkpoint(iter_to_load=iter_to_load)
-print(train_acc, test_acc)
-if not (train_acc > 0.7 and test_acc > 0.7):
-    print("BAD: ", setting_now, train_acc, test_acc)
 
+model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, verbose=False)
 del model
 tf.reset_default_graph()
-# print("DONE: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
+print("DONE: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
                 
             
