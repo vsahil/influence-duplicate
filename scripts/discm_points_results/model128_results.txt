@@ -38,3 +38,15 @@ Points removed: 36, Discriminating Tests: 1439
 Points removed: 37, Discriminating Tests: 1265
 Points removed: 38, Discriminating Tests: 979
 Points removed: 39, Discriminating Tests: 971
+Points removed: 40, Discriminating Tests: 1187
+Points removed: 41, Discriminating Tests: 1099
+Points removed: 42, Discriminating Tests: 997
+Points removed: 43, Discriminating Tests: 795
+Points removed: 44, Discriminating Tests: 426
+Points removed: 45, Discriminating Tests: 450
+Points removed: 46, Discriminating Tests: 563
+Points removed: 47, Discriminating Tests: 118
+Points removed: 48, Discriminating Tests: 393
+Points removed: 49, Discriminating Tests: 914
+Points removed: 50, Discriminating Tests: 740
+Points removed: 51, Discriminating Tests: 121
