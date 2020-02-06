@@ -11,18 +11,18 @@ df = pd.read_csv("all_german_discm_data.csv")
 x = (ggplot(aes(x='Removal-point', y='Discm-percent', color='Data-Split'), data=df) +\
     geom_point(size=1.5) +\
     # stat_smooth(colour='blue', span=0.2) +\
-    stat_summary() +\
+    # stat_summary() +\
     # xlim(0, 85) +\
     facet_wrap(['H1Units','H2units','Batch'], nrow=3, ncol=4,scales = 'free', labeller='label_both', shrink=False) + \
     xlab("Biased Points Removed") + \
     ylab("Percentage Discrimination remaining") + \
     ggtitle("Facet plot for remaining discrimination for each setting") +\
-    theme(axis_text_x = element_text(size=6), dpi=10000) +\
-    theme_seaborn()
+    theme(axis_text_x = element_text(size=6), dpi=300) +\
+    theme_xkcd()
     )
 
-x.save("summary.png", height=12, width=12)
-# x.save("points.png", height=12, width=12)
+# x.save("summary.png", height=12, width=12)
+x.save("points.png", height=12, width=12)
 # (ggplot(mtcars, aes('wt', 'mpg', color='factor(gear)'))
 #  + geom_point()
 #  + stat_smooth(method='lm')
