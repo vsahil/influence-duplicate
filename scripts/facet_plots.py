@@ -23,6 +23,7 @@ x = (ggplot(aes(x='Removal-point', y='Discm-percent', color='Data-Split'), data=
 
 # x.save("summary.png", height=12, width=12)
 x.save("points.png", height=12, width=12)
+
 # (ggplot(mtcars, aes('wt', 'mpg', color='factor(gear)'))
 #  + geom_point()
 #  + stat_smooth(method='lm')
