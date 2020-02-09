@@ -265,8 +265,9 @@ class GenericNeuralNet(object):
 
 
     def minibatch_mean_eval(self, ops, data_set):
-    
+        
         num_examples = data_set.num_examples
+        print(num_examples, self.batch_size)
         assert num_examples % self.batch_size == 0
         num_iter = int(num_examples / self.batch_size)
 
@@ -388,6 +389,7 @@ class GenericNeuralNet(object):
             else:
                 if step % 10000 == 0:
                     print(step)
+                    # self.print_model_eval()
 
             # Save a checkpoint and evaluate the model periodically.
             if (step + 1) % 1000 == 0 or (step + 1) == num_steps:
@@ -509,7 +511,7 @@ class GenericNeuralNet(object):
             self.discm_data_set = DataSet(X_discm, Y_discm)
 
         else:
-            assert False
+            raise NotImplementedError
         
         self.mini_batch = False
         # return discm_class0, discm_class1, desired_labels

@@ -10,8 +10,8 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 import influence.experiments as experiments
 from influence.fully_connected import Fully_Connected
 
-from load_german_credit import load_german_credit#, load_german_credit_partial
-# from find_discm_points import entire_test_suite
+from load_german_credit import load_german_credit, exclude_some_examples    #, load_german_credit_partial
+from find_discm_points import entire_test_suite
 
 
 input_dim = 20
@@ -33,24 +33,28 @@ setting_now = int(sys.argv[1])
 
 def variation(setting_now):
     model_count = 0
-    for perm in range(20):
-        for h1units in [16, 24, 32]:
-            for h2units in [8, 12]:
-                for batch in [50, 100]:
-                    if model_count < setting_now:
-                        model_count += 1
-                        continue
-                    # print(setting_now, "done", perm, h1units, h2units, batch)
-                    return perm, h1units, h2units, batch, model_count
+    # for perm in range(20):
+    for h1units in [16, 24, 32]:
+        for h2units in [8, 12]:
+            for batch in [50, 100]:
+                if model_count < setting_now:
+                    model_count += 1
+                    continue
+                # print(setting_now, "done", perm, h1units, h2units, batch)
+                return h1units, h2units, batch, model_count
 
 
-perm, h1units, h2units, batch, model_count = variation(setting_now)
-data_sets = load_german_credit(perm)
+h1units, h2units, batch, model_count = variation(setting_now)
+# print(h1units, h2units, batch)
+# exit(0)
+# data_sets = load_german_credit(perm)
+exclude = int(sys.argv[2])
+data_sets = exclude_some_examples(exclude)
 hidden1_units = h1units
 hidden2_units = h2units
 batch_size = batch
 assert(model_count == setting_now)
-print("Start: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
+print("Start: ", model_count, " Setting: ", hidden1_units, hidden2_units, batch_size)
 # num_steps = batch_size * 1000
 num_steps = 50000
 decay_epochs = [int(0.7 * num_steps)]
@@ -67,8 +71,8 @@ model = Fully_Connected(
     initial_learning_rate=initial_learning_rate,
     damping=1e-2,
     decay_epochs=decay_epochs,
-    mini_batch=True,
-    train_dir=f'trained_models/output_count{model_count}', 
+    mini_batch=False,
+    train_dir=f'throw/output_dont_save{model_count}', 
     log_dir=f'log{model_count}',
     hvp_files = f"inverse_HVP_schm{scheme}_count{model_count}",
     model_name=f"german_credit_count{model_count}",
@@ -77,13 +81,19 @@ model = Fully_Connected(
 
 model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, verbose=False)
 iter_to_load = num_steps - 1
-train_acc, test_acc = model.load_checkpoint(iter_to_load=iter_to_load)
-if not (train_acc > 0.7 and test_acc > 0.7):
-    print("BAD: ", setting_now, train_acc, test_acc)
-else:
-    print(train_acc, test_acc)
+# train_acc, test_acc = model.load_checkpoint(iter_to_load=iter_to_load)
+class0_data, class1_data = entire_test_suite(False)     # False means loads entire data
+num_dicsm = model.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
+train_acc, test_acc = model.print_model_eval()
+with open("really_biased_removed_data.csv", "a") as f:
+    print(h1units, h2units, batch, exclude, train_acc, test_acc, num_dicsm, file=f)
+
+# print(train_acc, test_acc)
+# if not (train_acc > 0.7 and test_acc > 0.7):
+#     print("BAD: ", setting_now)
+
 del model
 tf.reset_default_graph()
-print("DONE: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
+print("DONE: ", model_count, " Setting: ", hidden1_units, hidden2_units, batch_size)
                 
             
