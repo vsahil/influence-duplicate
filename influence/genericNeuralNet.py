@@ -294,6 +294,7 @@ class GenericNeuralNet(object):
         return ret
 
 
+
     def print_model_eval(self, no_print=False):
         params_val = self.sess.run(self.params)
 
