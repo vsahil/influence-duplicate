@@ -48,12 +48,12 @@ h1units, h2units, batch, model_count = variation(setting_now)
 # print(h1units, h2units, batch)
 # exit(0)
 # data_sets = load_german_credit(perm)
+assert(model_count == setting_now)
 exclude = int(sys.argv[2])
 data_sets = exclude_some_examples(exclude)
 hidden1_units = h1units
 hidden2_units = h2units
 batch_size = batch
-assert(model_count == setting_now)
 print("Start: ", model_count, " Setting: ", hidden1_units, hidden2_units, batch_size)
 # num_steps = batch_size * 1000
 num_steps = 50000
