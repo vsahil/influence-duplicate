@@ -733,7 +733,7 @@ class GenericNeuralNet(object):
             fhess_p=self.get_fmin_hvp,
             callback=cg_callback,
             avextol=1e-8,
-            maxiter=500) 
+            maxiter=5000) 
 
         return self.vec_to_list(fmin_results)
 
@@ -754,8 +754,8 @@ class GenericNeuralNet(object):
             for i in range(num_iter):
                 start = i * batch_size
                 end = int(min((i+1) * batch_size, len(test_indices)))
-
                 test_feed_dict = self.fill_feed_dict_with_some_ex(self.discm_data_set, test_indices[start:end])
+                # test_feed_dict = self.fill_feed_dict_with_some_ex(self.data_sets.test, test_indices[start:end])
 
                 temp = self.sess.run(op, feed_dict=test_feed_dict)
 
