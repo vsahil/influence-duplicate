@@ -14,9 +14,9 @@ def run_command(setting, exclude):
     os.system(f"python -W ignore train_all_permutations.py {setting} {exclude}")
     # process = subprocess.check_output(['python', 'train_all_permutations.py', str(index)], stdout=subprocess.PIPE)
 
-pool = multiprocessing.Pool(11)
+pool = multiprocessing.Pool(10)
 # l = 20 * 3 * 2 * 2 
-l = [i for i in range(40)]      # upto 40 real biased points removed
+l = [i for i in range(100)]      # upto 40 real biased points removed
 # mr = pool.map_async(run_command, l)
 settings = [i for i in range(12)]       # for all the 12 hyper-params settings
 mr = pool.starmap_async(run_command, product(settings, l))

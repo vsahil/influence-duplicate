@@ -6,7 +6,7 @@ import sys
 sys.path.append("../")
 from influence.dataset import DataSet
 
-def exclude_some_examples(exclude, validation_size=0):
+def exclude_some_examples(exclude, validation_size=0, remove_biased_test=False):
 	total_dataset = genfromtxt("../german-credit-dataset/normalised-features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
 	total_labels = genfromtxt("../german-credit-dataset/labels.csv", delimiter=",")
 
@@ -27,9 +27,13 @@ def exclude_some_examples(exclude, validation_size=0):
 	424, 195, 826, 186, 611, 92, 790, 113, 331, 129, 351, 614]
 
 	assert(exclude < len(ascending_order_biased_points))
-	removal_points = sorted(ascending_order_biased_points[-exclude:], reverse=True)
-	
+	removal_points = []
+	if exclude > 0:
+		removal_points = sorted(ascending_order_biased_points[-exclude:], reverse=True)
+	assert(len(removal_points) == exclude)
+		
 	# import ipdb; ipdb.set_trace()
+
 	train_examples = 800		# size changed from 750 to 800, testing set is 200
 	X_train = total_dataset[:train_examples]
 	X_validation = total_dataset[train_examples:train_examples + validation_size]
@@ -44,6 +48,17 @@ def exclude_some_examples(exclude, validation_size=0):
 			X_train = np.delete(X_train, i, axis = 0)
 			Y_train = np.delete(Y_train, i, axis = 0)
 			
+	biased_test_points = sorted([i for i in ascending_order_biased_points if i >= 800], reverse=True)
+
+	if remove_biased_test:
+		for i in biased_test_points:
+			X_test = np.delete(X_test, i - train_examples, axis = 0)
+			Y_test = np.delete(Y_test, i - train_examples, axis = 0)
+
+	if remove_biased_test: 
+		assert(len(Y_test) < 1000 - train_examples)
+	else:
+		assert(len(Y_test) == 1000 - train_examples)
 
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
@@ -100,7 +115,6 @@ def load_german_credit_partial(perm, index, validation_size=0):
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
-
 # These are 20 permutations of the full german credit dataset. 
 def permutations(perm):
 	
@@ -142,7 +156,7 @@ def permutations(perm):
 # 	# x,y = data[idx], classes[idx]
 
 if __name__ == "__main__":
-    pass
+    raise NotImplementedError
 # 	# for k in range(5):
 # 	produce_permutations()
 	# print(permutations(15)[:10])
