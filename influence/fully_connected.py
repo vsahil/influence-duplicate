@@ -26,12 +26,15 @@ from influence.dataset import DataSet
 
 class Fully_Connected(GenericNeuralNet):
 
-    def __init__(self, input_dim, hidden1_units, hidden2_units, weight_decay, **kwargs):
+    def __init__(self, input_dim, hidden1_units, hidden2_units, hidden3_units, weight_decay, **kwargs):
         self.weight_decay = weight_decay
         self.input_dim = input_dim
         self.hidden1_units = hidden1_units
         self.hidden2_units = hidden2_units
-
+        if hidden3_units > 0:
+            self.hidden3_units = hidden3_units
+        else:
+            self.hidden3_units = None
         super(Fully_Connected, self).__init__(**kwargs)
 
 
@@ -54,8 +57,13 @@ class Fully_Connected(GenericNeuralNet):
 
     def get_all_params(self):
         all_params = []
-        # for layer in ['h1_a', 'h1_c', 'h2_a', 'h2_c', 'h3_a', 'h3_c', 'softmax_linear']:        
-        for layer in ['h1', 'h2', 'out']:
+        # for layer in ['h1_a', 'h1_c', 'h2_a', 'h2_c', 'h3_a', 'h3_c', 'softmax_linear']:
+        if self.hidden3_units:
+            layers = ['h1', 'h2', 'h3', 'out']
+        else:
+            layers = ['h1', 'h2', 'out']
+        
+        for layer in layers:
             for var_name in ['weights', 'biases']:
                 temp_tensor = tf.get_default_graph().get_tensor_by_name("%s/%s:0" % (layer, var_name))            
                 all_params.append(temp_tensor)      
@@ -93,12 +101,20 @@ class Fully_Connected(GenericNeuralNet):
         # Hidden 2
         with tf.variable_scope('h2'):
             h2 = self.hidden_layer_compute(h1, self.hidden1_units, self.hidden2_units)
+
+        # Hidden 3
+        if self.hidden3_units:
+            with tf.variable_scope('h3'):
+                h3 = self.hidden_layer_compute(h2, self.hidden2_units, self.hidden3_units)
             
         # Shared layers / hidden 3
         with tf.variable_scope('out'):
-            h3 = self.hidden_layer_compute(h2, self.hidden2_units, self.num_classes)
+            if self.hidden3_units:
+                out = self.hidden_layer_compute(h3, self.hidden3_units, self.num_classes)
+            else:
+                out = self.hidden_layer_compute(h2, self.hidden2_units, self.num_classes)
         
-        logits = h3
+        logits = out
         
         return logits
         

@@ -49,7 +49,8 @@ def exclude_some_examples(exclude, validation_size=0, remove_biased_test=False):
 			Y_train = np.delete(Y_train, i, axis = 0)
 			
 	biased_test_points = sorted([i for i in ascending_order_biased_points if i >= 800], reverse=True)
-
+	# print(len(biased_test_points))
+	# exit(0)
 	if remove_biased_test:
 		for i in biased_test_points:
 			X_test = np.delete(X_test, i - train_examples, axis = 0)
@@ -74,6 +75,44 @@ def load_german_credit(perm, validation_size=0):
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
+
+	train_examples = 800		# size changed from 750 to 800, testing set is 200
+	X_train = total_dataset[:train_examples]
+	X_validation = total_dataset[train_examples:train_examples + validation_size]
+	X_test  = total_dataset[train_examples + validation_size:]
+	Y_train = total_labels[:train_examples]
+	Y_validation = total_labels[train_examples:train_examples + validation_size]
+	Y_test  = total_labels[train_examples + validation_size:]
+
+	train = DataSet(X_train, Y_train)
+	validation = DataSet(X_validation, Y_validation)
+	test = DataSet(X_test, Y_test)
+
+	return base.Datasets(train=train, validation=validation, test=test)
+
+
+def reweighted_load_german_credit(validation_size=0):
+	total_dataset = genfromtxt("reweighted_german/normalized_reweighted_features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
+	total_labels = genfromtxt("reweighted_german/normalized_reweighted_labels-german.csv", delimiter=",")
+
+	train_examples = 800		# size changed from 750 to 800, testing set is 200
+	X_train = total_dataset[:train_examples]
+	X_validation = total_dataset[train_examples:train_examples + validation_size]
+	X_test  = total_dataset[train_examples + validation_size:]
+	Y_train = total_labels[:train_examples]
+	Y_validation = total_labels[train_examples:train_examples + validation_size]
+	Y_test  = total_labels[train_examples + validation_size:]
+
+	train = DataSet(X_train, Y_train)
+	validation = DataSet(X_validation, Y_validation)
+	test = DataSet(X_test, Y_test)
+
+	return base.Datasets(train=train, validation=validation, test=test)
+
+
+def disparate_removed_load_german_credit(validation_size=0):
+	total_dataset = genfromtxt("disparate_impact_removed/normalized_disparateremoved_features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
+	total_labels = genfromtxt("disparate_impact_removed/normalized_disparateremoved_labels-german.csv", delimiter=",")
 
 	train_examples = 800		# size changed from 750 to 800, testing set is 200
 	X_train = total_dataset[:train_examples]

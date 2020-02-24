@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 import numpy as np
 import IPython, sys, os
-
 sys.path.append(".")
 sys.path.append("../")
 
@@ -19,9 +18,10 @@ from influence.fully_connected import Fully_Connected
 from load_german_credit import load_german_credit, load_german_credit_partial
 from find_discm_points import entire_test_suite
 
-# data_sets = load_german_credit()
+data_sets = load_german_credit()
+# data_sets = reweighted_load_german_credit()
 
-input_dim = 20 #* input_side * input_channels 
+input_dim = 20
 weight_decay = 0.001
 # batch_size = 50
 
@@ -78,13 +78,17 @@ model = Fully_Connected(
     )
 
 # model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000)
+
 iter_to_load = num_steps - 1
 # iter_to_load = 46999
 print("Start: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
 
 model.load_checkpoint(iter_to_load=iter_to_load, do_checks=False)
 class0_data, class1_data = entire_test_suite(False)     # False means loads entire data
+# print(model.data_sets.train.num_examples)
+# exit(0)
 model.find_discm_examples(class0_data, class1_data, print_file=True, scheme=scheme)
+
 
 # test_idx = 0
 # x = 
