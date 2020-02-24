@@ -12,16 +12,48 @@ def rescale_input_numpy(inp):
     return out
 
 
-def entire_test_suite(mini=True):
+def rescale_input_numpy_reweighted_german(inp):
+    assert(inp.shape[1] == 20)  # 20 features for german credit dataset
+    # means_and_ranges = [(1.001, 3), (20.903, 68), (32.545, 4), (47.148, 370), (3271.258, 18174), (1.19, 4), (3.384, 4), (2.973, 3), (0.69, 1), (101.145, 2), (2.845, 3), (122.358, 3), (35.546, 56), (142.675, 2), (151.929, 2), (1.407, 3), (172.904, 3), (1.155, 1), (1.404, 1), (1.037, 1)]
+    means_and_ranges = [(1.001, 3), (20.903, 68), (32.545, 4), (47.148, 370), (3271.258, 18174), (1.19, 4), (3.384, 4), (2.973, 3), (0.69, 1), (101.145, 2), (2.845, 3), (122.358, 3), (35.546, 56), (142.675, 2), (151.929, 2), (1.407, 3), (172.904, 3), (1.155, 1), (1.404, 1), (1.037, 1)]
+    r = np.arange(20)
+    out = copy.deepcopy(inp)
+    for col, (mean, range_) in zip(r, means_and_ranges):
+        out[:, col] = np.divide(np.subtract(out[:, col], mean), range_)
+    return out
+
+
+def rescale_input_numpy_disparateremoved_german(inp):
+    assert(inp.shape[1] == 20)  # 20 features for german credit dataset
+    # means_and_ranges = [(1.001, 3), (20.903, 68), (32.545, 4), (47.148, 370), (3271.258, 18174), (1.19, 4), (3.384, 4), (2.973, 3), (0.69, 1), (101.145, 2), (2.845, 3), (122.358, 3), (35.546, 56), (142.675, 2), (151.929, 2), (1.407, 3), (172.904, 3), (1.155, 1), (1.404, 1), (1.037, 1)]
+    means_and_ranges  = [(1.001, 3), (19.172, 56), (32.545, 4), (47.148, 370), (2866.523, 15607), (1.19, 4), (3.384, 4), (2.973, 3), (0.69, 1), (101.145, 2), (2.845, 3), (122.358, 3), (34.434, 56), (142.675, 2), (151.929, 2), (1.407, 3), (172.904, 3), (1.155, 1), (1.404, 1), (1.037, 1)]
+    r = np.arange(20)
+    out = copy.deepcopy(inp)
+    for col, (mean, range_) in zip(r, means_and_ranges):
+        out[:, col] = np.divide(np.subtract(out[:, col], mean), range_)
+    return out
+
+
+def entire_test_suite(mini=True, reweighted_german=False, disparateremoved=False):
     gender0 = "gender0"
     gender1 = "gender1"
     if mini:
         gender0 += "_mini"
         gender1 += "_mini"
-    class0_ = np.genfromtxt(f"../german-credit-dataset/{gender0}.csv", delimiter=",")
-    class1_ = np.genfromtxt(f"../german-credit-dataset/{gender1}.csv", delimiter=",")
-    class0 = rescale_input_numpy(class0_)
-    class1 = rescale_input_numpy(class1_)
+    class0_ = np.genfromtxt(f"/Users/sahilverma/research/influence-duplicate/german-credit-dataset/{gender0}.csv", delimiter=",")
+    class1_ = np.genfromtxt(f"/Users/sahilverma/research/influence-duplicate/german-credit-dataset/{gender1}.csv", delimiter=",")
+
+    assert(not (reweighted_german and disparateremoved)),  "both can't be true at the same time"
+    
+    if reweighted_german:
+        class0 = rescale_input_numpy_reweighted_german(class0_)
+        class1 = rescale_input_numpy_reweighted_german(class1_)
+    elif disparateremoved:
+        class0 = rescale_input_numpy_disparateremoved_german(class0_)
+        class1 = rescale_input_numpy_disparateremoved_german(class1_)
+    else:
+        class0 = rescale_input_numpy(class0_)
+        class1 = rescale_input_numpy(class1_)
 
     return class0, class1
     
@@ -29,7 +61,7 @@ def entire_test_suite(mini=True):
     # l_zero = np.eye(2)[np.zeros(length, dtype=int)]     # list of zero labels
     # l_one = np.eye(2)[np.ones(length, dtype=int)]      # list of one labels
 
-
+    # This all never happens
     with tf.Session() as sess:
         out0, loss_class0_label_0 = sess.run([logits, loss_no_reg], feed_dict={X: class0, Y:l_zero})
         out0, loss_class0_label_1 = sess.run([logits, loss_no_reg], feed_dict={X: class0, Y:l_one})

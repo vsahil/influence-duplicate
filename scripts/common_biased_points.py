@@ -66,10 +66,10 @@ points = []
 occurence = []
 for key, item in sorted_biased_points.items():
     points.append(key)
-    occurence.append(item * 100/240)
+    occurence.append(item * 100/203)
 
 feed = {'Points':points, "Occurence":occurence}
-
+feed['Points'] = [i for i in range(len(feed['Points']))]
 import pandas as pd
 # import ipdb; ipdb.set_trace()
 df = pd.DataFrame.from_dict(feed)
@@ -81,7 +81,7 @@ x = (ggplot(aes(x='Points', y='Occurence'), data=df) +\
     # stat_summary() +\
     ylim(0, 100) +\
     # facet_wrap(['H1Units','H2units','Batch'], nrow=3, ncol=4,scales = 'free', labeller='label_both', shrink=False) + \
-    xlab("Points in the German Credit Dataset") + \
+    xlab("Data-Points in order of occurence (not showing order in dataset") + \
     ylab("Percentage Occurence") + \
     ggtitle("Plot showing percentage labelling of a point as biased among all settings") +\
     theme(axis_text_x = element_text(size=6), dpi=10000) +\
