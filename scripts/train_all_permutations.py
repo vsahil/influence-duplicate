@@ -10,7 +10,7 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 import influence.experiments as experiments
 from influence.fully_connected import Fully_Connected
 
-from load_german_credit import exclude_some_examples    #, load_german_credit, load_german_credit_partial
+from load_german_credit import exclude_some_examples, reweighted_load_german_credit, disparate_removed_load_german_credit    #, load_german_credit, load_german_credit_partial
 from find_discm_points import entire_test_suite
 
 
@@ -50,8 +50,9 @@ h1units, h2units, batch, model_count = variation(setting_now)
 # exit(0)
 # data_sets = load_german_credit(perm)
 assert(model_count == setting_now)
-exclude = int(sys.argv[2])
-data_sets = exclude_some_examples(exclude, remove_biased_test=remove_biased_test_points)
+# exclude = int(sys.argv[2])
+# data_sets = exclude_some_examples(exclude, remove_biased_test=remove_biased_test_points)
+data_sets = disparate_removed_load_german_credit()
 hidden1_units = h1units
 hidden2_units = h2units
 batch_size = batch
@@ -84,9 +85,15 @@ model = Fully_Connected(
 model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
 iter_to_load = num_steps - 1
 # train_acc, test_acc = model.load_checkpoint(iter_to_load=iter_to_load)
-class0_data, class1_data = entire_test_suite(False)     # False means loads entire data
+class0_data, class1_data = entire_test_suite(mini=False, reweighted_german=False, disparateremoved=True)     # False means loads entire data
 num_dicsm = model.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
 train_acc, test_acc = model.print_model_eval()
+
+print("Discrimination:", num_dicsm)
+with open("disparate_removed_german_discrimination.csv", "a") as f:
+    f.write(f'{h1units},{h2units},{batch},{train_acc},{test_acc},{num_dicsm}\n')
+
+exit(0)
 if remove_biased_test_points:
     with open("really_biased_removed_biased_test_points_removed.csv", "a") as f:
         f.write(f'{h1units},{h2units},{batch},{exclude},{train_acc},{test_acc},{num_dicsm}\n')
