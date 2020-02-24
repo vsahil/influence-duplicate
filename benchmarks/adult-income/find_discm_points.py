@@ -45,8 +45,8 @@ def entire_test_suite(mini=True, reweighted_german=False, disparateremoved=False
         gender1 += "_mini"
     
     # now I can have headers in the tests files
-    df0 = pd.read_csv(f"/Users/sahilverma/research/influence-duplicate/adult-income-dataset/{gender0}.csv")
-    df1 = pd.read_csv(f"/Users/sahilverma/research/influence-duplicate/adult-income-dataset/{gender1}.csv")
+    df0 = pd.read_csv(f"../../adult-income-dataset/{gender0}.csv")
+    df1 = pd.read_csv(f"../../adult-income-dataset/{gender1}.csv")
     if mini: 
         assert(df0.shape == df1.shape == (1000, 12))
     else:

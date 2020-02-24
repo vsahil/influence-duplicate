@@ -82,21 +82,21 @@ if not load_from_numpy:
         print(list(sorted_training_points), file=f)
 
     np.save(f"{name}_influential_training_points", sorted_training_points)
+    training_size = model.data_sets.train.num_examples
+    assert(len(sorted_training_points) == training_size)
     del model   # so that weights of the original model are not used. This will not help
 
 else:
    sorted_training_points = list(np.load(f"{name}_influential_training_points.npy"))
 
-training_size = model.data_sets.train.num_examples
-assert(len(sorted_training_points) == training_size)
-
-
+# exit(0)
 # for percentage in range(5, 4, 0.5):
 # for percentage in np.arange(0, 5.0, 0.2):
-for p in range(1, 40):
+removal = [int(sys.argv[1])]
+# import ipdb; ipdb.set_trace()
+for p in removal:
     tf.reset_default_graph()
     # p = int(training_size * percentage / 100)
-    # p = 19
     remaining_indexes = np.array(sorted_training_points[p:])
     data_sets_partial = load_adult_income_partial(remaining_indexes)
     assert(data_sets_partial.train.num_examples == 36000 - p)
@@ -119,13 +119,15 @@ for p in range(1, 40):
         model_name='adult_income_partial',
         scheme = "scheme8_par")
     print("Training")
+    print("Points removed: ", p)
     model_partial_data.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
     # print("Percentage: ", percentage, " Points removed: ", p)
     print("Points removed: ", p)
     num = model_partial_data.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
     with open("scheme{}_results.txt".format(scheme), "a") as f:
         # f.write("Percentage: " + str(percentage) + ", Discriminating Tests: " + str(num) + "\n")
-        f.write("Points: " + str(p) + ", Discriminating Tests: " + str(num) + "\n")
+        # f.write("Points: " + str(p) + ", Discriminating Tests: " + str(num) + "\n")
+        f.write(f"{p}, {num}\n")
     
     del model_partial_data          # to remove any chance of reusing variables and reduce memory
 

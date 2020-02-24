@@ -53,19 +53,20 @@ def exclude_experiments(experiments):
         
     # num_cores = 11
     # Parallel(n_jobs=num_cores)(delayed(run_command)(ind) for ind in remaining)
-def run_command(index):
-    os.system(f"python train_all_permutations.py {index}")
+def run_command(removal_points):
+    os.system(f"python train_adult_income.py {removal_points}")
+    
     # os.system(f"python train_german_credit.py {index}")
     # process = subprocess.check_output(['python', 'train_all_permutations.py', str(index)], stdout=subprocess.PIPE)
 
-pool = multiprocessing.Pool(4)
-l = [i for i in range(12)]
+pool = multiprocessing.Pool(10)
+l = [i for i in range(1, 1000)]
 mr = pool.map_async(run_command, l)
 # # mr = pool.map_async(run_command, range(60, 72))
 while not mr.ready():
     sys.stdout.flush()
     mr.wait(0.1)
-print("hello")
+# print("hello")
 
 # for i in remaining:
 #     p = multiprocessing.Process(target=run_command, args=(i,))
