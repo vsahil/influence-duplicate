@@ -75,14 +75,14 @@ model = Fully_Connected(
     mini_batch=True,
     train_dir=f'trained_models/output_count{model_count}', 
     log_dir=f'throw/log{model_count}',
-    hvp_files = f"inverse_HVP_schm{scheme}_count{model_count}",
+    hvp_files = f"inverse_HVP_adult/inverse_HVP_schm{scheme}_count{model_count}",
     model_name=name,
     scheme = f"{scheme}")
 
 
 num_steps = 30000
 if train:
-    model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=True)
+    model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=True, verbose=False)
 
 ranked_influential_training_points = f"ranking_points_ordered/{name}.npy"
 # if not train and ranking of influential training points is stored in numpy file, then True
