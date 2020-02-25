@@ -1,5 +1,6 @@
 import sys
 sys.path.insert(1, "../")  
+sys.path.append("../../../")
 
 import numpy as np
 np.random.seed(0)
@@ -15,10 +16,13 @@ from sklearn.preprocessing import StandardScaler, MaxAbsScaler
 from sklearn.metrics import accuracy_score
 import tensorflow as tf
 
+perm = int(sys.argv[1])
+
 dataset_orig = GermanDataset(
     protected_attribute_names=['sex'],                   
     privileged_classes=[['male']],      
-    features_to_drop=['personal_status'] 
+    features_to_drop=['personal_status'],
+    permute=perm 
 )
 
 
@@ -31,11 +35,11 @@ metric_orig_train = BinaryLabelDatasetMetric(dataset_orig_train,
                                              unprivileged_groups=unprivileged_groups,
                                              privileged_groups=privileged_groups)
 
-print("Train set: Difference in mean outcomes between unprivileged and privileged groups = %f" % metric_orig_train.mean_difference())
+# print("Train set: Difference in mean outcomes between unprivileged and privileged groups = %f" % metric_orig_train.mean_difference())
 metric_orig_test = BinaryLabelDatasetMetric(dataset_orig_test, 
                                              unprivileged_groups=unprivileged_groups,
                                              privileged_groups=privileged_groups)
-print("Test set: Difference in mean outcomes between unprivileged and privileged groups = %f" % metric_orig_test.mean_difference())
+# print("Test set: Difference in mean outcomes between unprivileged and privileged groups = %f" % metric_orig_test.mean_difference())
 
 
 
@@ -46,11 +50,11 @@ metric_scaled_train = BinaryLabelDatasetMetric(dataset_orig_train,
                              unprivileged_groups=unprivileged_groups,
                              privileged_groups=privileged_groups)
 
-print("Train set: Difference in mean outcomes between unprivileged and privileged groups = %f" % metric_scaled_train.mean_difference())
+# print("Train set: Difference in mean outcomes between unprivileged and privileged groups = %f" % metric_scaled_train.mean_difference())
 metric_scaled_test = BinaryLabelDatasetMetric(dataset_orig_test, 
                              unprivileged_groups=unprivileged_groups,
                              privileged_groups=privileged_groups)
-print("Test set: Difference in mean outcomes between unprivileged and privileged groups = %f" % metric_scaled_test.mean_difference())
+# print("Test set: Difference in mean outcomes between unprivileged and privileged groups = %f" % metric_scaled_test.mean_difference())
 
 # sess = tf.Session()
 # plain_model = AdversarialDebiasing(privileged_groups = privileged_groups,
@@ -117,18 +121,18 @@ dataset_debiasing_test = debiased_model.predict(dataset_orig_test)
 # print("Test set: Difference in mean outcomes between unprivileged and privileged groups = %f" % metric_dataset_nodebiasing_test.mean_difference())
 
 # Metrics for the dataset from model with debiasing
-print("#### Model - with debiasing - dataset metrics")
+# print("#### Model - with debiasing - dataset metrics")
 metric_dataset_debiasing_train = BinaryLabelDatasetMetric(dataset_debiasing_train, 
                                              unprivileged_groups=unprivileged_groups,
                                              privileged_groups=privileged_groups)
 
-print("Train set: Difference in mean outcomes between unprivileged and privileged groups = %f" % metric_dataset_debiasing_train.mean_difference())
+# print("Train set: Difference in mean outcomes between unprivileged and privileged groups = %f" % metric_dataset_debiasing_train.mean_difference())
 
 metric_dataset_debiasing_test = BinaryLabelDatasetMetric(dataset_debiasing_test, 
                                              unprivileged_groups=unprivileged_groups,
                                              privileged_groups=privileged_groups)
 
-print("Test set: Difference in mean outcomes between unprivileged and privileged groups = %f" % metric_dataset_debiasing_test.mean_difference())
+# print("Test set: Difference in mean outcomes between unprivileged and privileged groups = %f" % metric_dataset_debiasing_test.mean_difference())
 
 
 
@@ -144,12 +148,12 @@ print("Test set: Difference in mean outcomes between unprivileged and privileged
 # print("Test set: Theil_index = %f" % classified_metric_nodebiasing_test.theil_index())
 
 
-print("#### Model - with debiasing - classification metrics")
+# print("#### Model - with debiasing - classification metrics")
 classified_metric_debiasing_test = ClassificationMetric(dataset_orig_test, 
                                                  dataset_debiasing_test,
                                                  unprivileged_groups=unprivileged_groups,
                                                  privileged_groups=privileged_groups)
-print("Test set: Classification accuracy = %f" % classified_metric_debiasing_test.accuracy())
+# print("Test set: Classification accuracy = %f" % classified_metric_debiasing_test.accuracy())
 classified_metric_debiasing_train = ClassificationMetric(dataset_orig_train, 
                                                  dataset_debiasing_train,
                                                  unprivileged_groups=unprivileged_groups,
@@ -158,14 +162,14 @@ classified_metric_debiasing_train = ClassificationMetric(dataset_orig_train,
 TPR = classified_metric_debiasing_test.true_positive_rate()
 TNR = classified_metric_debiasing_test.true_negative_rate()
 bal_acc_debiasing_test = 0.5*(TPR+TNR)
-print("Test set: Balanced classification accuracy = %f" % bal_acc_debiasing_test)
-print("Test set: Disparate impact = %f" % classified_metric_debiasing_test.disparate_impact())
-print("Test set: Equal opportunity difference = %f" % classified_metric_debiasing_test.equal_opportunity_difference())
-print("Test set: Average odds difference = %f" % classified_metric_debiasing_test.average_odds_difference())
-print("Test set: Theil_index = %f" % classified_metric_debiasing_test.theil_index())
+# print("Test set: Balanced classification accuracy = %f" % bal_acc_debiasing_test)
+# print("Test set: Disparate impact = %f" % classified_metric_debiasing_test.disparate_impact())
+# print("Test set: Equal opportunity difference = %f" % classified_metric_debiasing_test.equal_opportunity_difference())
+# print("Test set: Average odds difference = %f" % classified_metric_debiasing_test.average_odds_difference())
+# print("Test set: Theil_index = %f" % classified_metric_debiasing_test.theil_index())
 train_acc = classified_metric_debiasing_train.accuracy()
 test_acc = classified_metric_debiasing_test.accuracy()
-print(train_acc, test_acc, "hello")
+# print(train_acc, test_acc, "hello")
 
 def find_discm_examples(class0_data, class1_data, print_file, scheme):
         # assert False
@@ -204,11 +208,11 @@ def find_discm_examples(class0_data, class1_data, print_file, scheme):
         # predictions_class1_, loss_class1_label_0 = sess.run(ops, feed_dict=feed_dict_class1_label0)
         # predictions_class1, loss_class1_label_1 = sess.run(ops, feed_dict=feed_dict_class1_label1)
         # assert (predictions_class1_ == predictions_class1).all()    #"""This is my belief"""
-
+        # import ipdb; ipdb.set_trace()
         predictions_class0 = df0_pred.labels
         predictions_class1 = df1_pred.labels
         
-        num_discriminating = sum(predictions_class0 != predictions_class1)    # Gives the number of discriminating examples
+        num_discriminating = sum(predictions_class0 != predictions_class1)[0]    # Gives the number of discriminating examples
         print("Number of discriminating examples: ", num_discriminating)
         return num_discriminating
 
@@ -222,4 +226,4 @@ num_dicsm = find_discm_examples(class0_data, class1_data, print_file=False, sche
 print("Discrimination:", num_dicsm)
 
 with open("adversarial_debiased_german_discrimination.csv", "a") as f:
-    f.write(f'{train_acc},{test_acc},{num_dicsm}\n')
+    f.write(f'{train_acc},{test_acc},{perm},{num_dicsm}\n')
