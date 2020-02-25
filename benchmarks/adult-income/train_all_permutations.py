@@ -18,7 +18,7 @@ from influence.fully_connected import Fully_Connected
 from load_adult_income import load_adult_income, load_adult_income_partial
 from find_discm_points import entire_test_suite
 
-train = True
+train = False
 
 input_dim = 12
 weight_decay = 0.001
@@ -75,7 +75,7 @@ model = Fully_Connected(
     mini_batch=True,
     train_dir=f'trained_models/output_count{model_count}', 
     log_dir=f'throw/log{model_count}',
-    hvp_files = f"inverse_HVP_schm{scheme}_count{model_count}",
+    hvp_files = f"inverse_HVP_adult/HVP_model{model_count}",
     model_name=name,
     scheme = f"{scheme}")
 
@@ -87,7 +87,7 @@ if train:
 ranked_influential_training_points = f"ranking_points_ordered/{name}.npy"
 # if not train and ranking of influential training points is stored in numpy file, then True
 load_from_numpy = False if train else (True if os.path.exists(ranked_influential_training_points) else False)       
-
+load_from_numpy = False
 class0_data, class1_data = entire_test_suite(mini=False)     # False means loads entire data
 if not load_from_numpy:
     if not train:
@@ -114,6 +114,7 @@ if not load_from_numpy:
     del model   # so that weights of the original model are not used. This will not help
 
 else:
+   print("Loading from numpy")
    sorted_training_points = list(np.load(ranked_influential_training_points))
 
 if train:
