@@ -323,7 +323,7 @@ class GenericNeuralNet(object):
             
         pred = np.argmax(ans, axis=1)
         # import ipdb; ipdb.set_trace()
-        print(np.sum(pred), pred.shape, "hello")#, len(np.where(pred)[0].tolist()))    # print the nos of 1's in the list
+        # print(np.sum(pred), pred.shape, "hello")#, len(np.where(pred)[0].tolist()))    # print the nos of 1's in the list
 
         self.mini_batch = ori       # whatever the original value was
 
@@ -770,15 +770,25 @@ class GenericNeuralNet(object):
         fmin_grad_fn = self.get_fmin_grad_fn(v)
         cg_callback = self.get_cg_callback(v, verbose)
 
-        fmin_results = fmin_ncg(
+        fmin_results_all = fmin_ncg(
             f=fmin_loss_fn,
             x0=np.concatenate(v),
             fprime=fmin_grad_fn,
             fhess_p=self.get_fmin_hvp,
             callback=cg_callback,
             avextol=1e-8,
-            maxiter=5000) 
+            maxiter=500,
+            full_output=True) 
 
+        fmin_results = fmin_results_all[0]
+        warning = fmin_results_all[-1]
+        assert(isinstance(warning, int))
+        # print(warning, "hello")
+        if warning == 1 or warning == 3:
+            with open("bad_adult_models.txt", "a") as f:
+                f.write(f"{self.model_name}\n")
+            assert False
+        # print(self.model_name, "see")
         return self.vec_to_list(fmin_results)
 
 
