@@ -130,7 +130,8 @@ for percentage in np.linspace(removal-1, removal-0.2, 5):
     tf.reset_default_graph()
     p = int(36000 * percentage / 100)
     remaining_indexes = np.array(sorted_training_points[p:])
-    data_sets_partial = load_adult_income_partial(remaining_indexes)
+    data_sets_partial = load_adult_income_partial(perm=perm, index=remaining_indexes)
+    assert(len(remaining_indexes) == 36000 - p)
     assert(data_sets_partial.train.num_examples == 36000 - p)
     model_partial_data = Fully_Connected(
         input_dim=input_dim, 
@@ -153,14 +154,13 @@ for percentage in np.linspace(removal-1, removal-0.2, 5):
     print("Training")
     # print("Points removed: ", p)
     print("Percentage: ", percentage, " Points removed: ", p)
-    num_steps = 5
     model_partial_data.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
     train_acc, test_acc = model.print_model_eval()
     # print("Percentage: ", percentage, " Points removed: ", p)
     # print("Points removed: ", p)
     print("Percentage: ", percentage, " Points removed: ", p)
     num = model_partial_data.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
-    with open("adult_results_first120.csv".format(scheme), "a") as f:
+    with open("adult_results_last120.csv".format(scheme), "a") as f:
         # f.write("Percentage: " + str(percentage) + ", Discriminating Tests: " + str(num) + "\n")
         # f.write("Points: " + str(p) + ", Discriminating Tests: " + str(num) + "\n")
         f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{percentage},{p},{num},{num/45222.0}\n")     # the last ones gives percentage of discrimination

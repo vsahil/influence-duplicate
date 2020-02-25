@@ -140,16 +140,13 @@ def load_adult_income_partial(index, perm=-1, validation_size=0):
 	total_labels = genfromtxt("../../adult-income-dataset/adult_labels.csv", delimiter=",")
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
-		assert False
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
-	
-	# ordering = permutations(perm)
-	# total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
 	train_examples = 36000
 	X_train = total_dataset[:train_examples]
 	X_train = X_train[index]
+	assert(len(X_train) == len(index))
 	X_validation = total_dataset[train_examples:train_examples + validation_size]
 	X_test  = total_dataset[train_examples + validation_size:]
 	Y_train = total_labels[:train_examples]
