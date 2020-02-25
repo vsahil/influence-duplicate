@@ -40,8 +40,8 @@ def entire_test_suite(mini=True, reweighted_german=False, disparateremoved=False
     if mini:
         gender0 += "_mini"
         gender1 += "_mini"
-    class0_ = np.genfromtxt(f"/Users/sahilverma/research/influence-duplicate/german-credit-dataset/{gender0}.csv", delimiter=",")
-    class1_ = np.genfromtxt(f"/Users/sahilverma/research/influence-duplicate/german-credit-dataset/{gender1}.csv", delimiter=",")
+    class0_ = np.genfromtxt(f"../../german-credit-dataset/{gender0}.csv", delimiter=",")
+    class1_ = np.genfromtxt(f"../../german-credit-dataset/{gender1}.csv", delimiter=",")
 
     assert(not (reweighted_german and disparateremoved)),  "both can't be true at the same time"
     
