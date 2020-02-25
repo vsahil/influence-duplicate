@@ -18,7 +18,7 @@ from influence.fully_connected import Fully_Connected
 from load_adult_income import load_adult_income, load_adult_income_partial
 from find_discm_points import entire_test_suite
 
-train = True
+train = False
 
 input_dim = 12
 weight_decay = 0.001
@@ -59,6 +59,8 @@ hidden2_units = h2units
 hidden3_units = 0
 batch_size = batch
 
+print("Start: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
+
 name = f"adult_income_count{model_count}"
 model = Fully_Connected(
     input_dim=input_dim, 
@@ -87,7 +89,7 @@ if train:
 ranked_influential_training_points = f"ranking_points_ordered/{name}.npy"
 # if not train and ranking of influential training points is stored in numpy file, then True
 load_from_numpy = False if train else (True if os.path.exists(ranked_influential_training_points) else False)       
-
+assert(load_from_numpy)
 class0_data, class1_data = entire_test_suite(mini=False)     # False means loads entire data
 if not load_from_numpy:
     if not train:
@@ -119,10 +121,9 @@ else:
 if train:
     exit(0)
 
-assert False
 # for percentage in range(5, 4, 0.5):
 # for percentage in np.arange(0, 5.0, 0.2):
-removal = [int(sys.argv[1])]
+removal = int(sys.argv[2])
 # import ipdb; ipdb.set_trace()
 # for p in removal:
 for percentage in np.linspace(removal-1, removal-0.2, 5):
@@ -152,15 +153,17 @@ for percentage in np.linspace(removal-1, removal-0.2, 5):
     print("Training")
     # print("Points removed: ", p)
     print("Percentage: ", percentage, " Points removed: ", p)
+    num_steps = 5
     model_partial_data.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
+    train_acc, test_acc = model.print_model_eval()
     # print("Percentage: ", percentage, " Points removed: ", p)
     # print("Points removed: ", p)
     print("Percentage: ", percentage, " Points removed: ", p)
     num = model_partial_data.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
-    with open("scheme{}_results.txt".format(scheme), "a") as f:
+    with open("adult_results_first120.csv".format(scheme), "a") as f:
         # f.write("Percentage: " + str(percentage) + ", Discriminating Tests: " + str(num) + "\n")
         # f.write("Points: " + str(p) + ", Discriminating Tests: " + str(num) + "\n")
-        f.write(f"{p}, {num}\n")
+        f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{percentage},{p},{num},{num/45222.0}\n")     # the last ones gives percentage of discrimination
     
     del model_partial_data          # to remove any chance of reusing variables and reduce memory
 

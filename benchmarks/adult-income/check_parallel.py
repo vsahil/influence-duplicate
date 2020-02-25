@@ -7,24 +7,26 @@ import multiprocessing, subprocess
 #     print('%i done\n' % x, end='')
 #     return 0
 from itertools import product
-def exclude_experiments(experiments):
+# def exclude_experiments():
 
     # setting = int(sys.argv[1])
-    def run_command(setting, exclude):
-        # os.system(f"python train_all_permutations.py {index}")
-        os.system(f"python -W ignore train_all_permutations.py {setting} {exclude}")
-        # process = subprocess.check_output(['python', 'train_all_permutations.py', str(index)], stdout=subprocess.PIPE)
+def experiment_command(setting, removal_percent):
+    # os.system(f"python train_all_permutations.py {index}")
+    os.system(f"python -W ignore train_all_permutations.py {setting} {removal_percent}")
+    # process = subprocess.check_output(['python', 'train_all_permutations.py', str(index)], stdout=subprocess.PIPE)
 
-    pool = multiprocessing.Pool(10)
-    # l = 20 * 3 * 2 * 2 
-    l = [i for i in range(100)]      # upto 40 real biased points removed
-    # mr = pool.map_async(run_command, l)
-    settings = [i for i in range(12)]       # for all the 12 hyper-params settings
-    mr = pool.starmap_async(run_command, product(settings, l))
-    while not mr.ready():
-        sys.stdout.flush()
-        mr.wait(0.1)
+pool = multiprocessing.Pool(11)
+# l = 20 * 3 * 2 * 2 
+l = [i for i in range(26)]      # upto 25% removal in steps of 0.2%
+# mr = pool.map_async(run_command, l)
+settings = [i for i in range(240)]       # for 240 settings in total
+mr = pool.starmap_async(experiment_command, product(settings, l))
+while not mr.ready():
+    sys.stdout.flush()
+    mr.wait(0.1)
+print("DONE!")
 
+# exclude_experiments()
 
 # def reweighted_german_experiment():
     
@@ -53,20 +55,20 @@ def exclude_experiments(experiments):
         
     # num_cores = 11
     # Parallel(n_jobs=num_cores)(delayed(run_command)(ind) for ind in remaining)
-def run_command(removal_points):
-    os.system(f"python train_adult_income.py {removal_points}")
+def run_command(setting):
+    os.system(f"python train_all_permutations.py {setting}")
     
     # os.system(f"python train_german_credit.py {index}")
     # process = subprocess.check_output(['python', 'train_all_permutations.py', str(index)], stdout=subprocess.PIPE)
 
-pool = multiprocessing.Pool(10)
-l = [i for i in range(1, 1000)]
-mr = pool.map_async(run_command, l)
-# # mr = pool.map_async(run_command, range(60, 72))
-while not mr.ready():
-    sys.stdout.flush()
-    mr.wait(0.1)
-# print("hello")
+# pool = multiprocessing.Pool(11)
+# l = [i for i in range(240)]
+# mr = pool.map_async(run_command, l)
+# # # mr = pool.map_async(run_command, range(60, 72))
+# while not mr.ready():
+#     sys.stdout.flush()
+#     mr.wait(0.1)
+# print("DONE!")
 
 # for i in remaining:
 #     p = multiprocessing.Process(target=run_command, args=(i,))

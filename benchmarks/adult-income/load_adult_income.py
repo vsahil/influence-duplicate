@@ -9,6 +9,7 @@ sys.path.append("../../")
 from influence.dataset import DataSet
 
 def exclude_some_examples(exclude, validation_size=0, remove_biased_test=False):
+	assert False
 	total_dataset = genfromtxt("../german-credit-dataset/normalised-features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
 	total_labels = genfromtxt("../german-credit-dataset/labels.csv", delimiter=",")
 
@@ -95,6 +96,7 @@ def load_adult_income(perm=-1, validation_size=0):
 
 
 def reweighted_load_adult_income(validation_size=0):
+	assert False
 	total_dataset = genfromtxt("reweighted_german/normalized_reweighted_features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
 	total_labels = genfromtxt("reweighted_german/normalized_reweighted_labels-german.csv", delimiter=",")
 
@@ -114,6 +116,7 @@ def reweighted_load_adult_income(validation_size=0):
 
 
 def disparate_removed_load_adult_income(validation_size=0):
+	assert False
 	total_dataset = genfromtxt("disparate_impact_removed/normalized_disparateremoved_features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
 	total_labels = genfromtxt("disparate_impact_removed/normalized_disparateremoved_labels-german.csv", delimiter=",")
 
@@ -170,6 +173,7 @@ def permutations(perm):
 
 np.random.seed(2)
 def produce_permutations():
+	assert False
 	# total_dataset = genfromtxt("../german-credit-dataset/normalised-features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
 	# total_labels = genfromtxt("../german-credit-dataset/labels.csv", delimiter=",")
 	# with open("permuted_data.txt", "w") as f:
