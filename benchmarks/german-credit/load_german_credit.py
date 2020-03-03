@@ -4,6 +4,7 @@ from tensorflow.contrib.learn.python.learn.datasets import base
 import sys
 # sys.path.append(".")
 sys.path.append("../")
+sys.path.append("../../../")
 from influence.dataset import DataSet
 
 def exclude_some_examples(exclude, validation_size=0, remove_biased_test=False):
