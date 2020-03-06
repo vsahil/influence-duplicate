@@ -2,9 +2,10 @@ import numpy as np
 from numpy import genfromtxt
 from tensorflow.contrib.learn.python.learn.datasets import base
 import sys
-# sys.path.append(".")
-sys.path.append("../")
+sys.path.append("../../")
+sys.path.append("../../../")
 from influence.dataset import DataSet
+import pandas as pd
 
 def exclude_some_examples(exclude, validation_size=0, remove_biased_test=False):
 	total_dataset = genfromtxt("../german-credit-dataset/normalised-features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
@@ -69,31 +70,8 @@ def exclude_some_examples(exclude, validation_size=0, remove_biased_test=False):
 
 
 def load_german_credit(perm, validation_size=0):
-	total_dataset = genfromtxt("../german-credit-dataset/normalised-features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
-	total_labels = genfromtxt("../german-credit-dataset/labels.csv", delimiter=",")
-	assert(perm < 20)		# we only have 20 permutations
-	if perm >= 0:	# for negative number don't do
-		ordering = permutations(perm)
-		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
-
-	train_examples = 800		# size changed from 750 to 800, testing set is 200
-	X_train = total_dataset[:train_examples]
-	X_validation = total_dataset[train_examples:train_examples + validation_size]
-	X_test  = total_dataset[train_examples + validation_size:]
-	Y_train = total_labels[:train_examples]
-	Y_validation = total_labels[train_examples:train_examples + validation_size]
-	Y_test  = total_labels[train_examples + validation_size:]
-
-	train = DataSet(X_train, Y_train)
-	validation = DataSet(X_validation, Y_validation)
-	test = DataSet(X_test, Y_test)
-
-	return base.Datasets(train=train, validation=validation, test=test)
-
-
-def reweighted_load_german_credit(perm, validation_size=0):
-	total_dataset = genfromtxt("reweighted_german/normalized_reweighted_features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
-	total_labels = genfromtxt("reweighted_german/normalized_reweighted_labels-german.csv", delimiter=",")
+	total_dataset = genfromtxt("../../german-credit-dataset/normalised-features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
+	total_labels = genfromtxt("../../german-credit-dataset/labels.csv", delimiter=",")
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
@@ -162,6 +140,193 @@ def load_german_credit_partial(perm, index, validation_size=0):
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
+def kamiran_discrimination_pairs(df):
+	# Remember 0 - feamle and male - 1
+	# for target 1 - good, 0 - bad
+	# x = df.groupby('Gender')['target'].value_counts()
+	# y = x.to_dict()				# x is series, multilevel for gender and target
+	x = df.groupby(['Gender','target']).indices		# this gives the indices in the df, no the index
+	male_good_credit = x[(1, 1)]
+	male_bad_credit = x[(1, 0)]
+	female_good_credit = x[(0, 1)]
+	female_bad_credit = x[(0, 0)]
+	d_male = male_good_credit.shape[0] + male_bad_credit.shape[0]
+	male_half = male_good_credit.shape[0] / d_male
+	d_female = female_good_credit.shape[0] + female_bad_credit.shape[0]
+	female_half = female_good_credit.shape[0] / d_female
+	discm = male_half - female_half
+	pairs = int(discm * d_male * d_female / df.shape[0]) + 1
+	return discm, pairs, male_good_credit, male_bad_credit, female_good_credit, female_bad_credit
+	
+
+def before_massaging_german_credit(perm, validation_size=0):
+	original_dataset = pd.read_csv("../../german-credit-dataset/original_german.csv")
+	total_dataset = genfromtxt("../../german-credit-dataset/normalised-features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
+	total_labels = genfromtxt("../../german-credit-dataset/labels.csv", delimiter=",")
+	assert(perm < 20)		# we only have 20 permutations
+	if perm >= 0:	# for negative number don't do
+		ordering = permutations(perm)
+		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
+		# original_dataset = original_dataset.reindex(ordering[:800])
+	
+	train_examples = 800		# size changed from 750 to 800, testing set is 200
+	original_dataset = original_dataset.reindex(ordering[:train_examples])
+	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
+	# import ipdb; ipdb.set_trace()
+	discm, pairs_to_flip, male_good_credit, male_bad_credit, female_good_credit, female_bad_credit = kamiran_discrimination_pairs(original_dataset)
+	# print(perm, discm, pairs_to_flip)
+	# return
+	X_train = total_dataset[:train_examples]
+	X_validation = total_dataset[train_examples:train_examples + validation_size]
+	X_test  = total_dataset[train_examples + validation_size:]
+	Y_train = total_labels[:train_examples]
+	Y_validation = total_labels[train_examples:train_examples + validation_size]
+	Y_test  = total_labels[train_examples + validation_size:]
+
+	train = DataSet(X_train, Y_train)
+	validation = DataSet(X_validation, Y_validation)
+	test = DataSet(X_test, Y_test)
+
+	return base.Datasets(train=train, validation=validation, test=test), male_good_credit, male_bad_credit, female_good_credit, female_bad_credit, pairs_to_flip
+	
+
+def massaged_german_credit(perm, promotion_candidates, demotion_candidates, validation_size=0):
+	original_dataset = pd.read_csv("../../german-credit-dataset/original_german.csv")
+	total_dataset = genfromtxt("../../german-credit-dataset/normalised-features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
+	total_labels = genfromtxt("../../german-credit-dataset/labels.csv", delimiter=",")
+	assert(perm < 20)		# we only have 20 permutations
+	if perm >= 0:	# for negative number don't do
+		ordering = permutations(perm)
+		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
+
+	train_examples = 800		# size changed from 750 to 800, testing set is 200
+	original_dataset = original_dataset.reindex(ordering[:train_examples])
+	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
+	for p, d in zip(promotion_candidates, demotion_candidates):
+		assert original_dataset.loc[p, 'Gender'] == original_dataset.loc[p, 'target'] == int(total_labels[p]) == 0
+		assert original_dataset.loc[d, 'Gender'] == original_dataset.loc[d, 'target'] == int(total_labels[d]) == 1
+		original_dataset.loc[p, 'target'] = 1		# promote the female of bad credit
+		total_labels[p] = 1.0
+		original_dataset.loc[d, 'target'] = 0		# demote the male of good credit
+		total_labels[d] = 0.0
+		assert p < train_examples	# the index of both promotion and demotion candidates should be within training set
+		assert d < train_examples
+
+	discm, pairs_to_flip, _, _, _, _ = kamiran_discrimination_pairs(original_dataset)
+	assert discm <= 0 	# negative or zero discrimination
+	assert pairs_to_flip == 0 or pairs_to_flip == 1
+	# you can't check df feature as it is normalized values
+	# df_target = pd.DataFrame(total_labels, columns=['target'])
+	# df_feature = pd.DataFrame(total_dataset, columns=original_dataset.columns.tolist()[:-1])		# column names remove target
+	# df_feature['target'] = df_target
+	# import ipdb; ipdb.set_trace()
+	# print(perm, discm, pairs_to_flip)
+	# return
+	X_train = total_dataset[:train_examples]
+	X_validation = total_dataset[train_examples:train_examples + validation_size]
+	X_test  = total_dataset[train_examples + validation_size:]
+	Y_train = total_labels[:train_examples]
+	Y_validation = total_labels[train_examples:train_examples + validation_size]
+	Y_test  = total_labels[train_examples + validation_size:]
+
+	train = DataSet(X_train, Y_train)
+	validation = DataSet(X_validation, Y_validation)
+	test = DataSet(X_test, Y_test)
+
+	return base.Datasets(train=train, validation=validation, test=test)
+
+
+def before_preferential_sampling(perm, validation_size=0):
+	original_dataset = pd.read_csv("../../german-credit-dataset/original_german.csv")
+	total_dataset    = genfromtxt("../../german-credit-dataset/normalised-features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
+	total_labels     = genfromtxt("../../german-credit-dataset/labels.csv", delimiter=",")
+	assert(perm < 20)		# we only have 20 permutations
+	if perm >= 0:	# for negative number don't do
+		ordering = permutations(perm)
+		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
+		# original_dataset = original_dataset.reindex(ordering[:800])
+	
+	train_examples = 800		# size changed from 750 to 800, testing set is 200
+	original_dataset = original_dataset.reindex(ordering[:train_examples])
+	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
+	x_both = original_dataset.groupby(['Gender', 'target']).indices
+	
+	X_train = total_dataset[:train_examples]
+	X_validation = total_dataset[train_examples:train_examples + validation_size]
+	X_test  = total_dataset[train_examples + validation_size:]
+	Y_train = total_labels[:train_examples]
+	Y_validation = total_labels[train_examples:train_examples + validation_size]
+	Y_test  = total_labels[train_examples + validation_size:]
+
+	train = DataSet(X_train, Y_train)
+	validation = DataSet(X_validation, Y_validation)
+	test = DataSet(X_test, Y_test)
+
+	return base.Datasets(train=train, validation=validation, test=test), x_both
+
+
+def resampled_german_credit(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_candidates, fav_pos_candidates, validation_size=0):
+	original_dataset = pd.read_csv("../../german-credit-dataset/original_german.csv")
+	total_dataset = genfromtxt("../../german-credit-dataset/normalised-features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
+	total_labels = genfromtxt("../../german-credit-dataset/labels.csv", delimiter=",")
+	assert(perm < 20)		# we only have 20 permutations
+	if perm >= 0:	# for negative number don't do
+		ordering = permutations(perm)
+		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
+
+	train_examples = 800		# size changed from 750 to 800, testing set is 200
+	original_dataset = original_dataset.reindex(ordering[:train_examples])
+	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
+	x_gender = original_dataset.groupby(['Gender']).indices
+	x_target = original_dataset.groupby(['target']).indices
+
+	deprived_negative_size = int(round(x_gender[0].shape[0] * x_target[0].shape[0] / train_examples)) # * female_bad_credit)
+	deprived_positive_size = int(round(x_gender[0].shape[0] * x_target[1].shape[0] / train_examples))# * female_good_credit)
+
+	favoured_negative_size = int(round(x_gender[1].shape[0] * x_target[0].shape[0] / train_examples))# * male_bad_credit)
+	favoured_positive_size = int(round(x_gender[1].shape[0] * x_target[1].shape[0] / train_examples))# * male_good_credit)
+
+	assert deprived_negative_size + deprived_positive_size + favoured_negative_size + favoured_positive_size == train_examples
+	
+	# choose deprived negative candidates - no sampling - decrease
+	dep_neg_finalists = dep_neg_candidates[:deprived_negative_size].tolist()
+	# choose favoured positive candidates - no sampling - decrease
+	fav_pos_finalists = fav_pos_candidates[:favoured_positive_size].tolist()
+	
+	# add extra deprived positive candidates - increase
+	extra_pos = deprived_positive_size - dep_pos_candidates.shape[0]
+	assert(extra_pos >= 0)
+	dep_pos_finalists = dep_pos_candidates.tolist()
+	dep_pos_duplicates = dep_pos_candidates[:extra_pos].tolist()
+	dep_pos_finalists.extend(dep_pos_duplicates)
+	assert (len(dep_pos_finalists) == deprived_positive_size)
+
+	# add extra favoured negative candidates - increase
+	extra_neg = favoured_negative_size - fav_neg_candidates.shape[0]
+	assert(extra_neg >= 0)
+	fav_neg_finalists = fav_neg_candidates.tolist()
+	fav_neg_duplicates = fav_neg_candidates[:extra_neg].tolist()
+	fav_neg_finalists.extend(fav_neg_duplicates)
+	assert (len(fav_neg_finalists) == favoured_negative_size)
+	# import ipdb; ipdb.set_trace()
+	final_order = dep_neg_finalists + dep_pos_finalists + fav_neg_finalists + fav_pos_finalists
+	final_order= sorted(final_order) 
+	assert len(final_order) == train_examples
+
+	X_train = total_dataset[final_order]
+	X_validation = total_dataset[train_examples:train_examples + validation_size]
+	X_test  = total_dataset[train_examples + validation_size:]
+	Y_train = total_labels[final_order]
+	Y_validation = total_labels[train_examples:train_examples + validation_size]
+	Y_test  = total_labels[train_examples + validation_size:]
+
+	train = DataSet(X_train, Y_train)
+	validation = DataSet(X_validation, Y_validation)
+	test = DataSet(X_test, Y_test)
+
+	return base.Datasets(train=train, validation=validation, test=test)
+
+
 # These are 20 permutations of the full german credit dataset. 
 def permutations(perm):
 	
@@ -203,6 +368,9 @@ def permutations(perm):
 # 	# x,y = data[idx], classes[idx]
 
 if __name__ == "__main__":
+    # preferential_sampling(0)
+	# for i in range(-1, 20):
+    # 	massaged_german_credit(i)
     raise NotImplementedError
 # 	# for k in range(5):
 # 	produce_permutations()
