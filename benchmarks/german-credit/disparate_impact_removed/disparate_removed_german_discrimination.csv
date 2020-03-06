@@ -1,4 +1,4 @@
-h1units,h2units,batch,perm,train_acc,test_acc,num_dicsm
+h1units,h2units,batch,perm,train_acc,test_acc,Discriminating-points
 16,8,50,2,70.625,73.0,4787
 16,8,50,1,72.0,70.0,4467
 24,12,50,3,71.75,70.5,17899
