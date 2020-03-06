@@ -1,4 +1,4 @@
-Train-Acc,Test-Acc,perm,Discrimination
+Train-Acc,Test-Acc,perm,Discriminating-points
 0.39,0.4,0,11788
 0.39,0.4,1,12225
 0.38,0.44,2,10547
