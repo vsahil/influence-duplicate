@@ -84,7 +84,7 @@ x = (ggplot(aes(x='Points', y='Occurence'), data=df) +\
     xlab("Data-Points in order of occurence (not showing order in dataset") + \
     ylab("Percentage Occurence") + \
     ggtitle("Plot showing percentage labelling of a point as biased among all settings") +\
-    theme(axis_text_x = element_text(size=6), dpi=10000) +\
+    theme(axis_text_x = element_text(size=6), dpi=100) +\
     theme_seaborn()
     )
 
