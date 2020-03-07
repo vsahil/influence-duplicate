@@ -13,14 +13,14 @@ from itertools import product
 def experiment_command(setting, removal_percent):
     # os.system(f"python train_all_permutations.py {index}")
     # os.system(f"python -W ignore train_all_permutations.py {setting} {removal_percent}")
-    os.system(f"python -W remove_real_biased_points.py {setting} {removal_percent}")
+    os.system(f"python remove_real_biased_points.py {setting} {removal_percent}")
     # process = subprocess.check_output(['python', 'train_all_permutations.py', str(index)], stdout=subprocess.PIPE)
 
-pool = multiprocessing.Pool(51)
+pool = multiprocessing.Pool(81)
 # l = 20 * 3 * 2 * 2 
-l = [i for i in range(1, 51)]      # upto 25% removal in steps of 0.2%
+l = [i for i in range(30, 33)]      # upto 25% removal in steps of 0.2%
 # mr = pool.map_async(run_command, l)
-settings = [i for i in range(6)]       # we now only have 12 hyper-parameters
+settings = [i for i in range(6, 12)]       # we now only have 12 hyper-parameters
 mr = pool.starmap_async(experiment_command, product(settings, l))
 while not mr.ready():
     sys.stdout.flush()
