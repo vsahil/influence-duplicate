@@ -1,6 +1,10 @@
 import pandas as pd
 import numpy as np
-features = pd.read_csv("german_gender_reversed.csv")
-# import ipdb; ipdb.set_trace()
-features = features.apply(lambda x: (x - np.mean(x)) / (np.max(x) - np.min(x)))
-# features.to_csv("german_gender_reversed.csv", index=False)
+df = pd.read_csv("german_redone.csv")
+df_new = df.drop(columns=['target'])
+means_and_ranges = []
+for j in list(df_new):
+    i = df[j]
+    means_and_ranges.append((np.mean(i), np.max(i) - np.min(i)))
+print(means_and_ranges)
+print(len(means_and_ranges))
