@@ -26,9 +26,10 @@ def rescale_input_numpy_disparateremoved_german(inp):
 
 
 def entire_test_suite(mini=True, disparateremoved=False):
-    gender0 = "gender0"
-    gender1 = "gender1"
+    gender0 = "gender0_redone_german"
+    gender1 = "gender1_redone_german"
     if mini:
+        assert False
         gender0 += "_mini"
         gender1 += "_mini"
     class0_ = np.genfromtxt(f"../../german-credit-dataset/{gender0}.csv", delimiter=",")
