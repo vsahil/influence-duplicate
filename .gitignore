@@ -1,3 +1,4 @@
 influence/__pycache__/*
-__pycache__/*
+influence-duplicate/benchmarks/german-credit/__pycache__/*
+influence-duplicate/benchmarks/adult-income/__pycache__/*
 
