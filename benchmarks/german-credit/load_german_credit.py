@@ -116,8 +116,8 @@ def disparate_removed_load_german_credit(perm, validation_size=0):
 
 
 def load_german_credit_partial(perm, index, validation_size=0):
-	total_dataset = genfromtxt("../german-credit-dataset/normalised-features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
-	total_labels = genfromtxt("../german-credit-dataset/labels.csv", delimiter=",")
+	total_dataset = genfromtxt("../../german-credit-dataset/normalised-features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
+	total_labels = genfromtxt("../../german-credit-dataset/labels.csv", delimiter=",")
 	assert(perm < 20)
 	ordering = permutations(perm)
 	total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
