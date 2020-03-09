@@ -8,8 +8,9 @@ from influence.dataset import DataSet
 import pandas as pd
 
 def exclude_some_examples(exclude, validation_size=0, remove_biased_test=False):
-	total_dataset = genfromtxt("../german-credit-dataset/normalised-features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
-	total_labels = genfromtxt("../german-credit-dataset/labels.csv", delimiter=",")
+	# total_dataset = genfromtxt("../german-credit-dataset/normalised-features-german.csv", delimiter=",")
+	total_dataset = genfromtxt("../../german-credit-dataset/german_redone_normalized.csv", delimiter=",")
+	total_labels = genfromtxt("../../german-credit-dataset/labels.csv", delimiter=",")
 
 	ascending_order_biased_points = [11, 29, 50, 56, 58, 68, 87, 93, 98, 101, 112, 134, 142, 145, 154, 170, 
 	174, 180, 182, 194, 197, 199, 212, 213, 220, 226, 227, 228, 229, 237, 247, 257, 282, 285, 289, 302, 
@@ -70,7 +71,8 @@ def exclude_some_examples(exclude, validation_size=0, remove_biased_test=False):
 
 
 def load_german_credit(perm, validation_size=0):
-	total_dataset = genfromtxt("../../german-credit-dataset/normalised-features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
+	# total_dataset = genfromtxt("../../german-credit-dataset/normalised-features-german.csv", delimiter=",")
+	total_dataset = genfromtxt("../../german-credit-dataset/german_redone_normalized.csv", delimiter=",")
 	total_labels = genfromtxt("../../german-credit-dataset/labels.csv", delimiter=",")
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
@@ -93,7 +95,8 @@ def load_german_credit(perm, validation_size=0):
 
 
 def disparate_removed_load_german_credit(perm, validation_size=0):
-	total_dataset = genfromtxt("disparate_impact_removed/normalized_disparateremoved_features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
+	# total_dataset = genfromtxt("disparate_impact_removed/normalized_disparateremoved_features-german.csv", delimiter=",")
+	# total_dataset = genfromtxt("../../german-credit-dataset/german_redone_normalized.csv", delimiter=",")
 	total_labels = genfromtxt("disparate_impact_removed/normalized_disparateremoved_labels-german.csv", delimiter=",")
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
@@ -116,7 +119,8 @@ def disparate_removed_load_german_credit(perm, validation_size=0):
 
 
 def load_german_credit_partial(perm, index, validation_size=0):
-	total_dataset = genfromtxt("../../german-credit-dataset/normalised-features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
+	# total_dataset = genfromtxt("../german-credit-dataset/normalised-features-german.csv", delimiter=",")
+	total_dataset = genfromtxt("../../german-credit-dataset/german_redone_normalized.csv", delimiter=",")
 	total_labels = genfromtxt("../../german-credit-dataset/labels.csv", delimiter=",")
 	assert(perm < 20)
 	ordering = permutations(perm)
@@ -161,7 +165,8 @@ def kamiran_discrimination_pairs(df):
 
 def before_massaging_german_credit(perm, validation_size=0):
 	original_dataset = pd.read_csv("../../german-credit-dataset/original_german.csv")
-	total_dataset = genfromtxt("../../german-credit-dataset/normalised-features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
+	# total_dataset = genfromtxt("../../german-credit-dataset/normalised-features-german.csv", delimiter=",")
+	total_dataset = genfromtxt("../../german-credit-dataset/german_redone_normalized.csv", delimiter=",")
 	total_labels = genfromtxt("../../german-credit-dataset/labels.csv", delimiter=",")
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
@@ -192,7 +197,8 @@ def before_massaging_german_credit(perm, validation_size=0):
 
 def massaged_german_credit(perm, promotion_candidates, demotion_candidates, validation_size=0):
 	original_dataset = pd.read_csv("../../german-credit-dataset/original_german.csv")
-	total_dataset = genfromtxt("../../german-credit-dataset/normalised-features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
+	# total_dataset = genfromtxt("../../german-credit-dataset/normalised-features-german.csv", delimiter=",")
+	total_dataset = genfromtxt("../../german-credit-dataset/german_redone_normalized.csv", delimiter=",")
 	total_labels = genfromtxt("../../german-credit-dataset/labels.csv", delimiter=",")
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
@@ -238,7 +244,8 @@ def massaged_german_credit(perm, promotion_candidates, demotion_candidates, vali
 
 def before_preferential_sampling(perm, validation_size=0):
 	original_dataset = pd.read_csv("../../german-credit-dataset/original_german.csv")
-	total_dataset    = genfromtxt("../../german-credit-dataset/normalised-features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
+	# total_dataset    = genfromtxt("../../german-credit-dataset/normalised-features-german.csv", delimiter=",")
+	total_dataset = genfromtxt("../../german-credit-dataset/german_redone_normalized.csv", delimiter=",")
 	total_labels     = genfromtxt("../../german-credit-dataset/labels.csv", delimiter=",")
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
@@ -267,7 +274,8 @@ def before_preferential_sampling(perm, validation_size=0):
 
 def resampled_german_credit(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_candidates, fav_pos_candidates, validation_size=0):
 	original_dataset = pd.read_csv("../../german-credit-dataset/original_german.csv")
-	total_dataset = genfromtxt("../../german-credit-dataset/normalised-features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
+	# total_dataset = genfromtxt("../../german-credit-dataset/normalised-features-german.csv", delimiter=",")
+	total_dataset = genfromtxt("../../german-credit-dataset/german_redone_normalized.csv", delimiter=",")
 	total_labels = genfromtxt("../../german-credit-dataset/labels.csv", delimiter=",")
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
@@ -359,7 +367,7 @@ def permutations(perm):
 
 # np.random.seed(2)
 # def produce_permutations():
-# 	# total_dataset = genfromtxt("../german-credit-dataset/normalised-features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
+# 	# total_dataset = genfromtxt("../german-credit-dataset/normalised-features-german.csv", delimiter=",")
 # 	# total_labels = genfromtxt("../german-credit-dataset/labels.csv", delimiter=",")
 # 	with open("permuted_data.txt", "w") as f:
 # 		for _ in range(20):
