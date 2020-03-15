@@ -95,10 +95,27 @@ def missing_to_normalized():
     # print("see")
 
 
+def print_mins_and_ranges():
+    df = pd.read_csv("missing_compas_removed.csv")
+    df['sex'] = df['sex'].replace({"Male":1, "Female":0})
+    df['race'] = df['race'].replace({"Caucasian":1, "African-American":0})
+    df['c_charge_degree'] = df['c_charge_degree'].replace({"O":0, "F":1, "M":-1})    # O : Ordinary crime, F: Felony, M: Misconduct
+    df['r_charge_degree'] = df['r_charge_degree'].replace({"O":0, "F":1, "M":-1})    # O : Ordinary crime, F: Felony, M: Misconduct
+    df = df.drop(columns=["is_recid","r_charge_degree","is_violent_recid","v_decile_score"])
+    df_new = df.drop(columns=['decile_score_again'])
+    means_and_ranges = []
+    for j in list(df_new):
+        i = df[j]
+        means_and_ranges.append((np.min(i), np.max(i) - np.min(i)))
+    print(means_and_ranges)
+
+
 import sys
 if __name__ == "__main__":
     cleaning_level = int(sys.argv[1])
     if cleaning_level == 0:
         raw_to_no_missing()
-    else:
+    elif cleaning_level == 1:
        missing_to_normalized() 
+    else:
+        print_mins_and_ranges()
