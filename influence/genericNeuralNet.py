@@ -130,10 +130,6 @@ class GenericNeuralNet(object):
             self.logits, 
             self.labels_placeholder)
         
-        # summary
-        tf.summary.scalar('loss_val', self.total_loss)
-        self.write_op = tf.summary.merge_all()
-        self.summary_writer = tf.summary.FileWriter(self.log_dir, self.sess.graph)
 
         self.global_step = tf.Variable(0, name='global_step', trainable=False)
         self.learning_rate = tf.Variable(self.initial_learning_rate, name='learning_rate', trainable=False)
@@ -144,6 +140,12 @@ class GenericNeuralNet(object):
         self.train_sgd_op = self.get_train_sgd_op(self.total_loss, self.global_step, self.learning_rate)
         self.accuracy_op = self.get_accuracy_op(self.logits, self.labels_placeholder)        
         self.preds = self.predictions(self.logits)
+
+         # summary
+        tf.summary.scalar('loss_val', self.total_loss)
+        tf.summary.scalar('train_acc', self.accuracy_op)
+        self.write_op = tf.summary.merge_all()
+        self.summary_writer = tf.summary.FileWriter(self.log_dir, self.sess.graph)
 
         # Setup misc
         self.saver = tf.train.Saver()
@@ -348,16 +350,18 @@ class GenericNeuralNet(object):
     def update_learning_rate(self, step):
         # assert self.num_train_examples % self.batch_size == 0
         num_steps_in_epoch = self.num_train_examples / self.batch_size
-        epoch = step // num_steps_in_epoch
+        # epoch = step // num_steps_in_epoch
         # print(epoch, self.decay_epochs, "SEE")
         multiplier = 1
         if step < self.decay_epochs[0]:
             multiplier = 1
         elif step < self.decay_epochs[1]:
-            # print(step, "THERE")
+            # if step < self.decay_epochs[0] + 500:
+                # print(step, "THERE")
             multiplier = 0.1
         else:
-            # print(step, "HERE")
+            # if step < self.decay_epochs[1] + 500:
+                # print(step, "HERE")
             multiplier = 0.01
         
         # assert(multiplier == 1)
@@ -396,7 +400,6 @@ class GenericNeuralNet(object):
 
             duration = time.time() - start_time
             
-            
             # summary = sess.run(write_op, {log_var: random.rand()})
             if plot_loss:
                 self.summary_writer.add_summary(summary, step)
@@ -406,6 +409,7 @@ class GenericNeuralNet(object):
                 if step % 1000 == 0:
                     # Print status to stdout.
                     print('Step %d: loss = %.8f (%.3f sec)' % (step, loss_val, duration))
+                    print("Accuracies: ", self.print_model_eval())
             else:
                 if step % 10000 == 0:
                     print(step)
@@ -444,16 +448,28 @@ class GenericNeuralNet(object):
         
         predictions_class0_, loss_class0_label_0 = self.sess.run(ops, feed_dict=feed_dict_class0_label0)
         predictions_class0, loss_class0_label_1 = self.sess.run(ops, feed_dict=feed_dict_class0_label1)
-        assert (predictions_class0_ == predictions_class0).all()    #"""This is my belief"""
+        assert (predictions_class0_ == predictions_class0).all()    #"""This should hold"""
         predictions_class1_, loss_class1_label_0 = self.sess.run(ops, feed_dict=feed_dict_class1_label0)
         predictions_class1, loss_class1_label_1 = self.sess.run(ops, feed_dict=feed_dict_class1_label1)
-        assert (predictions_class1_ == predictions_class1).all()    #"""This is my belief"""
+        assert (predictions_class1_ == predictions_class1).all()    #"""This should hold"""
         
+        # for german credit dataset
+        if "german" in self.model_name:
+            loss_class0_label_0 = loss_class0_label_0
+            loss_class0_label_1 = loss_class0_label_1
+            loss_class1_label_1 = loss_class1_label_1
+            loss_class1_label_0 = loss_class1_label_0
+
+
         # for adult income
-        loss_class0_label_0 = loss_class0_label_0[0]                                                            
-        loss_class0_label_1 = loss_class0_label_1[0]                                                            
-        loss_class1_label_1 = loss_class1_label_1[0]                                                            
-        loss_class1_label_0 = loss_class1_label_0[0]
+        elif "adult" in self.model_name or "compas" in self.model_name:
+            loss_class0_label_0 = loss_class0_label_0[0]                                                            
+            loss_class0_label_1 = loss_class0_label_1[0]                                                            
+            loss_class1_label_1 = loss_class1_label_1[0]                                                            
+            loss_class1_label_0 = loss_class1_label_0[0]
+
+        else:
+            assert False
 
         num_discriminating = sum(predictions_class0 != predictions_class1)    # Gives the number of discriminating examples
         print("Number of discriminating examples: ", num_discriminating)
@@ -461,6 +477,10 @@ class GenericNeuralNet(object):
         if not print_file:
             return num_discriminating
         
+        # import ipdb; ipdb.set_trace()
+        # idx1 = np.where(predictions_class0 != predictions_class1)[0]     # find points where predictions are not equal for the two demographic groups
+        # idx2 = np.where(predictions_class0 == 0)[0]
+        # idx = list(set(idx1).intersection(idx2))            # find only points which are responsible for assigning 0 to class0, not 0 to class1 
         idx = np.where(predictions_class0 != predictions_class1)[0]
         discm_class0 = class0_data[idx]     # so discm_class0, discm_class1 are the vectors that only
         discm_class1 = class1_data[idx]     # differ in sensitive attribute
@@ -582,26 +602,42 @@ class GenericNeuralNet(object):
         return tf.reduce_sum(tf.cast(correct, tf.int32)) / tf.shape(labels)[0]
 
 
-    def loss(self, logits, labels):
+    def loss_per_instance(self):
+        ops = self.indiv_loss_no_reg
+        loss_each_training_points = self.sess.run(ops, feed_dict=self.all_train_feed_dict)
+        return loss_each_training_points
 
+
+    def loss(self, logits, labels):
         labels = tf.one_hot(labels, depth=self.num_classes, dtype=tf.float32)
         """This returns a tensor of the shape labels (tantamount to a vector of size equal to one mini-batch)"""
         cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits)
         # cross_entropy = -tf.reduce_sum(tf.multiply(labels, tf.nn.log_softmax(logits)), reduction_indices=1)
-        ratio = 11200*1.36 / 45200       # nos of one's by total dataset size, multiply by 1.2 for control over loss
-        class_weight = tf.constant([[ratio, 1.0 - ratio]])
-        weight_per_label = tf.transpose(tf.matmul(labels, tf.transpose(class_weight)) )
-        xent = tf.multiply(weight_per_label, cross_entropy, name='xent')
+        # for adult income dataset and compas dataset
+        if "adult" in self.model_name:
+            ratio = 11200*1.36 / 45200       # nos of one's by total dataset size, multiply by 1.2 for control over loss
+            class_weight = tf.constant([[ratio, 1.0 - ratio]])
+            weight_per_label = tf.transpose(tf.matmul(labels, tf.transpose(class_weight)) )
+            xent = tf.multiply(weight_per_label, cross_entropy, name='xent')
+            indiv_loss_no_reg = xent
+            loss_no_reg = tf.reduce_mean(xent, name='xentropy_mean')
+        
 
+        elif "compas" in self.model_name:
+            ratio = 3768*0.94 / 9884       # nos of one's by total dataset size, multiply by 0.94 for control over loss
+            class_weight = tf.constant([[ratio, 1.0 - ratio]])
+            weight_per_label = tf.transpose(tf.matmul(labels, tf.transpose(class_weight)) )
+            xent = tf.multiply(weight_per_label, cross_entropy, name='xent')
+            indiv_loss_no_reg = xent
+            loss_no_reg = tf.reduce_mean(xent, name='xentropy_mean')
+        
         # for german credit dataset
-        # indiv_loss_no_reg = cross_entropy
-        # loss_no_reg = tf.reduce_mean(cross_entropy, name='xentropy_mean')
+        elif "german" in self.model_name:
+            indiv_loss_no_reg = cross_entropy
+            loss_no_reg = tf.reduce_mean(cross_entropy, name='xentropy_mean')
 
-        # for adult income dataset
-        indiv_loss_no_reg = xent
-        loss_no_reg = tf.reduce_mean(xent, name='xentropy_mean')
+        
         tf.add_to_collection('losses', loss_no_reg)
-
         total_loss = tf.add_n(tf.get_collection('losses'), name='total_loss')
 
         return total_loss, loss_no_reg, indiv_loss_no_reg
@@ -777,7 +813,7 @@ class GenericNeuralNet(object):
             fhess_p=self.get_fmin_hvp,
             callback=cg_callback,
             avextol=1e-8,
-            maxiter=500,
+            maxiter=100,
             full_output=True) 
 
         fmin_results = fmin_results_all[0]
