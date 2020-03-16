@@ -4,9 +4,9 @@ import pandas as pd
 
 
 def rescale_input_numpy(inp):
-    assert(inp.shape[1] == 10)  # 10 features for compas dataset
-    mins_and_ranges = [(0, 1), (18, 68), (0, 1), (0, 13), (0, 13), (0, 17), (0, 43), (-597.0, 1654.0), (0.0, 9485.0), (-1, 2)]
-    r = np.arange(10)
+    assert(inp.shape[1] == 19)  # 19 features for compas dataset
+    mins_and_ranges = [(0, 1), (18, 65), (0, 1), (0, 10), (1, 9), (0, 13), (0, 17), (0, 38), (-414.0, 1471.0), (0.0, 9485.0), (-1, 2), (0, 1), (0, 1), (1, 9), (1, 9), (0, 38), (0, 937), (0, 1186), (0, 1)]
+    r = np.arange(19)
     out = copy.deepcopy(inp)
     for col, (min_, range_) in zip(r, mins_and_ranges):
         out[:, col] = np.divide(np.subtract(out[:, col], min_), range_)
@@ -26,8 +26,8 @@ def rescale_input_numpy_disparateremoved_compas(inp):
 
 
 def entire_test_suite(mini=False, disparateremoved=False):
-    gender0 = "race0_compas"
-    gender1 = "race1_compas"
+    gender0 = "race0_compas_two_year"
+    gender1 = "race1_compas_two_year"
     # if mini:
         # gender0 += "_mini"
         # gender1 += "_mini"
