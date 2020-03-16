@@ -34,10 +34,10 @@ def entire_test_suite(mini=False, disparateremoved=False):
     
     df0 = pd.read_csv(f"../../compas-dataset/{gender0}.csv")
     df1 = pd.read_csv(f"../../compas-dataset/{gender1}.csv")
-    if mini: 
-        assert(df0.shape == df1.shape == (1000, 12))
-    else:
-        assert(df0.shape == df1.shape == (1000000, 10))
+    # if mini: 
+        # assert(df0.shape == df1.shape == (1000, 12))
+    # else:
+    assert(df0.shape == df1.shape == (1000000, 19))
 
     assert(not df0.equals(df1))
     assert(df0.drop('race', axis=1).equals(df1.drop('race', axis=1)))     # after dropping sex they should be equal dataframe
