@@ -15,13 +15,13 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 import influence.experiments as experiments
 from influence.fully_connected import Fully_Connected
 
-from load_compas import load_compas, load_compas
+from load_compas import load_compas, load_compas_partial
 from find_discm_points import entire_test_suite
 
-train = True
+train = False
 
 input_dim = 10
-weight_decay = 0.001
+weight_decay = 0.002
 # batch_size = 3000
 
 initial_learning_rate = 1e-3 
@@ -61,7 +61,7 @@ else:
     hidden2_units = 8
     hidden3_units = 0
     batch_size = 1000
-    model_count = 207
+    model_count = 1000
 data_sets = load_compas(perm)
 
 
@@ -78,11 +78,11 @@ model = Fully_Connected(
     batch_size=batch_size,
     data_sets=data_sets,
     initial_learning_rate=initial_learning_rate,
-    damping=1e-2,
+    damping=3e-2,
     decay_epochs=decay_epochs,
     mini_batch=True,
     train_dir=f'trained_models/output_count{model_count}', 
-    log_dir=f'log{model_count}',
+    log_dir=f'throw/log{model_count}',
     hvp_files = f"inverse_HVP_compas/inverse_HVP_schm{scheme}_count{model_count}",
     model_name=name,
     scheme = f"{scheme}")
@@ -93,13 +93,13 @@ if train:
     model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, 
     iter_to_switch_to_sgd=20000, save_checkpoints=True, verbose=False, plot_loss=False)
     train_acc, test_acc = model.print_model_eval()
-    # print(train_acc, test_acc, "see accuracies")
-    exit(0)
+    # print(train_acc, test_acc, "see accuracies", model_count)
+    # exit(0)
 
 ranked_influential_training_points = f"ranking_points_ordered/{name}.npy"
 # if not train and ranking of influential training points is stored in numpy file, then True
 load_from_numpy = False if train else (True if os.path.exists(ranked_influential_training_points) else False)       
-assert(load_from_numpy)
+assert load_from_numpy
 class0_data, class1_data = entire_test_suite(mini=False)     # False means loads entire data
 if not load_from_numpy:
     if not train:
@@ -139,12 +139,12 @@ removal = int(sys.argv[2])
 # for p in removal:
 for percentage in np.linspace(removal-1, removal-0.2, 5):
     tf.reset_default_graph()
-    p = int(36000 * percentage / 100)
+    p = int(8000 * percentage / 100)
     remaining_indexes = np.array(sorted_training_points[p:])
     data_sets_partial = load_compas_partial(perm=perm, index=remaining_indexes)
     try:
-        assert(len(remaining_indexes) == 36000 - p)
-        assert(data_sets_partial.train.num_examples == 36000 - p)
+        assert(len(remaining_indexes) == 8000 - p)
+        assert(data_sets_partial.train.num_examples == 8000 - p)
     except:
         print(p, percentage, removal, data_sets_partial.train.num_examples, "hello")
         assert False
@@ -175,10 +175,10 @@ for percentage in np.linspace(removal-1, removal-0.2, 5):
     # print("Points removed: ", p)
     print("Percentage: ", percentage, " Points removed: ", p)
     num = model_partial_data.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
-    with open("compas_results_first120.csv".format(scheme), "a") as f:
+    with open("compas_results_first80.csv".format(scheme), "a") as f:
         # f.write("Percentage: " + str(percentage) + ", Discriminating Tests: " + str(num) + "\n")
         # f.write("Points: " + str(p) + ", Discriminating Tests: " + str(num) + "\n")
-        f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{percentage},{p},{num},{num/45222.0}\n")     # the last ones gives percentage of discrimination
+        f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{percentage},{p},{num},{num/10000.0}\n")     # the last ones gives percentage of discrimination
     
     del model_partial_data          # to remove any chance of reusing variables and reduce memory
 
