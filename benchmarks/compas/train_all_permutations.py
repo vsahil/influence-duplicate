@@ -15,12 +15,12 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 import influence.experiments as experiments
 from influence.fully_connected import Fully_Connected
 
-from load_compas import load_compas, load_compas_partial
+from load_compas_two_year import load_compas_two_year, load_compas_two_year_partial
 from find_discm_points import entire_test_suite
 
-train = False
+train = True
 
-input_dim = 10
+input_dim = 19
 weight_decay = 0.002
 # batch_size = 3000
 
@@ -62,12 +62,12 @@ else:
     hidden3_units = 0
     batch_size = 1000
     model_count = 1000
-data_sets = load_compas(perm)
+data_sets = load_compas_two_year(perm)
 
 
 print("Start: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
 
-name = f"compas_{model_count}"
+name = f"compas_two_year{model_count}"
 model = Fully_Connected(
     input_dim=input_dim, 
     hidden1_units=hidden1_units, 
@@ -81,9 +81,9 @@ model = Fully_Connected(
     damping=3e-2,
     decay_epochs=decay_epochs,
     mini_batch=True,
-    train_dir=f'trained_models/output_count{model_count}', 
+    train_dir=f'trained_models_two_year/output_count{model_count}', 
     log_dir=f'throw/log{model_count}',
-    hvp_files = f"inverse_HVP_compas/inverse_HVP_schm{scheme}_count{model_count}",
+    hvp_files = f"inverse_HVP_compas_two_year/inverse_HVP_schm{scheme}_count{model_count}",
     model_name=name,
     scheme = f"{scheme}")
 
@@ -96,10 +96,10 @@ if train:
     # print(train_acc, test_acc, "see accuracies", model_count)
     # exit(0)
 
-ranked_influential_training_points = f"ranking_points_ordered/{name}.npy"
+ranked_influential_training_points = f"ranking_points_ordered_two_year/{name}.npy"
 # if not train and ranking of influential training points is stored in numpy file, then True
 load_from_numpy = False if train else (True if os.path.exists(ranked_influential_training_points) else False)       
-assert load_from_numpy
+assert not load_from_numpy
 class0_data, class1_data = entire_test_suite(mini=False)     # False means loads entire data
 if not load_from_numpy:
     if not train:
@@ -141,7 +141,7 @@ for percentage in np.linspace(removal-1, removal-0.2, 5):
     tf.reset_default_graph()
     p = int(8000 * percentage / 100)
     remaining_indexes = np.array(sorted_training_points[p:])
-    data_sets_partial = load_compas_partial(perm=perm, index=remaining_indexes)
+    data_sets_partial = load_compas_two_year_partial(perm=perm, index=remaining_indexes)
     try:
         assert(len(remaining_indexes) == 8000 - p)
         assert(data_sets_partial.train.num_examples == 8000 - p)
@@ -164,7 +164,7 @@ for percentage in np.linspace(removal-1, removal-0.2, 5):
         train_dir='output_partial', 
         log_dir='log_partial',
         hvp_files = "inverse_HVP_scheme1_",
-        model_name='compas_partial',
+        model_name='compas_two_year_partial',
         scheme = "scheme8_par")
     print("Training")
     # print("Points removed: ", p)
@@ -175,7 +175,7 @@ for percentage in np.linspace(removal-1, removal-0.2, 5):
     # print("Points removed: ", p)
     print("Percentage: ", percentage, " Points removed: ", p)
     num = model_partial_data.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
-    with open("compas_results_first80.csv".format(scheme), "a") as f:
+    with open("compas_two_year_results_first80.csv".format(scheme), "a") as f:
         # f.write("Percentage: " + str(percentage) + ", Discriminating Tests: " + str(num) + "\n")
         # f.write("Points: " + str(p) + ", Discriminating Tests: " + str(num) + "\n")
         f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{percentage},{p},{num},{num/10000.0}\n")     # the last ones gives percentage of discrimination
