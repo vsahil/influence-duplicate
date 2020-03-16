@@ -40,7 +40,7 @@ def variation(setting_now):
     for perm in range(20):
         for h1units in [16, 24, 32]:
             for h2units in [8, 12]:
-                for batch in [1000, 2000]:      # different batch sizes for this dataset
+                for batch in [500, 1000]:      # different batch sizes for this dataset
                     if model_count < setting_now:
                         model_count += 1
                         continue
