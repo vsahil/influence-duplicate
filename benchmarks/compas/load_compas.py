@@ -10,6 +10,7 @@ sys.path.append("../../")
 from influence.dataset import DataSet
 
 def exclude_some_examples(exclude, validation_size=0, remove_biased_test=True):
+	assert False
 	total_dataset = genfromtxt("../../adult-income-dataset/normalized_adult_features.csv", delimiter=",")
 	total_labels = genfromtxt("../../adult-income-dataset/adult_labels.csv", delimiter=",")
 	real_biased_df = pd.read_csv("intersections.csv")		# it is sorted in ascending order of biased points
@@ -18,7 +19,7 @@ def exclude_some_examples(exclude, validation_size=0, remove_biased_test=True):
 
 	assert(exclude < len(descending_order_biased_points))
 	removal_points = []
-	train_examples = 36000
+	train_examples = 8000
 	if exclude > 0:
 		for d in descending_order_biased_points:
 			if d < train_examples:
@@ -112,14 +113,16 @@ def disparate_removed_load_compas(validation_size=0):
 
 
 def load_compas_partial(index, perm=-1, validation_size=0):
-	total_dataset = genfromtxt("../../adult-income-dataset/normalized_adult_features.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
-	total_labels = genfromtxt("../../adult-income-dataset/adult_labels.csv", delimiter=",")
+	total_dataset = pd.read_csv("../../compas-dataset/normalized_compas_features.csv").to_numpy()
+	# total_labels = pd.read_csv("../../compas-dataset/compas_labels_coarse.csv").to_numpy()
+	total_labels = pd.read_csv("../../compas-dataset/compas_labels_binary.csv").to_numpy()
+	total_labels = total_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
-	train_examples = 36000
+	train_examples = 8000
 	X_train = total_dataset[:train_examples]
 	X_train = X_train[index]
 	assert(len(X_train) == len(index))
@@ -130,7 +133,7 @@ def load_compas_partial(index, perm=-1, validation_size=0):
 	
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
-
+	assert(len(Y_test) == 1884)
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
