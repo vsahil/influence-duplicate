@@ -40,7 +40,7 @@ def variation(setting_now):
     for perm in range(20):
         for h1units in [16, 24, 32]:
             for h2units in [8, 12]:
-                for batch in [1000, 2000]:      # different batch sizes for this dataset
+                for batch in [500, 1000]:      # different batch sizes for this dataset
                     if model_count < setting_now:
                         model_count += 1
                         continue
@@ -99,7 +99,7 @@ if train:
 ranked_influential_training_points = f"ranking_points_ordered_two_year/{name}.npy"
 # if not train and ranking of influential training points is stored in numpy file, then True
 load_from_numpy = False if train else (True if os.path.exists(ranked_influential_training_points) else False)       
-assert not load_from_numpy
+assert load_from_numpy
 class0_data, class1_data = entire_test_suite(mini=False)     # False means loads entire data
 if not load_from_numpy:
     if not train:
@@ -139,12 +139,12 @@ removal = int(sys.argv[2])
 # for p in removal:
 for percentage in np.linspace(removal-1, removal-0.2, 5):
     tf.reset_default_graph()
-    p = int(8000 * percentage / 100)
+    p = int(5000 * percentage / 100)
     remaining_indexes = np.array(sorted_training_points[p:])
     data_sets_partial = load_compas_two_year_partial(perm=perm, index=remaining_indexes)
     try:
-        assert(len(remaining_indexes) == 8000 - p)
-        assert(data_sets_partial.train.num_examples == 8000 - p)
+        assert(len(remaining_indexes) == 5000 - p)
+        assert(data_sets_partial.train.num_examples == 5000 - p)
     except:
         print(p, percentage, removal, data_sets_partial.train.num_examples, "hello")
         assert False
@@ -175,6 +175,7 @@ for percentage in np.linspace(removal-1, removal-0.2, 5):
     # print("Points removed: ", p)
     print("Percentage: ", percentage, " Points removed: ", p)
     num = model_partial_data.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
+    with open("compas_two_year_results_last120.csv".format(scheme), "a") as f:
         # f.write("Percentage: " + str(percentage) + ", Discriminating Tests: " + str(num) + "\n")
         # f.write("Points: " + str(p) + ", Discriminating Tests: " + str(num) + "\n")
         f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{percentage},{p},{num},{num/10000.0}\n")     # the last ones gives percentage of discrimination
