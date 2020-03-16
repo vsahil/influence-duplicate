@@ -18,7 +18,7 @@ from influence.fully_connected import Fully_Connected
 from load_compas_two_year import load_compas_two_year, load_compas_two_year_partial
 from find_discm_points import entire_test_suite
 
-train = True
+train = False
 
 input_dim = 19
 weight_decay = 0.002
@@ -175,7 +175,6 @@ for percentage in np.linspace(removal-1, removal-0.2, 5):
     # print("Points removed: ", p)
     print("Percentage: ", percentage, " Points removed: ", p)
     num = model_partial_data.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
-    with open("compas_two_year_results_first80.csv".format(scheme), "a") as f:
         # f.write("Percentage: " + str(percentage) + ", Discriminating Tests: " + str(num) + "\n")
         # f.write("Points: " + str(p) + ", Discriminating Tests: " + str(num) + "\n")
         f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{percentage},{p},{num},{num/10000.0}\n")     # the last ones gives percentage of discrimination
