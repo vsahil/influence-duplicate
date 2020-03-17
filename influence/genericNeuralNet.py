@@ -462,7 +462,7 @@ class GenericNeuralNet(object):
 
 
         # for adult income
-        elif "adult" in self.model_name or "compas" in self.model_name:
+        elif "adult" in self.model_name or "compas" in self.model_name or "default" in self.model_name:
             loss_class0_label_0 = loss_class0_label_0[0]                                                            
             loss_class0_label_1 = loss_class0_label_1[0]                                                            
             loss_class1_label_1 = loss_class1_label_1[0]                                                            
@@ -630,6 +630,15 @@ class GenericNeuralNet(object):
             xent = tf.multiply(weight_per_label, cross_entropy, name='xent')
             indiv_loss_no_reg = xent
             loss_no_reg = tf.reduce_mean(xent, name='xentropy_mean')
+
+        
+        elif "default" in self.model_name:
+            ratio = 6636*1.09 / 30000       # nos of one's by total dataset size, multiply by 1.09 for control over loss
+            class_weight = tf.constant([[ratio, 1.0 - ratio]])
+            weight_per_label = tf.transpose(tf.matmul(labels, tf.transpose(class_weight)) )
+            xent = tf.multiply(weight_per_label, cross_entropy, name='xent')
+            indiv_loss_no_reg = xent
+            loss_no_reg = tf.reduce_mean(xent, name='xentropy_mean')
         
         # for german credit dataset
         elif "german" in self.model_name or "student" in self.model_name:
@@ -763,32 +772,6 @@ class GenericNeuralNet(object):
         hessian_vector_val = self.minibatch_hessian_vector_val(self.vec_to_list(p))
 
         return np.concatenate(hessian_vector_val)
-
-
-    # def get_cg_callback(self, v, verbose):
-    #     fmin_loss_fn = self.get_fmin_loss_fn(v)
-        
-    #     def fmin_loss_split(x):
-    #         hessian_vector_val = self.minibatch_hessian_vector_val(self.vec_to_list(x))
-
-    #         return 0.5 * np.dot(np.concatenate(hessian_vector_val), x), -np.dot(np.concatenate(v), x)
-
-    #     def cg_callback(x):
-    #         # x is current params
-    #         v = self.vec_to_list(x)
-    #         idx_to_remove = 5
-
-    #         single_train_feed_dict = self.fill_feed_dict_with_one_ex(self.data_sets.train, idx_to_remove)      
-    #         train_grad_loss_val = self.sess.run(self.grad_total_loss_op, feed_dict=single_train_feed_dict)
-    #         predicted_loss_diff = np.dot(np.concatenate(v), np.concatenate(train_grad_loss_val)) / self.num_train_examples
-
-    #         if verbose:
-    #             print('Function value: %s' % fmin_loss_fn(x))
-    #             quad, lin = fmin_loss_split(x)
-    #             print('Split function value: %s, %s' % (quad, lin))
-    #             print('Predicted loss diff on train_idx %s: %s' % (idx_to_remove, predicted_loss_diff))
-
-    #     return cg_callback
 
 
     def get_cg_callback(self, v, verbose):
