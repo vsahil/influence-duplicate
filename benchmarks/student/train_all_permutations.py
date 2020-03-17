@@ -67,7 +67,7 @@ data_sets = load_student(perm)
 
 print("Start: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
 
-name = f"student{model_count}"
+name = f"student_{model_count}"
 model = Fully_Connected(
     input_dim=input_dim, 
     hidden1_units=hidden1_units, 
@@ -91,7 +91,7 @@ model = Fully_Connected(
 
 if train:
     model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, 
-    iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=True, plot_loss=False)
+    iter_to_switch_to_sgd=20000, save_checkpoints=True, verbose=False, plot_loss=False)
     train_acc, test_acc = model.print_model_eval()
     # print(train_acc, test_acc, "see accuracies", model_count)
     # exit(0)

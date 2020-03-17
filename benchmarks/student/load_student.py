@@ -136,7 +136,7 @@ def load_student_partial(index, perm=-1, validation_size=0):
 
 # These are 20 permutations of the full student dataset. 
 def permutations(perm):
-	x = np.load(f"data-permutations-two-year/split{perm}.npy")
+	x = np.load(f"data-permutations/split{perm}.npy")
 	return list(x)
 
 
