@@ -454,7 +454,7 @@ class GenericNeuralNet(object):
         assert (predictions_class1_ == predictions_class1).all()    #"""This should hold"""
         
         # for german credit dataset
-        if "german" in self.model_name:
+        if "german" in self.model_name or "student" in self.model_name:
             loss_class0_label_0 = loss_class0_label_0
             loss_class0_label_1 = loss_class0_label_1
             loss_class1_label_1 = loss_class1_label_1
@@ -632,7 +632,7 @@ class GenericNeuralNet(object):
             loss_no_reg = tf.reduce_mean(xent, name='xentropy_mean')
         
         # for german credit dataset
-        elif "german" in self.model_name:
+        elif "german" in self.model_name or "student" in self.model_name:
             indiv_loss_no_reg = cross_entropy
             loss_no_reg = tf.reduce_mean(cross_entropy, name='xentropy_mean')
 
