@@ -20,7 +20,7 @@ weight_decay = 0.001
 initial_learning_rate = 1e-5 
 num_classes = 2
 keep_probs = [1.0, 1.0]
-num_steps = 300
+num_steps = 30000
 decay_epochs = [30000, 40000]
 scheme = 8
 assert(scheme == 8)     # now always
