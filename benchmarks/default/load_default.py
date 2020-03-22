@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 from numpy import genfromtxt
 from tensorflow.contrib.learn.python.learn.datasets import base
-import sys
-# sys.path.append(".")
+import sys, os
+sys.path.append(".")
 sys.path.append("../")
 sys.path.append("../../")
 
@@ -86,19 +86,24 @@ def load_default(perm=-1, validation_size=0):
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
-def disparate_removed_load_default(validation_size=0):
-	assert False
-	total_dataset = genfromtxt("disparate_impact_removed/normalized_disparateremoved_features-german.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
-	total_labels = genfromtxt("disparate_impact_removed/normalized_disparateremoved_labels-german.csv", delimiter=",")
+def disparate_removed_load_default(perm, validation_size=0):
+	total_dataset = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/disparate_impact_removed/normalized_disparateremoved_features-default.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
+	total_labels = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/disparate_impact_removed/normalized_disparateremoved_labels-default.csv", delimiter=",")
+	
+	# total_labels = total_labels.flatten()
+	assert(perm < 20)		# we only have 20 permutations
+	if perm >= 0:	# for negative number don't do
+		ordering = permutations(perm)
+		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
-	train_examples = 800		# size changed from 750 to 800, testing set is 200
+	train_examples = 24000		# testing set is 6000		# exactly 20%
 	X_train = total_dataset[:train_examples]
 	X_validation = total_dataset[train_examples:train_examples + validation_size]
 	X_test  = total_dataset[train_examples + validation_size:]
 	Y_train = total_labels[:train_examples]
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
-
+	assert(len(Y_test) == 6000)
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -136,7 +141,7 @@ def load_default_partial(index, perm=-1, validation_size=0):
 
 # These are 20 permutations of the full default dataset. 
 def permutations(perm):
-	x = np.load(f"data-permutations/split{perm}.npy")
+	x = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/data-permutations/split{perm}.npy")
 	return list(x)
 
 
