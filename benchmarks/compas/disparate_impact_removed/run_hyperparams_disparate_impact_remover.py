@@ -50,8 +50,8 @@ hidden1_units = h1units
 hidden2_units = h2units
 hidden3_units = 0
 batch_size = batch
-print("Start: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
-
+with open("lines.txt", "a") as f:
+    print("Start: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size, file=f)
 
 model = Fully_Connected(
     input_dim=input_dim, 
