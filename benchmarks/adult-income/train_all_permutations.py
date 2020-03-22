@@ -160,7 +160,7 @@ for percentage in np.linspace(removal-1, removal-0.2, 5):
     # print("Points removed: ", p)
     print("Percentage: ", percentage, " Points removed: ", p) 
     model_partial_data.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
-    train_acc, test_acc = model.print_model_eval()
+    # train_acc, test_acc = model_partial_data.print_model_eval()
     # print("Percentage: ", percentage, " Points removed: ", p)
     # print("Points removed: ", p)
     print("Percentage: ", percentage, " Points removed: ", p)
