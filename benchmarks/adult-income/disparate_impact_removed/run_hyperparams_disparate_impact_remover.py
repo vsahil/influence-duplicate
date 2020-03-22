@@ -82,5 +82,5 @@ train_acc, test_acc = model.print_model_eval()
 
 print("Discrimination:", num_dicsm)
 with open("results_disparate_removed_adult.csv", "a") as f:
-    f.write(f'{h1units},{h2units},{batch},{perm},{train_acc*100},{test_acc*100},{num_dicsm}\n')
+    f.write(f'{h1units},{h2units},{batch},{perm},{train_acc*100},{test_acc*100},{num_dicsm},{num_dicsm/45222.0}\n')
 
