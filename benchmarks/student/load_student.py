@@ -138,6 +138,116 @@ def load_student_partial(index, perm=-1, validation_size=0):
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
+
+def before_preferential_sampling(perm, validation_size=0):
+	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../student-dataset/student-por.csv")
+	original_dataset['sex'] = original_dataset['sex'].replace({"M":1, "F":0})
+	original_dataset['G3'] = original_dataset['G3'].apply(lambda x: 0 if x <= 11 else 1)
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../student-dataset/normalized_student_features.csv").to_numpy()
+	total_labels  = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../student-dataset/student_labels.csv").to_numpy()
+	total_labels = total_labels.flatten()
+	assert(perm < 20)		# we only have 20 permutations
+	if perm >= 0:	# for negative number don't do
+		ordering = permutations(perm)
+		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
+	# import ipdb; ipdb.set_trace()
+	train_examples = 500		# testing set is 149
+	original_dataset = original_dataset.reindex(ordering[:train_examples])
+	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
+	x_both = original_dataset.groupby(['sex', 'G3']).indices
+	# import ipdb; ipdb.set_trace()
+	X_train = total_dataset[:train_examples]
+	X_validation = total_dataset[train_examples:train_examples + validation_size]
+	X_test  = total_dataset[train_examples + validation_size:]
+	
+	Y_train = total_labels[:train_examples]
+	Y_validation = total_labels[train_examples:train_examples + validation_size]
+	Y_test  = total_labels[train_examples + validation_size:]
+	assert(len(Y_test) == 149)
+	train = DataSet(X_train, Y_train)
+	validation = DataSet(X_validation, Y_validation)
+	test = DataSet(X_test, Y_test)
+
+	return base.Datasets(train=train, validation=validation, test=test), x_both
+
+
+def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_candidates, fav_pos_candidates, validation_size=0):
+	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../student-dataset/student-por.csv")
+	original_dataset['sex'] = original_dataset['sex'].replace({"M":1, "F":0})
+	original_dataset['G3'] = original_dataset['G3'].apply(lambda x: 0 if x <= 11 else 1)
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../student-dataset/normalized_student_features.csv").to_numpy()
+	total_labels  = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../student-dataset/student_labels.csv").to_numpy()
+	total_labels = total_labels.flatten()
+	assert(perm < 20)		# we only have 20 permutations
+	if perm >= 0:	# for negative number don't do
+		ordering = permutations(perm)
+		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
+
+	train_examples = 500		# testing set is 149
+	original_dataset = original_dataset.reindex(ordering[:train_examples])
+	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
+	x_gender = original_dataset.groupby(['sex']).indices
+	x_target = original_dataset.groupby(['G3']).indices
+	# import ipdb; ipdb.set_trace()
+	# deprived_negative_size = int(round(x_gender[0].shape[0] * x_target[0].shape[0] / train_examples)) 	# * female_bad_credit)
+	# deprived_positive_size = int(round(x_gender[0].shape[0] * x_target[1].shape[0] / train_examples))	# * female_good_credit)
+
+	# favoured_negative_size = int(round(x_gender[1].shape[0] * x_target[0].shape[0] / train_examples))	# * male_bad_credit)
+	# favoured_positive_size = int(round(x_gender[1].shape[0] * x_target[1].shape[0] / train_examples))	# * male_good_credit)
+
+	deprived_negative_size = int(round(x_gender[1].shape[0] * x_target[0].shape[0] / train_examples)) 	# * male_bad_credit)
+	deprived_positive_size = int(round(x_gender[1].shape[0] * x_target[1].shape[0] / train_examples))	# * male_good_credit)
+
+	favoured_negative_size = int(round(x_gender[0].shape[0] * x_target[0].shape[0] / train_examples))	# * female_bad_credit)
+	favoured_positive_size = int(round(x_gender[0].shape[0] * x_target[1].shape[0] / train_examples))	# * female_good_credit)
+
+	assert deprived_negative_size + deprived_positive_size + favoured_negative_size + favoured_positive_size == train_examples
+	
+	# choose deprived negative candidates - no sampling - decrease
+	dep_neg_finalists = dep_neg_candidates[:deprived_negative_size].tolist()
+	# choose favoured positive candidates - no sampling - decrease
+	fav_pos_finalists = fav_pos_candidates[:favoured_positive_size].tolist()
+	
+	# add extra deprived positive candidates - increase
+	extra_pos = deprived_positive_size - dep_pos_candidates.shape[0]
+	assert(extra_pos >= 0)
+	dep_pos_finalists = dep_pos_candidates.tolist()
+	while len(dep_pos_finalists) < deprived_positive_size:
+		dep_pos_duplicates = dep_pos_candidates[:extra_pos].tolist()
+		dep_pos_finalists.extend(dep_pos_duplicates)
+		extra_pos -= len(dep_pos_duplicates)
+	assert (len(dep_pos_finalists) == deprived_positive_size)
+
+	# add extra favoured negative candidates - increase
+	extra_neg = favoured_negative_size - fav_neg_candidates.shape[0]
+	assert(extra_neg >= 0)
+	fav_neg_finalists = fav_neg_candidates.tolist()
+	while len(fav_neg_finalists) < favoured_negative_size:
+		fav_neg_duplicates = fav_neg_candidates[:extra_neg].tolist()
+		fav_neg_finalists.extend(fav_neg_duplicates)
+		extra_neg -= len(fav_neg_duplicates)
+		
+	assert (len(fav_neg_finalists) == favoured_negative_size)
+	# import ipdb; ipdb.set_trace()
+	final_order = dep_neg_finalists + dep_pos_finalists + fav_neg_finalists + fav_pos_finalists
+	final_order= sorted(final_order) 
+	assert len(final_order) == train_examples
+
+	X_train = total_dataset[final_order]
+	X_validation = total_dataset[train_examples:train_examples + validation_size]
+	X_test  = total_dataset[train_examples + validation_size:]
+	Y_train = total_labels[final_order]
+	Y_validation = total_labels[train_examples:train_examples + validation_size]
+	Y_test  = total_labels[train_examples + validation_size:]
+	assert(len(Y_test) == 149)
+	train = DataSet(X_train, Y_train)
+	validation = DataSet(X_validation, Y_validation)
+	test = DataSet(X_test, Y_test)
+
+	return base.Datasets(train=train, validation=validation, test=test)
+
+
+
 # These are 20 permutations of the full student dataset. 
 def permutations(perm):
 	x = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/data-permutations/split{perm}.npy")
