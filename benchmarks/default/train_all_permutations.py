@@ -18,7 +18,7 @@ from influence.fully_connected import Fully_Connected
 from load_default import load_default, load_default_partial
 from find_discm_points import entire_test_suite
 
-train = True
+train = False
 
 input_dim = 23
 weight_decay = 0.001
@@ -176,10 +176,10 @@ for percentage in np.linspace(removal-1, removal-0.2, 5):
     # print("Points removed: ", p)
     print("Percentage: ", percentage, " Points removed: ", p)
     num = model_partial_data.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
-    with open("default_results_first80.csv".format(scheme), "a") as f:
+    with open("default_results_last120.csv".format(scheme), "a") as f:
         # f.write("Percentage: " + str(percentage) + ", Discriminating Tests: " + str(num) + "\n")
         # f.write("Points: " + str(p) + ", Discriminating Tests: " + str(num) + "\n")
-        f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{percentage},{p},{num},{num/1000.0}\n")     # the last ones gives percentage of discrimination
+        f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{percentage},{p},{num},{num/30000.0}\n")     # the last ones gives percentage of discrimination
     
     del model_partial_data          # to remove any chance of reusing variables and reduce memory
 
