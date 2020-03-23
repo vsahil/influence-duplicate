@@ -13,18 +13,6 @@ def rescale_input_numpy(inp):
     return out
 
 
-def rescale_input_numpy_reweighted_adult(inp):
-    assert False
-    assert(inp.shape[1] == 20)  # 20 features for german credit dataset
-    # means_and_ranges = [(1.001, 3), (20.903, 68), (32.545, 4), (47.148, 370), (3271.258, 18174), (1.19, 4), (3.384, 4), (2.973, 3), (0.69, 1), (101.145, 2), (2.845, 3), (122.358, 3), (35.546, 56), (142.675, 2), (151.929, 2), (1.407, 3), (172.904, 3), (1.155, 1), (1.404, 1), (1.037, 1)]
-    means_and_ranges = [(1.001, 3), (20.903, 68), (32.545, 4), (47.148, 370), (3271.258, 18174), (1.19, 4), (3.384, 4), (2.973, 3), (0.69, 1), (101.145, 2), (2.845, 3), (122.358, 3), (35.546, 56), (142.675, 2), (151.929, 2), (1.407, 3), (172.904, 3), (1.155, 1), (1.404, 1), (1.037, 1)]
-    r = np.arange(20)
-    out = copy.deepcopy(inp)
-    for col, (mean, range_) in zip(r, means_and_ranges):
-        out[:, col] = np.divide(np.subtract(out[:, col], mean), range_)
-    return out
-
-
 def rescale_input_numpy_disparateremoved_adult(inp):
     assert False
     assert(inp.shape[1] == 20)  # 20 features for german credit dataset
@@ -37,7 +25,7 @@ def rescale_input_numpy_disparateremoved_adult(inp):
     return out
 
 
-def entire_test_suite(mini=True, reweighted_german=False, disparateremoved=False):
+def entire_test_suite(mini=True, disparateremoved=False):
     gender0 = "gender0_adult"
     gender1 = "gender1_adult"
     if mini:
@@ -61,12 +49,9 @@ def entire_test_suite(mini=True, reweighted_german=False, disparateremoved=False
     # class0_ = np.genfromtxt(f"/Users/sahilverma/research/influence-duplicate/adult-income-dataset/{gender0}.csv", delimiter=",")
     # class1_ = np.genfromtxt(f"/Users/sahilverma/research/influence-duplicate/adult-income-dataset/{gender1}.csv", delimiter=",")
 
-    assert(not (reweighted_german and disparateremoved)),  "both can't be true at the same time"
-    
-    if reweighted_german:
-        class0 = rescale_input_numpy_reweighted_german(class0_)
-        class1 = rescale_input_numpy_reweighted_german(class1_)
-    elif disparateremoved:
+    # assert(not (reweighted_german and disparateremoved)),  "both can't be true at the same time"
+
+    if disparateremoved:
         class0 = rescale_input_numpy_disparateremoved_german(class0_)
         class1 = rescale_input_numpy_disparateremoved_german(class1_)
     else:
