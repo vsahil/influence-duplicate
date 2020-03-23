@@ -29,8 +29,8 @@ for i in df.columns:
     assert is_numeric_dtype(df[i])
 
 df_normalized = df.drop('target', axis=1)
-df_normalized = df_normalized.apply(lambda x: (x - np.mean(x)) / (np.max(x) - np.min(x)))    
- 
+# df_normalized = df_normalized.apply(lambda x: (x - np.mean(x)) / (np.max(x) - np.min(x)))
+df_normalized = df_normalized.apply(lambda x: (x - np.min(x)) / (np.max(x) - np.min(x)))        # corrected to min, instead of mean
 df.to_csv("german_redone.csv", index=False)
 df_normalized.to_csv("german_redone_normalized.csv", index=False)
 

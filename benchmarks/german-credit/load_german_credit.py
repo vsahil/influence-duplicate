@@ -1,7 +1,7 @@
 import numpy as np
 from numpy import genfromtxt
 from tensorflow.contrib.learn.python.learn.datasets import base
-import sys
+import sys, os
 sys.path.append("../../")
 sys.path.append("../../../")
 from influence.dataset import DataSet
@@ -94,10 +94,9 @@ def load_german_credit(perm, validation_size=0):
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
-def disparate_removed_load_german_credit(perm, validation_size=0):
-	# total_dataset = genfromtxt("disparate_impact_removed/normalized_disparateremoved_features-german.csv", delimiter=",")
-	# total_dataset = genfromtxt("../../german-credit-dataset/german_redone_normalized.csv", delimiter=",")
-	total_labels = genfromtxt("disparate_impact_removed/normalized_disparateremoved_labels-german.csv", delimiter=",")
+def disparate_removed_load_german(perm, validation_size=0):
+	total_dataset = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/disparate_impact_removed/normalized_disparateremoved_features-german.csv", delimiter=",")
+	total_labels = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/disparate_impact_removed/normalized_disparateremoved_labels-german.csv", delimiter=",")
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
@@ -145,7 +144,7 @@ def load_german_credit_partial(perm, index, validation_size=0):
 
 
 def kamiran_discrimination_pairs(df):
-	# Remember 0 - feamle and male - 1
+	# Remember 0 - female and male - 1
 	# for target 1 - good, 0 - bad
 	# x = df.groupby('Gender')['target'].value_counts()
 	# y = x.to_dict()				# x is series, multilevel for gender and target
