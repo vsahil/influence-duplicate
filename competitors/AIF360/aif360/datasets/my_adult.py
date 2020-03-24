@@ -133,7 +133,7 @@ class MyAdultDataset(StandardDataset):
         # df = pd.concat([test, train], ignore_index=True)
         # df = train
 
-        super(MyAdultDataset, self).__init__(df=df, label_name=label_name,
+        super(MyAdultDataset, self).__init__(df=df_ordered, label_name=label_name,
             favorable_classes=favorable_classes,
             protected_attribute_names=protected_attribute_names,
             privileged_classes=privileged_classes,

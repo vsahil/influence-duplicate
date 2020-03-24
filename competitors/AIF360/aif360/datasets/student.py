@@ -59,7 +59,7 @@ class StudentDataset(StandardDataset):
                                           
         column_names = ['school','sex','age','address','famsize','Pstatus','Medu','Fedu','Mjob','Fjob','reason','guardian','traveltime','studytime','failures','schoolsup','famsup','paid','activities','nursery','higher','internet','romantic','famrel','freetime','goout','Dalc','Walc','health','absences','G1','G2','G3']
 
-        super(StudentDataset, self).__init__(df=df, label_name=label_name,
+        super(StudentDataset, self).__init__(df=df_ordered, label_name=label_name,
             favorable_classes=favorable_classes,
             protected_attribute_names=protected_attribute_names,
             privileged_classes=privileged_classes,
