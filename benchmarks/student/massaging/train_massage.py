@@ -18,7 +18,7 @@ weight_decay = 0.002
 
 initial_learning_rate = 1e-3 
 decay_epochs = [20000, 30000]
-num_steps = 100
+num_steps = 10000
 num_classes = 2
 keep_probs = [1.0, 1.0]
 scheme = 8
