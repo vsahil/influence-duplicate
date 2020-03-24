@@ -80,7 +80,6 @@ class MyAdultDataset(StandardDataset):
         """
 
         if normalized:
-            raise NotImplementedError
             train_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'raw', 'adult', 'normalized_adult_features.csv')
         else:
            train_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'raw', 'adult', 'adult_no_missing.csv') 
@@ -113,10 +112,11 @@ class MyAdultDataset(StandardDataset):
                 x = df.to_numpy()
                 x = x[ordering]
                 df_ordered = pd.DataFrame(x, columns=df.columns.tolist())
-                new1 = df_ordered.sort_values(by=['fnlwgt']).reset_index(drop=True)
-                new2 = df.sort_values(by=['fnlwgt']).reset_index(drop=True)
-                z = new1 == new2
-                assert(sum([z[i].unique()[0] for i in z.columns.tolist()]) == len(z.columns.tolist()))      # just a sanity check
+                if not normalized:
+                    new1 = df_ordered.sort_values(by=['fnlwgt']).reset_index(drop=True)
+                    new2 = df.sort_values(by=['fnlwgt']).reset_index(drop=True)
+                    z = new1 == new2
+                    assert(sum([z[i].unique()[0] for i in z.columns.tolist()]) == len(z.columns.tolist()))      # just a sanity check
 
         except IOError as err:
             print("IOError: {}".format(err))
