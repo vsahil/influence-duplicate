@@ -2,6 +2,9 @@ import os
 
 import pandas as pd
 
+import sys
+sys.path.append("../../../benchmarks/compas/")
+import load_compas_two_year
 from aif360.datasets import StandardDataset
 
 
@@ -20,7 +23,7 @@ class MyCompasDataset(StandardDataset):
                  categorical_features=[],
                  features_to_keep=[], features_to_drop=[],
                  na_values=[], custom_preprocessing=None,
-                 metadata=default_mappings, normalized=False):
+                 metadata=default_mappings, normalized=False, permute=-1):
         """See :obj:`StandardDataset` for a description of the arguments.
 
         """
@@ -39,6 +42,19 @@ class MyCompasDataset(StandardDataset):
             df['sex'] = df['sex'].replace({"Male":1, "Female":0})
             df['race'] = df['race'].replace({"Caucasian":1, "African-American":0})
             df['c_charge_degree'] = df['c_charge_degree'].replace({"F":1, "M":0})    # O : Ordinary crime, F: Felony, M: Misconduct
+            if permute == -1:
+                df_ordered = df
+            else:
+                assert(permute < 20)
+                ordering = load_compas_two_year.permutations(permute)
+                x = df.to_numpy()
+                x = x[ordering]
+                df_ordered = pd.DataFrame(x, columns=df.columns.tolist())
+                new1 = df_ordered.sort_values(by=['end']).reset_index(drop=True)
+                new2 = df.sort_values(by=['end']).reset_index(drop=True)
+                z = new1 == new2
+                assert(sum([z[i].unique()[0] for i in z.columns.tolist()]) == len(z.columns.tolist()))      # just a sanity check
+
                                   
         column_names = ['sex','age','race','juv_fel_count','decile_score','juv_misd_count','juv_other_count','priors_count','days_b_screening_arrest','c_days_from_compas','c_charge_degree','is_recid','is_violent_recid','decile_score.1','v_decile_score','priors_count.1','start','end','event','two_year_recid']
 
