@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-df = pd.read_csv("disparate_impact_removed_compas.csv")
+df = pd.read_csv("disparate_impact_removed_compas-correct.csv")
 # normalizes the features (not labels) and prints them to a file
 target = df['two_year_recid']
 df_new = df.drop(columns=['two_year_recid'])

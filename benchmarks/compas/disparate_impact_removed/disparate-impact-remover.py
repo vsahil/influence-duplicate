@@ -1,17 +1,18 @@
 import sys
 sys.path.insert(1, "../")
+sys.path.append("../../../")
 sys.path.append("../../../competitors/AIF360/") 
 
 import numpy as np
 np.random.seed(0)
 
 from tqdm import tqdm
-from aif360.datasets import CompasDataset
+from aif360.datasets import MyCompasDataset
 from aif360.metrics import BinaryLabelDatasetMetric
 from aif360.algorithms.preprocessing import DisparateImpactRemover
 from sklearn.preprocessing import MinMaxScaler
 
-dataset_orig = CompasDataset(
+dataset_orig = MyCompasDataset(
     protected_attribute_names=['race'],                   
     privileged_classes=[[1]], 
     normalized = False    
@@ -26,7 +27,7 @@ new_df = train_repd.convert_to_dataframe()[0]
 
 write = True
 if write:
-    with open("disparate_impact_removed_compas.csv", "w") as f:
+    with open("disparate_impact_removed_compas-correct.csv", "w") as f:
         new_df.to_csv(f, index=False)
 
 new_df = new_df.drop(columns=['two_year_recid'])

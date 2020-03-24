@@ -53,6 +53,7 @@ batch_size = batch
 with open("lines.txt", "a") as f:
     print("Start: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size, file=f)
 
+
 model = Fully_Connected(
     input_dim=input_dim, 
     hidden1_units=hidden1_units, 

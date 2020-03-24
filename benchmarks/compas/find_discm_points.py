@@ -15,7 +15,7 @@ def rescale_input_numpy(inp):
 
 def rescale_input_numpy_disparateremoved_compas(inp):
     assert(inp.shape[1] == 19)  # 19 features for compas dataset
-    mins_and_ranges  = [(0, 1), (18, 59), (0, 1), (0, 8), (1, 9), (0, 6), (0, 7), (0, 36), (-414, 1439), (0, 4696), (0, 1), (0, 1), (0, 1), (1, 9), (1, 9), (0, 36), (0, 640), (0, 1186), (0, 1)]
+    mins_and_ranges  = [(0.0, 1.0), (18.0, 59.0), (0.0, 1.0), (0.0, 8.0), (1.0, 9.0), (0.0, 6.0), (0.0, 7.0), (0.0, 36.0), (-414.0, 1439.0), (0.0, 4696.0), (0.0, 1.0), (0.0, 1.0), (0.0, 1.0), (1.0, 9.0), (1.0, 9.0), (0.0, 36.0), (0.0, 640.0), (0.0, 1186.0), (0.0, 1.0)]
     r = np.arange(19)
     out = copy.deepcopy(inp)
     for col, (min_, range_) in zip(r, mins_and_ranges):
