@@ -161,18 +161,16 @@ def kamiran_discrimination_pairs(df):
 	return discm, pairs, male_good_credit, male_bad_credit, female_good_credit, female_bad_credit
 	
 
-def before_massaging_german_credit(perm, validation_size=0):
-	original_dataset = pd.read_csv("../../german-credit-dataset/original_german.csv")
-	# total_dataset = genfromtxt("../../german-credit-dataset/normalised-features-german.csv", delimiter=",")
-	total_dataset = genfromtxt("../../german-credit-dataset/german_redone_normalized.csv", delimiter=",")
-	total_labels = genfromtxt("../../german-credit-dataset/labels.csv", delimiter=",")
+def before_massaging_dataset(perm, validation_size=0):
+	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone.csv")
+	total_dataset = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone_normalized.csv", delimiter=",")
+	total_labels = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/labels.csv", delimiter=",")
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
-		# original_dataset = original_dataset.reindex(ordering[:800])
 	
-	train_examples = 800		# size changed from 750 to 800, testing set is 200
+	train_examples = 800		# size 800, testing set is 200
 	original_dataset = original_dataset.reindex(ordering[:train_examples])
 	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
 	# import ipdb; ipdb.set_trace()
@@ -193,17 +191,16 @@ def before_massaging_german_credit(perm, validation_size=0):
 	return base.Datasets(train=train, validation=validation, test=test), male_good_credit, male_bad_credit, female_good_credit, female_bad_credit, pairs_to_flip
 	
 
-def massaged_german_credit(perm, promotion_candidates, demotion_candidates, validation_size=0):
-	original_dataset = pd.read_csv("../../german-credit-dataset/original_german.csv")
-	# total_dataset = genfromtxt("../../german-credit-dataset/normalised-features-german.csv", delimiter=",")
-	total_dataset = genfromtxt("../../german-credit-dataset/german_redone_normalized.csv", delimiter=",")
-	total_labels = genfromtxt("../../german-credit-dataset/labels.csv", delimiter=",")
+def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation_size=0):
+	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone.csv")
+	total_dataset = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone_normalized.csv", delimiter=",")
+	total_labels = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/labels.csv", delimiter=",")
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
-	train_examples = 800		# size changed from 750 to 800, testing set is 200
+	train_examples = 800		# size 800, testing set is 200
 	original_dataset = original_dataset.reindex(ordering[:train_examples])
 	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
 	for p, d in zip(promotion_candidates, demotion_candidates):
