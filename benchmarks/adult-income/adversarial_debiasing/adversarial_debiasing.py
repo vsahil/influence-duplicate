@@ -1,6 +1,7 @@
 import sys
 sys.path.insert(1, "../")  
 sys.path.append("../../../")
+sys.path.append("../../../competitors/AIF360/")
 
 import numpy as np
 np.random.seed(0)
