@@ -460,7 +460,6 @@ class GenericNeuralNet(object):
             loss_class1_label_1 = loss_class1_label_1
             loss_class1_label_0 = loss_class1_label_0
 
-
         # for adult income
         elif "adult" in self.model_name or "compas" in self.model_name or "default" in self.model_name:
             loss_class0_label_0 = loss_class0_label_0[0]                                                            
@@ -605,7 +604,15 @@ class GenericNeuralNet(object):
     def loss_per_instance(self):
         ops = self.indiv_loss_no_reg
         loss_each_training_points = self.sess.run(ops, feed_dict=self.all_train_feed_dict)
-        return loss_each_training_points
+        if "german" in self.model_name or "student" in self.model_name:
+            return loss_each_training_points
+
+        # for adult income
+        elif "adult" in self.model_name or "compas" in self.model_name or "default" in self.model_name:
+            return loss_each_training_points[0]
+
+        else:
+            assert False
 
 
     def loss(self, logits, labels):
