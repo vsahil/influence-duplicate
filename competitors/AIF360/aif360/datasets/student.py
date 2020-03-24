@@ -52,8 +52,8 @@ class StudentDataset(StandardDataset):
                 x = df.to_numpy()
                 x = x[ordering]
                 df_ordered = pd.DataFrame(x, columns=df.columns.tolist())
-                new1 = df_ordered.sort_values(by=['G2']).reset_index(drop=True)
-                new2 = df.sort_values(by=['G2']).reset_index(drop=True)
+                new1 = df_ordered.sort_values(by=['G1']).reset_index(drop=True)
+                new2 = df.sort_values(by=['G1']).reset_index(drop=True)
                 z = new1 == new2
                 assert(sum([z[i].unique()[0] for i in z.columns.tolist()]) == len(z.columns.tolist()))      # just a sanity check
                                           
