@@ -138,7 +138,6 @@ def load_student_partial(index, perm=-1, validation_size=0):
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
-
 def before_preferential_sampling(perm, validation_size=0):
 	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../student-dataset/student-por.csv")
 	original_dataset['sex'] = original_dataset['sex'].replace({"M":1, "F":0})
@@ -246,6 +245,110 @@ def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_cand
 
 	return base.Datasets(train=train, validation=validation, test=test)
 
+
+def kamiran_discrimination_pairs(df):
+	# Remember 1 - female and male - 0		# reversed in this dataset
+	# for target 1 - good, 0 - bad
+	x = df.groupby(['sex','G3']).indices		# this gives the indices in the df, no the index
+	# male_good_credit = x[(1, 1)]
+	# male_bad_credit = x[(1, 0)]
+	# female_good_credit = x[(0, 1)]
+	# female_bad_credit = x[(0, 0)]
+
+	male_good_credit = x[(0, 1)]
+	male_bad_credit = x[(0, 0)]
+	female_good_credit = x[(1, 1)]
+	female_bad_credit = x[(1, 0)]
+
+	d_male = male_good_credit.shape[0] + male_bad_credit.shape[0]
+	male_half = male_good_credit.shape[0] / d_male
+	d_female = female_good_credit.shape[0] + female_bad_credit.shape[0]
+	female_half = female_good_credit.shape[0] / d_female
+	discm = male_half - female_half
+	pairs = int(discm * d_male * d_female / df.shape[0]) + 1
+	return discm, pairs, male_good_credit, male_bad_credit, female_good_credit, female_bad_credit
+	
+
+def before_massaging_dataset(perm, validation_size=0):
+	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../student-dataset/student-por.csv")
+	original_dataset['sex'] = original_dataset['sex'].replace({"M":1, "F":0})
+	original_dataset['G3'] = original_dataset['G3'].apply(lambda x: 0 if x <= 11 else 1)
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../student-dataset/normalized_student_features.csv").to_numpy()
+	total_labels  = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../student-dataset/student_labels.csv").to_numpy()
+	total_labels = total_labels.flatten()
+	assert(perm < 20)		# we only have 20 permutations
+	if perm >= 0:	# for negative number don't do
+		ordering = permutations(perm)
+		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
+	
+	train_examples = 500		# testing set is 149
+	original_dataset = original_dataset.reindex(ordering[:train_examples])
+	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
+	# import ipdb; ipdb.set_trace()
+	discm, pairs_to_flip, male_good_credit, male_bad_credit, female_good_credit, female_bad_credit = kamiran_discrimination_pairs(original_dataset)
+	# print(perm, discm, pairs_to_flip)
+	# return
+	X_train = total_dataset[:train_examples]
+	X_validation = total_dataset[train_examples:train_examples + validation_size]
+	X_test  = total_dataset[train_examples + validation_size:]
+	Y_train = total_labels[:train_examples]
+	Y_validation = total_labels[train_examples:train_examples + validation_size]
+	Y_test  = total_labels[train_examples + validation_size:]
+	assert(len(Y_test) == 149)
+	train = DataSet(X_train, Y_train)
+	validation = DataSet(X_validation, Y_validation)
+	test = DataSet(X_test, Y_test)
+
+	return base.Datasets(train=train, validation=validation, test=test), male_good_credit, male_bad_credit, female_good_credit, female_bad_credit, pairs_to_flip
+	
+
+def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation_size=0):
+	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../student-dataset/student-por.csv")
+	original_dataset['sex'] = original_dataset['sex'].replace({"M":1, "F":0})
+	original_dataset['G3'] = original_dataset['G3'].apply(lambda x: 0 if x <= 11 else 1)
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../student-dataset/normalized_student_features.csv").to_numpy()
+	total_labels  = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../student-dataset/student_labels.csv").to_numpy()
+	total_labels = total_labels.flatten()
+	assert(perm < 20)		# we only have 20 permutations
+	if perm >= 0:	# for negative number don't do
+		ordering = permutations(perm)
+		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
+
+	train_examples = 500		# testing set is 149
+	original_dataset = original_dataset.reindex(ordering[:train_examples])
+	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
+	for p, d in zip(promotion_candidates, demotion_candidates):
+		assert original_dataset.loc[d, 'sex'] == original_dataset.loc[p, 'G3'] == int(total_labels[p]) == 0		# notice in the first part, p and d are flipped in these two statements
+		assert original_dataset.loc[p, 'sex'] == original_dataset.loc[d, 'G3'] == int(total_labels[d]) == 1
+		original_dataset.loc[p, 'G3'] = 1		# promote the female of bad credit
+		total_labels[p] = 1.0
+		original_dataset.loc[d, 'G3'] = 0		# demote the male of good credit
+		total_labels[d] = 0.0
+		assert p < train_examples	# the index of both promotion and demotion candidates should be within training set
+		assert d < train_examples
+
+	discm, pairs_to_flip, _, _, _, _ = kamiran_discrimination_pairs(original_dataset)
+	assert discm <= 0 	# negative or zero discrimination
+	assert pairs_to_flip == 0 or pairs_to_flip == 1
+	# you can't check df feature as it is normalized values
+	# df_target = pd.DataFrame(total_labels, columns=['G3])
+	# df_feature = pd.DataFrame(total_dataset, columns=original_dataset.columns.tolist()[:-1])		# column names remove target
+	# df_feature['G3] = df_target
+	# import ipdb; ipdb.set_trace()
+	# print(perm, discm, pairs_to_flip)
+	# return
+	X_train = total_dataset[:train_examples]
+	X_validation = total_dataset[train_examples:train_examples + validation_size]
+	X_test  = total_dataset[train_examples + validation_size:]
+	Y_train = total_labels[:train_examples]
+	Y_validation = total_labels[train_examples:train_examples + validation_size]
+	Y_test  = total_labels[train_examples + validation_size:]
+	assert(len(Y_test) == 149)
+	train = DataSet(X_train, Y_train)
+	validation = DataSet(X_validation, Y_validation)
+	test = DataSet(X_test, Y_test)
+
+	return base.Datasets(train=train, validation=validation, test=test)
 
 
 # These are 20 permutations of the full student dataset. 
