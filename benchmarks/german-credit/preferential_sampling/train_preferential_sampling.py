@@ -117,9 +117,6 @@ model_ = Fully_Connected(
     )
 
 model_.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
-
-# iter_to_load = num_steps - 1
-# train_acc, test_acc = model.load_checkpoint(iter_to_load=iter_to_load)
 class0_data, class1_data = entire_test_suite(mini=False, disparateremoved=False)     # False means loads entire data
 num_dicsm = model_.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
 train_acc, test_acc = model_.print_model_eval()

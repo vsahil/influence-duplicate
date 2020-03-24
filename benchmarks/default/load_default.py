@@ -332,7 +332,6 @@ def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
-
 # These are 20 permutations of the full default dataset. 
 def permutations(perm):
 	x = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/data-permutations/split{perm}.npy")

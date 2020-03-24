@@ -57,8 +57,8 @@ if setting_now >= 0:
     batch_size = batch
 else:
     perm = -1
-    hidden1_units = 16
-    hidden2_units = 8
+    hidden1_units = 32
+    hidden2_units = 12
     hidden3_units = 0
     batch_size = 50
     model_count = 1000

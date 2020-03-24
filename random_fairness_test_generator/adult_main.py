@@ -54,4 +54,4 @@ for line in f:
 # exit(0)
 # print(names)
 soft = Themis.soft(names, values, num_values, command, type_discm)
-soft.single_feature_discm(7, 0.3, 0.99, 0.01, "causal")     # 9th feature is gender
+soft.single_feature_discm_adult(7, 0.3, 0.99, 0.01, "causal")     # 9th feature is gender
