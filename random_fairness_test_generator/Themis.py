@@ -15,7 +15,7 @@ import random
 import math
 import causal
 import group
-
+import pandas as pd
 
 
 class soft:
@@ -148,48 +148,52 @@ class soft:
             if not i == discm_feature:
                 inp.append(int(random.choice(self.values[i]))) 
             else:
-                inp.append(0)       # this is for gender 0
+                inp.append(0)       # this is for gender == 0
         return inp
 
 
-    def single_feature_discm(self, feature, theta, confidence, epsilon, type_discm):
+    def single_feature_discm_adult(self, feature, theta, confidence, epsilon, type_discm):
         assert(isinstance(feature, int))
         assert(feature <= len(self.attr_names))
         # score = self.causalDiscrimination([feature], confidence, epsilon)
         # print("No. of discriminating tests: ", len(self.causal_tests), "Score: ", score)
         discm_tests_gender0 = []
         total = 0
+        with open("gender0_adult.csv", "a") as f:
+            f.write("age,workclass,fnlwgt,education,marital-status,occupation,race,sex,capitalgain,capitalloss,hoursperweek,native-country\n")
+        
         while True:
             new = self.randomInput_gender0(feature)
             # if not new in discm_tests_gender0:      # its fine for 2 or more tests to be identical, we generate it randomly
             discm_tests_gender0.append(new)
             total += 1
             x = len(discm_tests_gender0) 
-            # if x == 1000000:
-            if x == self.MaxSamples:
+            if x == 1000000:
+            # if x == self.MaxSamples:
                 print(total, "hello")
-                with open("gender0_adult_mini.csv", "a") as f:
+                with open("gender0_adult.csv", "a") as f:
                     for i in discm_tests_gender0:
-                        f.write(str(i)[1:-1] + "\n")
+                        f.write(str(i)[1:-1].replace(" ", "") + "\n")
                 discm_tests_gender0 = []
             
-            # if total == 45222*100:
-            if total == self.MaxSamples:                
-                with open("gender0_adult_mini.csv", "a") as f:
+            if total == 45222*100:
+            # if total == self.MaxSamples:                
+                with open("gender0_adult.csv", "a") as f:
                     for i in discm_tests_gender0:
-                        f.write(str(i)[1:-1] + "\n")
+                        f.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
                 break
 
         # check if any tests are duplicated:
-        # df = pd.read_csv("gender0_adult.csv")
-        # x = df.duplicated()
-        # x.any()     # if this is False, we are all good.
+        df = pd.read_csv("gender0_adult.csv")
+        x = df.duplicated()
+        print(x.any(), "see duplication")     # if this is False, we are all good.
         # np.where(x) # if this is an empty list we are good, For adult we are good.
         
         # This generates same examples for the other gender
-        # df = pd.read_csv("gender0_adult_mini.csv")
-        # df['sex'] = 1
-        # df.to_csv("gender1_adult_mini.csv", index=False)
+        
+        # df = pd.read_csv("gender0_adult.csv")
+        df['sex'] = 1
+        df.to_csv("gender1_adult.csv", index=False)
         
         # with open("gender0_adult.csv", "a") as f:
         #     for i in discm_tests_gender0:
@@ -197,6 +201,229 @@ class soft:
 
         # if score > theta:
             # print("Discriminates against: ", self.attr_names[feature])
+
+
+    def single_feature_discm_german(self, feature, theta, confidence, epsilon, type_discm):
+        assert(isinstance(feature, int))
+        assert(feature <= len(self.attr_names))     # feature is the sensitive feature
+        # score = self.causalDiscrimination([feature], confidence, epsilon)
+        # print("No. of discriminating tests: ", len(self.causal_tests), "Score: ", score)
+        discm_tests_gender0 = []
+        total = 0
+        with open("gender0_german.csv", "a") as f:
+            f.write("Checking-ccount,Months,Credit-history,Purpose,Credit-mount,Svings-ccount,Present-employment-since,Instllment-rte,Gender,Other-debtors,Present-residence-since,Property,ge,Other-instllment-plns,Housing,Number-of-existing-credits,Job,Number-of-people-being-lible,Telephone,Foreign-worker\n")
+        
+        while True:
+            new = self.randomInput_gender0(feature)
+            # if not new in discm_tests_gender0:      # its fine for 2 or more tests to be identical, we generate it randomly
+            discm_tests_gender0.append(new)
+            total += 1
+            x = len(discm_tests_gender0) 
+            if x == 10000:
+            # if x == self.MaxSamples:
+                print(total, "hello")
+                with open("gender0_german.csv", "a") as f:
+                    for i in discm_tests_gender0:
+                        f.write(str(i)[1:-1].replace(" ", "") + "\n")
+                discm_tests_gender0 = []
+            
+            if total == 100000:
+            # if total == self.MaxSamples:                
+                with open("gender0_german.csv", "a") as f:
+                    for i in discm_tests_gender0:
+                        f.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                break
+
+        # check if any tests are duplicated:
+        df = pd.read_csv("gender0_german.csv")
+        x = df.duplicated()
+        print(x.any(), "see duplication")     # if this is False, we are all good.
+        # np.where(x) # if this is an empty list we are good, For adult we are good.
+        
+        # This generates same examples for the other gender
+        
+        # df = pd.read_csv("gender0_german.csv")
+        df['Gender'] = 1
+        df.to_csv("gender1_german.csv", index=False)
+        
+        # with open("gender0_german.csv", "a") as f:
+        #     for i in discm_tests_gender0:
+        #         f.write(str(i)[1:-1] + "\n")
+
+        # if score > theta:
+            # print("Discriminates against: ", self.attr_names[feature])
+
+
+    def single_feature_discm_small_dataset(self, feature, theta, confidence, epsilon, type_discm):
+        assert(isinstance(feature, int))
+        assert(feature <= len(self.attr_names))
+        # score = self.causalDiscrimination([feature], confidence, epsilon)
+        # print("No. of discriminating tests: ", len(self.causal_tests), "Score: ", score)
+        discm_tests_gender0 = []
+        total = 0
+        with open("race0_biased.csv", "a") as f:
+            f.write("Income,Neighbor-income,Race\n")
+        
+        while True:
+            new = self.randomInput_gender0(feature)
+            discm_tests_gender0.append(new)
+            total += 1
+
+            if total == 500:              
+                with open("race0_biased.csv", "a") as f:
+                    for i in discm_tests_gender0:
+                        f.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                break
+
+        # check if any tests are duplicated:
+        df = pd.read_csv("race0_biased.csv")
+        x = df.duplicated()
+        print(x.any(), "see duplication")     # if this is False, we are all good.
+        
+        # This generates same examples for the other gender
+        df['Race'] = 1
+        df.to_csv("race1_biased.csv", index=False)
+        
+
+    def single_feature_discm_compas(self, feature, theta, confidence, epsilon, type_discm):
+        assert(isinstance(feature, int))
+        assert(feature <= len(self.attr_names))
+        # score = self.causalDiscrimination([feature], confidence, epsilon)
+        # print("No. of discriminating tests: ", len(self.causal_tests), "Score: ", score)
+        discm_tests_gender0 = []
+        total = 0
+        with open("race0_compas.csv", "a") as f:
+            f.write("sex,age,race,juv_fel_count,juv_misd_count,juv_other_count,priors_count,days_b_screening_arrest,c_days_from_compas,c_charge_degree\n")
+        
+        while True:
+            new = self.randomInput_gender0(feature)
+            # if not new in discm_tests_gender0:      # its fine for 2 or more tests to be identical, we generate it randomly
+            discm_tests_gender0.append(new)
+            total += 1
+            x = len(discm_tests_gender0) 
+            
+            if total == 1000000:            
+                with open("race0_compas.csv", "a") as f:
+                    for i in discm_tests_gender0:
+                        f.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                break
+
+        # check if any tests are duplicated:
+        df = pd.read_csv("race0_compas.csv")
+        x = df.duplicated()
+        print(x.any(), "see duplication")     # if this is False, we are all good.
+        # np.where(x) # if this is an empty list we are good, For adult we are good.
+        
+        # This generates same examples for the other demographic group
+        df['race'] = 1
+        df.to_csv("race1_compas.csv", index=False)
+        
+        # with open("gender0_adult.csv", "a") as f:
+        #     for i in discm_tests_gender0:
+        #         f.write(str(i)[1:-1] + "\n")
+
+        # if score > theta:
+            # print("Discriminates against: ", self.attr_names[feature])
+
+    
+    def single_feature_discm_compas_two_year(self, feature, theta, confidence, epsilon, type_discm):
+        assert(isinstance(feature, int))
+        assert(feature <= len(self.attr_names))
+        discm_tests_gender0 = []
+        total = 0
+        with open("race0_compas_two_year.csv", "a") as f:
+            f.write("sex,age,race,juv_fel_count,decile_score,juv_misd_count,juv_other_count,priors_count,days_b_screening_arrest,c_days_from_compas,c_charge_degree,is_recid,is_violent_recid,decile_score.1,v_decile_score,priors_count.1,start,end,event\n")
+        
+        while True:
+            new = self.randomInput_gender0(feature)
+            discm_tests_gender0.append(new)
+            total += 1
+            x = len(discm_tests_gender0) 
+            
+            if total == 1000000:            
+                with open("race0_compas_two_year.csv", "a") as f:
+                    for i in discm_tests_gender0:
+                        f.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                break
+
+        # check if any tests are duplicated:
+        df = pd.read_csv("race0_compas_two_year.csv")
+        x = df.duplicated()
+        print(x.any(), "see duplication")     # if this is False, we are all good.
+        
+        # This generates same examples for the other demographic group
+        df['race'] = 1
+        df.to_csv("race1_compas_two_year.csv", index=False)
+        
+    
+    def single_feature_discm_student(self, feature, theta, confidence, epsilon, type_discm):
+        assert(isinstance(feature, int))
+        assert(feature <= len(self.attr_names))
+        discm_tests_gender0 = []
+        total = 0
+        with open("sex0_student.csv", "a") as f:
+            f.write("school,sex,age,address,famsize,Pstatus,Medu,Fedu,Mjob,Fjob,reason,guardian,traveltime,studytime,failures,schoolsup,famsup,paid,activities,nursery,higher,internet,romantic,famrel,freetime,goout,Dalc,Walc,health,absences,G1,G2\n")
+        
+        while True:
+            new = self.randomInput_gender0(feature)
+            discm_tests_gender0.append(new)
+            total += 1
+            x = len(discm_tests_gender0) 
+            
+            if total == 100000:            
+                with open("sex0_student.csv", "a") as f:
+                    for i in discm_tests_gender0:
+                        f.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                break
+
+        # check if any tests are duplicated:
+        df = pd.read_csv("sex0_student.csv")
+        x = df.duplicated()
+        print(x.any(), "see duplication")     # if this is False, we are all good.
+        if not x.any():
+            # This generates same examples for the other demographic group, after flipping that attribute
+            df['sex'] = 1
+            df.to_csv("sex1_student.csv", index=False)
+        
+
+    def single_feature_discm_default(self, feature, theta, confidence, epsilon, type_discm):
+        assert(isinstance(feature, int))
+        assert(feature <= len(self.attr_names))
+        # score = self.causalDiscrimination([feature], confidence, epsilon)
+        # print("No. of discriminating tests: ", len(self.causal_tests), "Score: ", score)
+        discm_tests_gender0 = []
+        total = 0
+        with open("sex0_default.csv", "a") as f:
+            f.write("LIMIT_BAL,sex,EDUCATION,MARRIAGE,AGE,PAY_0,PAY_2,PAY_3,PAY_4,PAY_5,PAY_6,BILL_AMT1,BILL_AMT2,BILL_AMT3,BILL_AMT4,BILL_AMT5,BILL_AMT6,PAY_AMT1,PAY_AMT2,PAY_AMT3,PAY_AMT4,PAY_AMT5,PAY_AMT6\n")
+        
+        while True:
+            new = self.randomInput_gender0(feature)
+            discm_tests_gender0.append(new)
+            total += 1
+            x = len(discm_tests_gender0) 
+            if x == 1000000:
+                print(total, "hello")
+                with open("sex0_default.csv", "a") as f:
+                    for i in discm_tests_gender0:
+                        f.write(str(i)[1:-1].replace(" ", "") + "\n")
+                discm_tests_gender0 = []
+            
+            if total == 3000000:
+                if not x == 1000000:    # only if there are cases not pushed into random test suite 
+                    with open("sex0_default.csv", "a") as f:
+                        for i in discm_tests_gender0:
+                            f.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                break
+
+        # check if any tests are duplicated:
+        df = pd.read_csv("sex0_default.csv")
+        x = df.duplicated()
+        print(x.any(), "see duplication", df.shape)     # if this is False, we are all good.
+        if not x.any():
+            # This generates same examples for the other gender
+            df['sex'] = 1
+            df.to_csv("sex1_default.csv", index=False)
+        
 
     # theta is discrimination threshold
     # epsilon is the error margin, with some confidence value. I want to keep max confidence and lowest error to generate a lot of tests.

@@ -6,7 +6,7 @@ import numpy as np
 np.random.seed(0)
 
 from tqdm import tqdm
-from aif360.datasets import GermanDataset, MyAdultDataset
+from aif360.datasets import MyAdultDataset
 from aif360.metrics import BinaryLabelDatasetMetric
 from aif360.algorithms.preprocessing import DisparateImpactRemover
 from sklearn.preprocessing import MinMaxScaler

@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 import numpy as np
 import IPython, sys, os
+sys.path.append(".")
 sys.path.append("../../")
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -56,7 +57,7 @@ hidden3_units = 0
 batch_size = batch
 assert(model_count == setting_now)
 num_steps = 50000
-decay_epochs = [80000, 100000]  # no use
+decay_epochs = [60000, 70000]
 
 model = Fully_Connected(
     input_dim=input_dim, 
@@ -71,15 +72,15 @@ model = Fully_Connected(
     damping=1e-2,
     decay_epochs=decay_epochs,
     mini_batch=True,
-    train_dir=f'trained_models/output_count{model_count}', 
-    log_dir=f'logs/log{model_count}',
-    hvp_files = f"HVP_files1men/inverse_HVP_schm{scheme}_count{model_count}",
+    train_dir=f'throw/trained_models/output_count{model_count}', 
+    log_dir=f'log{model_count}',
+    hvp_files = f"HVP_files/inverse_HVP_schm{scheme}_count{model_count}",
     model_name=f"german_credit_count{model_count}",
     scheme = f"{scheme}"
     )
 
-# model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000)
-
+model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=True)
+exit(0)
 iter_to_load = num_steps - 1
 # iter_to_load = 46999
 print("Start: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)

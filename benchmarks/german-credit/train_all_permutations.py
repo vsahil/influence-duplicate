@@ -10,7 +10,7 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 import influence.experiments as experiments
 from influence.fully_connected import Fully_Connected
 
-from load_german_credit import exclude_some_examples, reweighted_load_german_credit, disparate_removed_load_german_credit    #, load_german_credit, load_german_credit_partial
+from load_german_credit import exclude_some_examples, disparate_removed_load_german_credit    # reweighted_load_german_credit
 from find_discm_points import entire_test_suite
 
 
@@ -55,6 +55,7 @@ assert(model_count == setting_now)
 data_sets = disparate_removed_load_german_credit()
 hidden1_units = h1units
 hidden2_units = h2units
+hidden3_units = 0
 batch_size = batch
 print("Start: ", model_count, " Setting: ", hidden1_units, hidden2_units, batch_size)
 # num_steps = batch_size * 1000
@@ -67,6 +68,7 @@ model = Fully_Connected(
     input_dim=input_dim, 
     hidden1_units=hidden1_units, 
     hidden2_units=hidden2_units,
+    hidden3_units=hidden3_units,
     weight_decay=weight_decay,
     num_classes=num_classes, 
     batch_size=batch_size,
@@ -85,7 +87,7 @@ model = Fully_Connected(
 model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
 iter_to_load = num_steps - 1
 # train_acc, test_acc = model.load_checkpoint(iter_to_load=iter_to_load)
-class0_data, class1_data = entire_test_suite(mini=False, reweighted_german=False, disparateremoved=True)     # False means loads entire data
+class0_data, class1_data = entire_test_suite(mini=False, disparateremoved=True)     # False means loads entire data
 num_dicsm = model.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
 train_acc, test_acc = model.print_model_eval()
 
