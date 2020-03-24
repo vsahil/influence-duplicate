@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import numpy as np
 import IPython, sys, os
 sys.path.append(".")
-sys.path.append("../")
+sys.path.append("../../")
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
@@ -18,7 +18,7 @@ from influence.fully_connected import Fully_Connected
 from load_german_credit import load_german_credit, load_german_credit_partial
 from find_discm_points import entire_test_suite
 
-data_sets = load_german_credit()
+# data_sets = load_german_credit()
 # data_sets = reweighted_load_german_credit()
 
 input_dim = 20
@@ -53,15 +53,17 @@ perm, h1units, h2units, batch, model_count = variation(setting_now)
 data_sets = load_german_credit(perm)
 hidden1_units = h1units
 hidden2_units = h2units
+hidden3_units = 0
 batch_size = batch
 assert(model_count == setting_now)
 num_steps = 50000
-decay_epochs = [int(0.7 * num_steps)]
+decay_epochs = [60000, 70000]
 
 model = Fully_Connected(
     input_dim=input_dim, 
     hidden1_units=hidden1_units, 
     hidden2_units=hidden2_units,
+    hidden3_units=hidden3_units,
     weight_decay=weight_decay,
     num_classes=num_classes, 
     batch_size=batch_size,
@@ -70,15 +72,15 @@ model = Fully_Connected(
     damping=1e-2,
     decay_epochs=decay_epochs,
     mini_batch=True,
-    train_dir=f'trained_models/output_count{model_count}', 
+    train_dir=f'throw/trained_models/output_count{model_count}', 
     log_dir=f'log{model_count}',
     hvp_files = f"HVP_files/inverse_HVP_schm{scheme}_count{model_count}",
     model_name=f"german_credit_count{model_count}",
     scheme = f"{scheme}"
     )
 
-# model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000)
-
+model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=True)
+exit(0)
 iter_to_load = num_steps - 1
 # iter_to_load = 46999
 print("Start: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
@@ -89,32 +91,30 @@ class0_data, class1_data = entire_test_suite(False)     # False means loads enti
 # exit(0)
 model.find_discm_examples(class0_data, class1_data, print_file=True, scheme=scheme)
 
-
-# test_idx = 0
-# x = 
-# import ipdb; ipdb.set_trace()
 predicted_loss_diffs = model.get_influence_on_test_loss(
             [i for i in range(model.discm_data_set.num_examples)], 
             np.arange(len(model.data_sets.train.labels)),
             force_refresh=False)
-
 
 sorted_training_points = list(np.argsort(predicted_loss_diffs)[::-1])     # decreasing order of influence among training points
 # print(sorted_training_points)
 training_size = model.data_sets.train.num_examples
 assert(len(sorted_training_points) == training_size)
 
-with open("sorted_training_points.csv", "a") as f:
-    f.write(str(model_count) + ": " + str(sorted_training_points))
-    f.write("\n")
-
+# with open("sorted_training_points.csv", "a") as f:
+#     f.write(str(model_count) + ": " + str(sorted_training_points))
+#     f.write("\n")
+# print(train_acc, test_acc)
 exit(0)
 
 del model   # so that weights of the original model are not used. This will not help
 
 # for percentage in range(5, 4, 0.5):
 # for percentage in np.arange(1, 51.0, 5):
-for p in range(80, 120):
+# import time
+# start_time = time.time()
+num_steps = 20000
+for p in range(0, 400):
     tf.reset_default_graph()
     # p = int(training_size * percentage / 100)
     # p = 26
@@ -127,6 +127,7 @@ for p in range(80, 120):
         input_dim=input_dim, 
         hidden1_units=hidden1_units, 
         hidden2_units=hidden2_units,
+        hidden3_units=hidden3_units,
         weight_decay=weight_decay,
         num_classes=num_classes, 
         batch_size=batch_size,
@@ -136,17 +137,20 @@ for p in range(80, 120):
         decay_epochs=decay_epochs,
         mini_batch=False,
         train_dir='output_partial', 
-        log_dir='log_partial',
+        log_dir='logs/log_partial',
         hvp_files = "inverse_HVP_scheme1_useless",
         model_name='german_credit_partial_useless',
-        scheme = "scheme1_useless")
+        scheme = "scheme8_useless")
     print("Training model no: ", model_count, "Removed  points: ", p)
-    model_partial_data.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, verbose=False)
+    model_partial_data.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
     # print("Percentage: ", percentage, " Points removed: ", p)
     num = model_partial_data.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
-    with open(f"discm_points_results/model{model_count}_results.txt", "a") as f:
-        f.write("Points removed: " + str(p) + ", Discriminating Tests: " + str(num) + "\n")
+    train_acc, test_acc = model_partial_data.print_model_eval()
+    os.system("rm -rf logs/log_partial")
+    with open(f"german_credit_mega_results_1menonly.csv", "a") as f:
+        # f.write("Points removed: " + str(p) + ", Discriminating Tests: " + str(num) + "\n")
+        f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{p},{num},{num/1000.0}\n")
     del model_partial_data          # to remove any chance of reusing variables and reduce memory
 
-
+# print(time.time() - start_time, "see")
 print("Completed: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)

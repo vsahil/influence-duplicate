@@ -119,3 +119,4 @@ if __name__ == "__main__":
        missing_to_normalized() 
     else:
         print_mins_and_ranges()
+        
