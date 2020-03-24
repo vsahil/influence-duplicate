@@ -1,4 +1,4 @@
-Train-Acc,Test-Acc,perm,Discriminating-points,Discm
+Train-Acc,Test-Acc,perm,Discriminating-points,Discm_percent
 0.85625,0.76,2,17707,17.707
 0.8525,0.76,0,16531,16.531
 0.865,0.68,4,11297,11.297
