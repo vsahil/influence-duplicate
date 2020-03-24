@@ -61,7 +61,7 @@ labels = new_df['target'].to_numpy()
 features = new_df.drop(columns=['target']).to_numpy()
 # import ipdb; ipdb.set_trace()
 
-write = True
+write = False
 if write:
     with open("see.csv", "w") as f:
         new_df.to_csv(f, index=False)
