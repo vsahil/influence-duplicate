@@ -9,7 +9,7 @@ default_mappings = {
     'protected_attribute_maps': [{1.0:"Caucasian", 0.0:"African-American"}]
 }
 
-class CompasDataset(StandardDataset):
+class MyCompasDataset(StandardDataset):
     """Default Prediction Dataset.
     """
     def __init__(self, label_name='two_year_recid',
@@ -42,7 +42,7 @@ class CompasDataset(StandardDataset):
                                   
         column_names = ['sex','age','race','juv_fel_count','decile_score','juv_misd_count','juv_other_count','priors_count','days_b_screening_arrest','c_days_from_compas','c_charge_degree','is_recid','is_violent_recid','decile_score.1','v_decile_score','priors_count.1','start','end','event','two_year_recid']
 
-        super(CompasDataset, self).__init__(df=df, label_name=label_name,
+        super(MyCompasDataset, self).__init__(df=df, label_name=label_name,
             favorable_classes=favorable_classes,
             protected_attribute_names=protected_attribute_names,
             privileged_classes=privileged_classes,
