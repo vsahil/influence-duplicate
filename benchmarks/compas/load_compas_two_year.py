@@ -86,6 +86,27 @@ def load_compas_two_year(perm=-1, validation_size=0):
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
+def load_fair_representations(perm, total_dataset, total_labels, validation_size=0):
+	assert(perm < 20)		# we only have 20 permutations
+	if perm >= 0:	# for negative number don't do
+		ordering = permutations(perm)
+		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
+
+	train_examples = 5000		# testing set is 1150		# weird size (about 20% - similar to german credit dataset and adult income dataset)
+	X_train = total_dataset[:train_examples]
+	X_validation = total_dataset[train_examples:train_examples + validation_size]
+	X_test  = total_dataset[train_examples + validation_size:]
+	Y_train = total_labels[:train_examples]
+	Y_validation = total_labels[train_examples:train_examples + validation_size]
+	Y_test  = total_labels[train_examples + validation_size:]
+	assert(len(Y_test) == 1150)
+	train = DataSet(X_train, Y_train)
+	validation = DataSet(X_validation, Y_validation)
+	test = DataSet(X_test, Y_test)
+
+	return base.Datasets(train=train, validation=validation, test=test)
+
+
 def disparate_removed_load_compas(perm, validation_size=0):
 	total_dataset = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/disparate_impact_removed/normalized_disparateremoved_features-compas.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
 	total_labels = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/disparate_impact_removed/normalized_disparateremoved_labels-compas.csv", delimiter=",")
