@@ -28,9 +28,8 @@ class MyGermanDataset(StandardDataset):
         """
 
         if normalized:
-            raise NotImplementedError
-            # features_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'default-dataset', 'normalized_default_features.csv')
-            # labels_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'default-dataset', 'default_labels.csv')
+            features_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'german-credit-dataset', 'german_redone_normalized_withheader.csv')
+            labels_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'german-credit-dataset', 'german_labels_withheader.csv')
             df = pd.read_csv(features_path)
             df2 = pd.read_csv(labels_path)
             df['target'] = df2
@@ -38,14 +37,15 @@ class MyGermanDataset(StandardDataset):
             train_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'german-credit-dataset', 'german_redone.csv')
             df = pd.read_csv(train_path)
             assert len(df.columns[df.isnull().any()]) == 0
-            if permute == -1:
-                df_ordered = df
-            else:
-                assert(permute < 20)
-                ordering = load_german_credit.permutations(permute)
-                x = df.to_numpy()
-                x = x[ordering]
-                df_ordered = pd.DataFrame(x, columns=df.columns.tolist())
+        if permute == -1:
+            df_ordered = df
+        else:
+            assert(permute < 20)
+            ordering = load_german_credit.permutations(permute)
+            x = df.to_numpy()
+            x = x[ordering]
+            df_ordered = pd.DataFrame(x, columns=df.columns.tolist())
+            if not normalized:
                 new1 = df_ordered.sort_values(by=['Credit-mount']).reset_index(drop=True)
                 new2 = df.sort_values(by=['Credit-mount']).reset_index(drop=True)
                 z = new1 == new2
