@@ -170,7 +170,11 @@ if train:
 #     # print("Points removed: ", p)
 #     print("Percentage: ", percentage, " Points removed: ", p) 
 #     model_partial_data.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
+<<<<<<< HEAD
 #     train_acc, test_acc = model.print_model_eval()
+=======
+#     train_acc, test_acc = model_partial_data.print_model_eval()
+>>>>>>> 542c0a097f97872bfbbbaeb12ae6a824b0a853ef
 #     # print("Percentage: ", percentage, " Points removed: ", p)
 #     # print("Points removed: ", p)
 #     print("Percentage: ", percentage, " Points removed: ", p)
@@ -220,7 +224,7 @@ model_partial_data = Fully_Connected(
 print("Training")
 print("Percentage: ", percentage, " Points removed: ", p)
 model_partial_data.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
-train_acc, test_acc = model.print_model_eval()
+train_acc, test_acc = model_partial_data.print_model_eval()
 print("Percentage: ", percentage, " Points removed: ", p)
 num = model_partial_data.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
 with open("student_results_pointsremoved_first120.csv".format(scheme), "a") as f:
