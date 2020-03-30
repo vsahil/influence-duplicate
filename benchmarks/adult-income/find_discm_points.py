@@ -5,11 +5,11 @@ import pandas as pd
 
 def rescale_input_numpy(inp):
     assert(inp.shape[1] == 12)  # 12 features for adult income dataset
-    means_and_ranges = [(1.7695369510415284, 4), (2.1092388660386536, 6), (189734.7343107337, 1476908), (3.4133165273539428, 15), (1.0784795011277697, 6), (4.628012914068374, 13), (0.21120251205165627, 4), (0.6750475432311707, 1), (0.20505506169563487, 4), (0.1165583123258591, 4), (1.98805890938039, 4), (1.1686347353058246, 40)]
+    mins_and_ranges = [(0, 4), (0, 6), (13492, 1476908), (0, 15), (0, 6), (0, 13), (0, 4), (0, 1), (0, 4), (0, 4), (0, 4), (0, 40)]
     r = np.arange(12)
     out = copy.deepcopy(inp)
-    for col, (mean, range_) in zip(r, means_and_ranges):
-        out[:, col] = np.divide(np.subtract(out[:, col], mean), range_)
+    for col, (min_, range_) in zip(r, mins_and_ranges):
+        out[:, col] = np.divide(np.subtract(out[:, col], min_), range_)
     return out
 
 
