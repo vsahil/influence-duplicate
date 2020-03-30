@@ -9,14 +9,12 @@ target = df['target']
 # _map = {1: 1, 2: 0}
 # target = target.replace(_map)
 df_new = df.drop(columns=['target'])
-# import ipdb; ipdb.set_trace()
-# df_new = df_new.reindex(['status','month','credit_history','purpose','credit_amount','savings','employment','investment_as_income_percentage','sex','other_debtors','residence_since','property','age','installment_plans','housing','number_of_credits','skill_level','people_liable_for','telephone','foreign_worker'], axis=1)
-# df_new = df_new.apply(lambda x: (x - np.mean(x)) / (np.max(x) - np.min(x)))
-# df_new.to_csv("normalized_adult_features.csv", index=False, header=False)
-# target.to_csv("normalized_adult_labels.csv", index=False, header=False)
+df_ = df_new.apply(lambda x: (x - np.min(x)) / (np.max(x) - np.min(x)))
+# df_.to_csv("normalized_adult_features.csv", index=False, header=True)
+# target.to_csv("adult_labels.csv", index=False, header=True)
 
-means_and_ranges = []
+mins_and_ranges = []
 for j in list(df_new):
     i = df[j]
-    means_and_ranges.append((np.mean(i), np.max(i) - np.min(i)))
-print(means_and_ranges)
+    mins_and_ranges.append((np.min(i), np.max(i) - np.min(i)))
+print(len(mins_and_ranges), mins_and_ranges)
