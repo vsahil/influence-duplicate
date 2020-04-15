@@ -1,0 +1,6 @@
+model_checkpoint_path: "german_credit_count223-checkpoint-49999"
+all_model_checkpoint_paths: "german_credit_count223-checkpoint-45999"
+all_model_checkpoint_paths: "german_credit_count223-checkpoint-46999"
+all_model_checkpoint_paths: "german_credit_count223-checkpoint-47999"
+all_model_checkpoint_paths: "german_credit_count223-checkpoint-48999"
+all_model_checkpoint_paths: "german_credit_count223-checkpoint-49999"
