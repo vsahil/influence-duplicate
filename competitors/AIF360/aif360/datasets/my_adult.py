@@ -78,58 +78,44 @@ class MyAdultDataset(StandardDataset):
             Now this information will stay attached to the dataset and can be
             used for more descriptive visualizations.
         """
-
         if normalized:
-            # train_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'raw', 'adult', 'normalized_adult_features.csv')
-            train_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'adult-income-dataset', 'normalized_adult_features.csv')
+            features_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'adult-income-dataset', 'normalized_adult_features.csv')
+            labels_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'adult-income-dataset', 'adult_labels.csv')
+            df = pd.read_csv(features_path)
+            df2 = pd.read_csv(labels_path)
+            df['target'] = df2
         else:
-           train_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'adult-income-dataset', 'adult_no_missing.csv') 
-
-                                  
-        # train_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-        #                           '..', 'data', 'raw', 'adult', 'adult.data')
-        # test_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-        #                           '..', 'data', 'raw', 'adult', 'adult.test')
-        # as given by adult.names
-        # column_names = ['age', 'workclass', 'fnlwgt', 'education',
-        #     'education-num', 'marital-status', 'occupation', 'relationship',
-        #     'race', 'sex', 'capital-gain', 'capital-loss', 'hours-per-week',
-        #     'native-country', 'income-per-year']
-        column_names = ['age','workclass','fnlwgt','education','marital-status','occupation',
-        'race','sex','capitalgain','capitalloss','hoursperweek','native-country','target']
-
-        try:
-            # train = pd.read_csv(train_path, header=None, names=column_names,
-                # skipinitialspace=True, na_values=na_values)
+            train_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'adult-income-dataset', 'adult_no_missing.csv')
             df = pd.read_csv(train_path)
-            # test = pd.read_csv(test_path, header=0, names=column_names,
-            #     skipinitialspace=True, na_values=na_values)
             assert len(df.columns[df.isnull().any()]) == 0
-            if permute == -1:
-                df_ordered = df
-            else:
-                assert(permute < 20)
-                ordering = load_adult_income.permutations(permute)
-                x = df.to_numpy()
-                x = x[ordering]
-                df_ordered = pd.DataFrame(x, columns=df.columns.tolist())
-                if not normalized:
-                    new1 = df_ordered.sort_values(by=['fnlwgt']).reset_index(drop=True)
-                    new2 = df.sort_values(by=['fnlwgt']).reset_index(drop=True)
-                    z = new1 == new2
-                    assert(sum([z[i].unique()[0] for i in z.columns.tolist()]) == len(z.columns.tolist()))      # just a sanity check
+                                  
+        if permute == -1:
+            df_ordered = df
+        else:
+            assert(permute < 20)
+            ordering = load_adult_income.permutations(permute)
+            x = df.to_numpy()
+            x = x[ordering]
+            df_ordered = pd.DataFrame(x, columns=df.columns.tolist())
+            if not normalized:
+                new1 = df_ordered.sort_values(by=['fnlwgt']).reset_index(drop=True)
+                new2 = df.sort_values(by=['fnlwgt']).reset_index(drop=True)
+                z = new1 == new2
+                assert(sum([z[i].unique()[0] for i in z.columns.tolist()]) == len(z.columns.tolist()))      # just a sanity check
 
-        except IOError as err:
-            print("IOError: {}".format(err))
-            print("To use this class, please download the following files:")
-            print("\n\thttps://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data")
-            print("\thttps://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.test")
-            print("\thttps://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.names")
-            print("\nand place them, as-is, in the folder:")
-            print("\n\t{}\n".format(os.path.abspath(os.path.join(
-               os.path.abspath(__file__), '..', '..', 'data', 'raw', 'adult'))))
-            import sys
-            sys.exit(1)
+        column_names = ['age','workclass','fnlwgt','education','marital-status','occupation','race','sex','capitalgain','capitalloss','hoursperweek','native-country','target']
+
+        # except IOError as err:
+        #     print("IOError: {}".format(err))
+        #     print("To use this class, please download the following files:")
+        #     print("\n\thttps://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data")
+        #     print("\thttps://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.test")
+        #     print("\thttps://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.names")
+        #     print("\nand place them, as-is, in the folder:")
+        #     print("\n\t{}\n".format(os.path.abspath(os.path.join(
+        #        os.path.abspath(__file__), '..', '..', 'data', 'raw', 'adult'))))
+        #     import sys
+        #     sys.exit(1)
 
         # df = pd.concat([test, train], ignore_index=True)
         # df = train
