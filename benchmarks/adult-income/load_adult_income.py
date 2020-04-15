@@ -62,8 +62,10 @@ def exclude_some_examples(exclude, validation_size=0, remove_biased_test=True):
 
 
 def load_adult_income(perm=-1, validation_size=0):
-	total_dataset = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-income-dataset/normalized_adult_features.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
-	total_labels = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-income-dataset/adult_labels.csv", delimiter=",")
+	total_dataset = pd.read_csv("../../adult-income-dataset/normalized_adult_features.csv").to_numpy()
+	total_labels = pd.read_csv("../../adult-income-dataset/adult_labels.csv").to_numpy()
+	total_labels = total_labels.flatten()
+	# import ipdb; ipdb.set_trace()
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
@@ -131,8 +133,9 @@ def disparate_removed_load_adult_income(perm, validation_size=0):
 
 
 def load_adult_income_partial(index, perm=-1, validation_size=0):
-	total_dataset = genfromtxt("../../adult-income-dataset/normalized_adult_features.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
-	total_labels = genfromtxt("../../adult-income-dataset/adult_labels.csv", delimiter=",")
+	total_dataset = pd.read_csv("../../adult-income-dataset/normalized_adult_features.csv").to_numpy()
+	total_labels = pd.read_csv("../../adult-income-dataset/adult_labels.csv").to_numpy()
+	total_labels = total_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
