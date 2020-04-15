@@ -1,7 +1,7 @@
 import os, sys
 
 import pandas as pd
-sys.path.append("../../../benchmarks/german-credit/")
+sys.path.append("../../../benchmarks/german/")
 import load_german_credit
 
 from aif360.datasets import StandardDataset

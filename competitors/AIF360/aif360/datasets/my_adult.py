@@ -2,7 +2,7 @@ import os
 
 import pandas as pd
 import sys
-sys.path.append("../../../benchmarks/adult-income/")
+sys.path.append("../../../benchmarks/adult/")
 import load_adult_income
 
 from aif360.datasets import StandardDataset
@@ -80,9 +80,10 @@ class MyAdultDataset(StandardDataset):
         """
 
         if normalized:
-            train_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'raw', 'adult', 'normalized_adult_features.csv')
+            # train_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'raw', 'adult', 'normalized_adult_features.csv')
+            train_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'adult-income-dataset', 'normalized_adult_features.csv')
         else:
-           train_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'raw', 'adult', 'adult_no_missing.csv') 
+           train_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'adult-income-dataset', 'adult_no_missing.csv') 
 
                                   
         # train_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
