@@ -71,8 +71,9 @@ def exclude_some_examples(exclude, validation_size=0, remove_biased_test=False):
 
 
 def load_german_credit(perm, validation_size=0):
-	total_dataset = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone_normalized.csv", delimiter=",")
-	total_labels = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/labels.csv", delimiter=",")
+	total_dataset = pd.read_csv("../../german-credit-dataset/german_redone_normalized_withheader.csv").to_numpy()
+	total_labels = pd.read_csv("../../german-credit-dataset/german_labels_withheader.csv").to_numpy()
+	total_labels = total_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
@@ -138,9 +139,9 @@ def disparate_removed_load_german(perm, validation_size=0):
 
 
 def load_german_credit_partial(perm, index, validation_size=0):
-	# total_dataset = genfromtxt("../german-credit-dataset/normalised-features-german.csv", delimiter=",")
-	total_dataset = genfromtxt("../../german-credit-dataset/german_redone_normalized.csv", delimiter=",")
-	total_labels = genfromtxt("../../german-credit-dataset/labels.csv", delimiter=",")
+	total_dataset = pd.read_csv("../../german-credit-dataset/german_redone_normalized_withheader.csv").to_numpy()
+	total_labels = pd.read_csv("../../german-credit-dataset/german_labels_withheader.csv").to_numpy()
+	total_labels = total_labels.flatten()
 	assert(perm < 20)
 	ordering = permutations(perm)
 	total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
@@ -184,8 +185,9 @@ def kamiran_discrimination_pairs(df):
 
 def before_massaging_dataset(perm, validation_size=0):
 	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone.csv")
-	total_dataset = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone_normalized.csv", delimiter=",")
-	total_labels = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/labels.csv", delimiter=",")
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone_normalized_withheader.csv").to_numpy()
+	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_labels_withheader.csv").to_numpy()
+	total_labels = total_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
@@ -214,8 +216,9 @@ def before_massaging_dataset(perm, validation_size=0):
 
 def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation_size=0):
 	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone.csv")
-	total_dataset = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone_normalized.csv", delimiter=",")
-	total_labels = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/labels.csv", delimiter=",")
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone_normalized_withheader.csv").to_numpy()
+	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_labels_withheader.csv").to_numpy()
+	total_labels = total_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
@@ -260,8 +263,9 @@ def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation
 
 def before_preferential_sampling(perm, validation_size=0):
 	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone.csv")
-	total_dataset = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone_normalized.csv", delimiter=",")
-	total_labels  = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/labels.csv", delimiter=",")
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone_normalized_withheader.csv").to_numpy()
+	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_labels_withheader.csv").to_numpy()
+	total_labels = total_labels.flatten()	
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
@@ -289,8 +293,9 @@ def before_preferential_sampling(perm, validation_size=0):
 
 def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_candidates, fav_pos_candidates, validation_size=0):
 	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone.csv")
-	total_dataset = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone_normalized.csv", delimiter=",")
-	total_labels  = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/labels.csv", delimiter=",")
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone_normalized_withheader.csv").to_numpy()
+	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_labels_withheader.csv").to_numpy()
+	total_labels = total_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
