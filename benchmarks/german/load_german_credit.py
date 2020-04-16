@@ -185,8 +185,9 @@ def kamiran_discrimination_pairs(df):
 
 def before_massaging_dataset(perm, validation_size=0):
 	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone.csv")
-	total_dataset = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone_normalized.csv", delimiter=",")
-	total_labels = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/labels.csv", delimiter=",")
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone_normalized_withheader.csv").to_numpy()
+	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_labels_withheader.csv").to_numpy()
+	total_labels = total_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
@@ -215,8 +216,9 @@ def before_massaging_dataset(perm, validation_size=0):
 
 def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation_size=0):
 	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone.csv")
-	total_dataset = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone_normalized.csv", delimiter=",")
-	total_labels = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/labels.csv", delimiter=",")
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone_normalized_withheader.csv").to_numpy()
+	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_labels_withheader.csv").to_numpy()
+	total_labels = total_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
@@ -261,8 +263,9 @@ def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation
 
 def before_preferential_sampling(perm, validation_size=0):
 	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone.csv")
-	total_dataset = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone_normalized.csv", delimiter=",")
-	total_labels  = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/labels.csv", delimiter=",")
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone_normalized_withheader.csv").to_numpy()
+	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_labels_withheader.csv").to_numpy()
+	total_labels = total_labels.flatten()	
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
@@ -290,8 +293,9 @@ def before_preferential_sampling(perm, validation_size=0):
 
 def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_candidates, fav_pos_candidates, validation_size=0):
 	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone.csv")
-	total_dataset = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone_normalized.csv", delimiter=",")
-	total_labels  = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/labels.csv", delimiter=",")
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_redone_normalized_withheader.csv").to_numpy()
+	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/german_labels_withheader.csv").to_numpy()
+	total_labels = total_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)

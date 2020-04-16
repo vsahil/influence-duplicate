@@ -16,9 +16,9 @@ from aif360.algorithms.preprocessing.lfr import LFR
 input_dim = 20
 weight_decay = 0.001
 
-initial_learning_rate = 0.05 
+initial_learning_rate = 1e-4
 decay_epochs = [60000, 70000]
-num_steps = 50000
+num_steps = 10000
 num_classes = 2
 keep_probs = [1.0, 1.0]
 scheme = 8
@@ -87,7 +87,7 @@ model = Fully_Connected(
     batch_size=batch_size,
     data_sets=data_sets,
     initial_learning_rate=initial_learning_rate,
-    damping=1e-2,
+    damping=5e-2,
     decay_epochs=decay_epochs,
     mini_batch=True,
     train_dir=f'throw/output_dont_save{model_count}', 
