@@ -162,8 +162,9 @@ def load_adult_income_partial(index, perm=-1, validation_size=0):
 
 def before_preferential_sampling(perm, validation_size=0):
 	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-income-dataset/adult_no_missing.csv")
-	total_dataset = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-income-dataset/normalized_adult_features.csv", delimiter=",")
-	total_labels  = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-income-dataset/adult_labels.csv", delimiter=",")
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-income-dataset/normalized_adult_features.csv").to_numpy()
+	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-income-dataset/adult_labels.csv").to_numpy()
+	total_labels = total_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
@@ -191,8 +192,9 @@ def before_preferential_sampling(perm, validation_size=0):
 
 def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_candidates, fav_pos_candidates, validation_size=0):
 	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-income-dataset/adult_no_missing.csv")
-	total_dataset = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-income-dataset/normalized_adult_features.csv", delimiter=",")
-	total_labels  = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-income-dataset/adult_labels.csv", delimiter=",")
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-income-dataset/normalized_adult_features.csv").to_numpy()
+	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-income-dataset/adult_labels.csv").to_numpy()
+	total_labels = total_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
@@ -275,8 +277,9 @@ def kamiran_discrimination_pairs(df):
 
 def before_massaging_dataset(perm, validation_size=0):
 	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-income-dataset/adult_no_missing.csv")
-	total_dataset = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-income-dataset/normalized_adult_features.csv", delimiter=",")
-	total_labels  = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-income-dataset/adult_labels.csv", delimiter=",")
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-income-dataset/normalized_adult_features.csv").to_numpy()
+	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-income-dataset/adult_labels.csv").to_numpy()
+	total_labels = total_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
@@ -305,8 +308,9 @@ def before_massaging_dataset(perm, validation_size=0):
 
 def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation_size=0):
 	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-income-dataset/adult_no_missing.csv")
-	total_dataset = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-income-dataset/normalized_adult_features.csv", delimiter=",")
-	total_labels  = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-income-dataset/adult_labels.csv", delimiter=",")
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-income-dataset/normalized_adult_features.csv").to_numpy()
+	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-income-dataset/adult_labels.csv").to_numpy()
+	total_labels = total_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)

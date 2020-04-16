@@ -117,6 +117,6 @@ num_dicsm = model_.find_discm_examples(class0_data, class1_data, print_file=Fals
 train_acc, test_acc = model_.print_model_eval()
 
 print("Discrimination:", num_dicsm)
-
+size = class0_data.shape[0]/100
 with open("results_resampling_adult.csv", "a") as f:
-    f.write(f'{h1units},{h2units},{batch},{perm},{train_acc*100},{test_acc*100},{num_dicsm},{num_dicsm/45222.0}\n')
+    f.write(f'{h1units},{h2units},{batch},{perm},{train_acc*100},{test_acc*100},{num_dicsm},{num_dicsm/size}\n')
