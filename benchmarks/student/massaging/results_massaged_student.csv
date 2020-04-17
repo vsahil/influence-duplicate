@@ -1,4 +1,4 @@
-H1Units,H2Units,batch,perm,Flipped-Pairs,train_acc,test_acc,Discriminating-Points,Discm_percent
+H1Units,H2Units,Batch,Dataperm,Flipped-Pairs,train_acc,test_acc,Discriminating-Points,Discm_percent
 32,12,50,17,20,97.6,89.93288590604027,6750,6.75
 32,8,50,13,14,98.6,91.94630872483222,4364,4.364
 32,8,50,14,14,97.2,88.59060402684564,5095,5.095
