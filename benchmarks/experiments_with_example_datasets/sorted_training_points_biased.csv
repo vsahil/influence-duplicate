@@ -1,0 +1,83 @@
+[0, 1, 4, 2, 3] - correct  (78/500 discrimination)
+Income,Neighbor-income,Race,Decision
+1,0.1,0,0 (biased)
+0.6,0.8,1,1 (fine)
+1,0.9,1,1 (fine)
+0.2,0.3,1,0 (fine)
+0.2,0.2,0,0 (fine)
+
+
+
+Income,Shopping,Gender,Decision
+1,0.1,1,1
+0.8,0.7,1,1
+0.8,0.1,1,1
+0.1,0.9,0,0 (correlation point)
+0.1,0.7,0,0 (correlation point)
+
+
+0: [4, 3, 1, 2, 0, 5]   # discrimination = 170/500 - added favourable outcome for high income female
+0: [4, 3, 1, 2, 0, 6, 5]
+0: [1, 4, 3, 2, 0, 6, 5] # discrimination = 104/500
+0: [4, 3, 0, 2, 1]  # discrimination = 473/500
+0: [4, 3, 0, 2, 1]
+
+
+Income,Shopping,Gender,Decision  - good dataset
+1.0,0.1,1,1
+0.8,0.7,1,1
+0.1,0.7,0,0
+0.1,0.9,1,0
+0.1,0.7,1,0
+0.8,0.7,0,1
+- 6/500 discriminating examples
+
+
+Income,Shopping,Gender,Decision
+1.0,0.1,1,1
+0.8,0.7,1,1
+0.1,0.7,0,0
+0.1,0.7,1,0
+0.8,0.7,0,1
+0/500 discriminating examples
+
+0: [2, 5, 3, 0, 6, 4, 1]
+0: [2, 5, 3, 0, 6, 4, 1]
+0: [1, 4, 5, 3, 0, 2]
+0: [2, 3, 0, 4, 1]
+0: [2, 0, 3, 1]
+0: [0, 2, 1]
+0: [4, 0, 6, 5, 2, 3, 1]
+0: [2, 6, 5, 3, 0, 4, 1] - correlation2.csv, 130 discriminating
+3: [3, 1, 0, 2, 5, 4] - correlation3.csv, 169 discriminating 
+
+Income,Shopping,Gender,Decision
+1.0,0.1,1,1
+0.9,0.7,0,0  (1 - most biased)
+0.8,0.3,1,1
+0.1,0.7,0,0
+0.1,0.5,1,0
+0.9,0.9,0,0
+1.0,0.8,0,1  (6 - second most biased)
+4: [1, 6, 2, 0, 3, 4, 5]
+Initial discrimination - 20.4% discrimination
+If datapoint 1 is removed discrimination goes to 4.4%
+If datapoints 1 and 6 are removed discrimination jumps back to 22.6%
+If datapoints 1, 6 and 2 are removed discrimination is down to 16.4%
+
+
+# FINAL - correlation5.csv
+Income,Shopping,Gender,Decision
+1.0,0.1,1,1
+0.9,0.7,0,0 (1 - most biased)
+0.8,0.3,1,1
+0.1,0.7,0,0
+0.1,0.5,1,0
+0.5,0.9,0,0
+1.0,0.8,0,1 (6 - second most biased)
+5: [1, 6, 2, 0, 3, 5, 4]
+Initial discrimination - 26.4% discrimination (132/500)
+If datapoint 1 is removed discrimination goes to 0.2% (1/500)
+If datapoints 1 and 6 are removed discrimination jumps back to 17.4%
+If datapoints 1, 6 and 2 are removed discrimination is down to 14.4%
+
