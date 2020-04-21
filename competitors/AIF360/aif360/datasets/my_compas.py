@@ -29,12 +29,11 @@ class MyCompasDataset(StandardDataset):
         """
 
         if normalized:
-            raise NotImplementedError
-            # features_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'default-dataset', 'normalized_default_features.csv')
-            # labels_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'default-dataset', 'default_labels.csv')
+            features_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'compas-dataset', 'normalized_compas_two_year_features.csv')
+            labels_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'compas-dataset', 'compas_two_year_labels.csv')
             df = pd.read_csv(features_path)
             df2 = pd.read_csv(labels_path)
-            df['target'] = df2
+            df['two_year_recid'] = df2
         else:
             train_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'compas-dataset', 'missing_compas_two_year_removed.csv')
             df = pd.read_csv(train_path)
@@ -42,14 +41,15 @@ class MyCompasDataset(StandardDataset):
             df['sex'] = df['sex'].replace({"Male":1, "Female":0})
             df['race'] = df['race'].replace({"Caucasian":1, "African-American":0})
             df['c_charge_degree'] = df['c_charge_degree'].replace({"F":1, "M":0})    # O : Ordinary crime, F: Felony, M: Misconduct
-            if permute == -1:
-                df_ordered = df
-            else:
-                assert(permute < 20)
-                ordering = load_compas_two_year.permutations(permute)
-                x = df.to_numpy()
-                x = x[ordering]
-                df_ordered = pd.DataFrame(x, columns=df.columns.tolist())
+        if permute == -1:
+            df_ordered = df
+        else:
+            assert(permute < 20)
+            ordering = load_compas_two_year.permutations(permute)
+            x = df.to_numpy()
+            x = x[ordering]
+            df_ordered = pd.DataFrame(x, columns=df.columns.tolist())
+            if not normalized:
                 new1 = df_ordered.sort_values(by=['end']).reset_index(drop=True)
                 new2 = df.sort_values(by=['end']).reset_index(drop=True)
                 z = new1 == new2

@@ -28,12 +28,11 @@ class StudentDataset(StandardDataset):
         """
 
         if normalized:
-            raise NotImplementedError
-            # features_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'default-dataset', 'normalized_default_features.csv')
-            # labels_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'default-dataset', 'default_labels.csv')
+            features_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'student-dataset', 'normalized_student_features.csv')
+            labels_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'student-dataset', 'student_labels.csv')
             df = pd.read_csv(features_path)
             df2 = pd.read_csv(labels_path)
-            df['target'] = df2
+            df['G3'] = df2
         else:
             train_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'student-dataset', 'student-por.csv')
             df = pd.read_csv(train_path)
@@ -44,14 +43,15 @@ class StudentDataset(StandardDataset):
                     df[i], mapping_index = pd.Series(df[i]).factorize()
             df['G3'] = df['G3'].apply(lambda x: 0 if x <= 11 else 1)
             
-            if permute == -1:
-                df_ordered = df
-            else:
-                assert(permute < 20)
-                ordering = load_student.permutations(permute)
-                x = df.to_numpy()
-                x = x[ordering]
-                df_ordered = pd.DataFrame(x, columns=df.columns.tolist())
+        if permute == -1:
+            df_ordered = df
+        else:
+            assert(permute < 20)
+            ordering = load_student.permutations(permute)
+            x = df.to_numpy()
+            x = x[ordering]
+            df_ordered = pd.DataFrame(x, columns=df.columns.tolist())
+            if not normalized:
                 new1 = df_ordered.sort_values(by=['G1']).reset_index(drop=True)
                 new2 = df.sort_values(by=['G1']).reset_index(drop=True)
                 z = new1 == new2

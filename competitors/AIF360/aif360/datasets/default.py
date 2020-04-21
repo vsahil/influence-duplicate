@@ -28,7 +28,6 @@ class DefaultDataset(StandardDataset):
         """
 
         if normalized:
-            raise NotImplementedError
             features_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'default-dataset', 'normalized_default_features.csv')
             labels_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'default-dataset', 'default_labels.csv')
             df = pd.read_csv(features_path)
@@ -38,14 +37,16 @@ class DefaultDataset(StandardDataset):
             train_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'default-dataset', 'raw_default.csv')
             df = pd.read_csv(train_path)
             assert len(df.columns[df.isnull().any()]) == 0
-            if permute == -1:
-                df_ordered = df
-            else:
-                assert(permute < 20)
-                ordering = load_default.permutations(permute)
-                x = df.to_numpy()
-                x = x[ordering]
-                df_ordered = pd.DataFrame(x, columns=df.columns.tolist())
+            
+        if permute == -1:
+            df_ordered = df
+        else:
+            assert(permute < 20)
+            ordering = load_default.permutations(permute)
+            x = df.to_numpy()
+            x = x[ordering]
+            df_ordered = pd.DataFrame(x, columns=df.columns.tolist())
+            if not normalized:
                 new1 = df_ordered.sort_values(by=['BILL_AMT3']).reset_index(drop=True)
                 new2 = df.sort_values(by=['BILL_AMT3']).reset_index(drop=True)
                 z = new1 == new2

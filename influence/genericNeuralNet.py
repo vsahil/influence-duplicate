@@ -506,7 +506,7 @@ class GenericNeuralNet(object):
         desired_labels = list(map(lambda x: 1 if x[0] > x[1] else 0, zip(zero_labels_loss, ones_labels_loss)))  # label the pair with the one that produces lower loss
         actual_predictions = list(map(lambda x: 0 if x == 1 else 1, desired_labels))      # """Just the inverse of desired_labels. This is by definition of causal/individual discrimination"""
 
-        assert(scheme == 8)
+        # assert(scheme == 8)
         # print(len(actual_predictions), len(zero_labels_loss), len(ones_labels_loss))
         if scheme == 1:
             X_discm, Y_discm = [], []
@@ -562,6 +562,45 @@ class GenericNeuralNet(object):
             Y_discm = np.array(Y_discm)
             self.discm_data_set = DataSet(X_discm, Y_discm)
 
+        elif scheme == 9:
+            # l00 = loss_class0_label_0[idx]   # class0 refers to the senstive attribute value == 0
+            # l10 = loss_class1_label_0[idx]   # class1 refers to the senstive attribute value == 1
+            # l11 = loss_class1_label_1[idx]
+            # l01 = loss_class0_label_1[idx]
+
+            # for the data point whose prediction == label, return its complement data-point (gender flipped) and its gender in a tuple
+            # which_data_point = list(map(lambda x: (x[3], 1) if int(x[0]) == int(x[1]) else (x[2], 0), zip(predictions_class0[idx], desired_labels, discm_class0, discm_class1)))
+
+            # gender = [i[1] for i in which_data_point]
+            # which_data_point = [i[0] for i in which_data_point]
+
+            # losses_at_this_point = list(map(lambda x: x[2] if x[0] == 0 and x[1] == 0 else (x[3] if x[0] == 0 and x[1] == 1 else (x[4] if x[0] == 1 and x[1] == 0 else x[5])) , zip(gender, actual_predictions, l00, l01, l10, l11)))
+
+            # arg_ = np.argsort(loss_labelling).tolist()
+            # arg_ = np.argsort(losses_at_this_point).tolist()[::-1]       # decreasing order of loss as the point with highest loss is easiest to flip prediction
+            # actual_predictions_sorted = [actual_predictions[i] for i in arg_]
+            # which_data_point_sorted = [which_data_point[i] for i in arg_]
+            
+            # These two will be used in X_discm
+            # discm_class0 = class0_data[idx]     # so discm_class0, discm_class1 are the vectors that only
+            # discm_class1 = class1_data[idx]
+            predictions_class0 = predictions_class0[idx]
+            predictions_class1 = predictions_class1[idx]
+            assert(len(predictions_class0) == len(predictions_class1) == len(discm_class0) == len(discm_class1))
+            X_discm, Y_discm = [], []
+            for dt, label in zip(discm_class0, predictions_class0):
+                X_discm.append(dt)
+                Y_discm.append(label)
+            
+            for dt, label in zip(discm_class1, predictions_class1):
+                X_discm.append(dt)
+                Y_discm.append(label)
+                
+            X_discm = np.array(X_discm)
+            Y_discm = np.array(Y_discm)
+            self.discm_data_set = DataSet(X_discm, Y_discm)
+ 
+        
         else:
             raise NotImplementedError
         
