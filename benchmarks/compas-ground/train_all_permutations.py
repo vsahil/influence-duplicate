@@ -132,11 +132,9 @@ else:
 if train:
     exit(0)
 
-# for percentage in range(5, 4, 0.5):
-# for percentage in np.arange(0, 5.0, 0.2):
 removal = int(sys.argv[2])
 # import ipdb; ipdb.set_trace()
-# for p in removal:
+size = class0_data.shape[0]/100
 for percentage in np.linspace(removal-1, removal-0.2, 5):
     tf.reset_default_graph()
     p = int(5000 * percentage / 100)
@@ -167,18 +165,13 @@ for percentage in np.linspace(removal-1, removal-0.2, 5):
         model_name='compas_two_year_partial',
         scheme = "scheme8_par")
     print("Training")
-    # print("Points removed: ", p)
     print("Percentage: ", percentage, " Points removed: ", p) 
     model_partial_data.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
     train_acc, test_acc = model.print_model_eval()
-    # print("Percentage: ", percentage, " Points removed: ", p)
-    # print("Points removed: ", p)
     print("Percentage: ", percentage, " Points removed: ", p)
     num = model_partial_data.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
-    with open("compas_two_year_results_first120.csv".format(scheme), "a") as f:
-        # f.write("Percentage: " + str(percentage) + ", Discriminating Tests: " + str(num) + "\n")
-        # f.write("Points: " + str(p) + ", Discriminating Tests: " + str(num) + "\n")
-        f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{percentage},{p},{num},{num/10000.0}\n")     # the last ones gives percentage of discrimination
+    with open("results_compas-ground_final.csv".format(scheme), "a") as f:
+        f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{percentage},{p},{num},{num/size}\n")     # the last ones gives percentage of discrimination
     
     del model_partial_data          # to remove any chance of reusing variables and reduce memory
 
