@@ -3,8 +3,8 @@ import os
 import pandas as pd
 
 import sys
-sys.path.append("../../../benchmarks/compas/")
-import load_compas_two_year
+sys.path.append("../../../benchmarks/compas-ground/")
+import load_compas_score_as_labels
 from aif360.datasets import StandardDataset
 
 
@@ -12,7 +12,7 @@ default_mappings = {
     'protected_attribute_maps': [{1.0:"Caucasian", 0.0:"African-American"}]
 }
 
-class MyCompasDataset(StandardDataset):
+class MyCompasGroundDataset(StandardDataset):
     """Default Prediction Dataset.
     """
     def __init__(self, label_name='two_year_recid',
@@ -29,13 +29,13 @@ class MyCompasDataset(StandardDataset):
         """
 
         if normalized:
-            features_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'compas-dataset', 'normalized_compas_two_year_features.csv')
-            labels_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'compas-dataset', 'compas_two_year_labels.csv')
+            features_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'compas-dataset', 'normalized_scores_as_labels_features.csv')
+            labels_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'compas-dataset', 'target_groundtruth_as_label.csv')
             df = pd.read_csv(features_path)
             df2 = pd.read_csv(labels_path)
             df['two_year_recid'] = df2
         else:
-            train_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'compas-dataset', 'missing_compas_two_year_removed.csv')
+            train_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'compas-dataset', 'groundtruth_as_label.csv')
             df = pd.read_csv(train_path)
             assert len(df.columns[df.isnull().any()]) == 0
             df['sex'] = df['sex'].replace({"Male":1, "Female":0})
@@ -45,20 +45,20 @@ class MyCompasDataset(StandardDataset):
             df_ordered = df
         else:
             assert(permute < 20)
-            ordering = load_compas_two_year.permutations(permute)
+            ordering = load_compas_score_as_labels.permutations(permute)
             x = df.to_numpy()
             x = x[ordering]
             df_ordered = pd.DataFrame(x, columns=df.columns.tolist())
+            # import ipdb; ipdb.set_trace()
             if not normalized:
-                new1 = df_ordered.sort_values(by=['end']).reset_index(drop=True)
-                new2 = df.sort_values(by=['end']).reset_index(drop=True)
+                new1 = df_ordered.sort_values(by=['diff_custody', 'age', 'juv_misd_count', 'juv_other_count']).reset_index(drop=True)
+                new2 = df.sort_values(by=['diff_custody', 'age', 'juv_misd_count', 'juv_other_count']).reset_index(drop=True)
                 z = new1 == new2
                 assert(sum([z[i].unique()[0] for i in z.columns.tolist()]) == len(z.columns.tolist()))      # just a sanity check
 
-                                  
-        column_names = ['sex','age','race','juv_fel_count','decile_score','juv_misd_count','juv_other_count','priors_count','days_b_screening_arrest','c_days_from_compas','c_charge_degree','is_recid','is_violent_recid','decile_score.1','v_decile_score','priors_count.1','start','end','event','two_year_recid']
+        column_names = ['age','sex','race','diff_custody','diff_jail','priors_count','juv_fel_count','juv_misd_count','juv_other_count','c_charge_degree','two_year_recid']
 
-        super(MyCompasDataset, self).__init__(df=df_ordered, label_name=label_name,
+        super(MyCompasGroundDataset, self).__init__(df=df_ordered, label_name=label_name,
             favorable_classes=favorable_classes,
             protected_attribute_names=protected_attribute_names,
             privileged_classes=privileged_classes,
