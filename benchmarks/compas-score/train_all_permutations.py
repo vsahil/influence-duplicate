@@ -18,7 +18,7 @@ from influence.fully_connected import Fully_Connected
 from load_compas_score_as_labels import load_compas_two_year, load_compas_two_year_partial
 from find_discm_points import entire_test_suite
 
-train = True
+train = False
 
 input_dim = 10
 weight_decay = 0.002
