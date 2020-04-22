@@ -109,9 +109,9 @@ def load_fair_representations(perm, total_dataset, total_labels, validation_size
 
 
 def disparate_removed_load_compas(perm, validation_size=0):
-	raise NotImplementedError
-	total_dataset = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/disparate_impact_removed/normalized_disparateremoved_features-compas.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
-	total_labels = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/disparate_impact_removed/normalized_disparateremoved_labels-compas.csv", delimiter=",")
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/disparate_impact_removed/normalized_disparateremoved_features-compas_score.csv").to_numpy()
+	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/disparate_impact_removed/normalized_disparateremoved_labels-compas_score.csv").to_numpy()
+	total_labels = total_labels.flatten()
 
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
@@ -162,13 +162,12 @@ def load_compas_two_year_partial(index, perm=-1, validation_size=0):
 
 
 def before_preferential_sampling(perm, validation_size=0):
-	raise NotImplementedError
-	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/missing_compas_two_year_removed.csv")
+	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/compas_score_as_label.csv")
 	original_dataset['sex'] = original_dataset['sex'].replace({"Male":1, "Female":0})
 	original_dataset['race'] = original_dataset['race'].replace({"Caucasian":1, "African-American":0})
 	original_dataset['c_charge_degree'] = original_dataset['c_charge_degree'].replace({"F":1, "M":0})
-	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/normalized_compas_two_year_features.csv").to_numpy()
-	total_labels  = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/compas_two_year_labels.csv").to_numpy()
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/normalized_scores_as_labels_features.csv").to_numpy()
+	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/target_compas_score_as_label.csv").to_numpy()
 	total_labels = total_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
@@ -178,7 +177,7 @@ def before_preferential_sampling(perm, validation_size=0):
 	train_examples = 5000		# testing set is 1150
 	original_dataset = original_dataset.reindex(ordering[:train_examples])
 	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
-	x_both = original_dataset.groupby(['race', 'two_year_recid']).indices
+	x_both = original_dataset.groupby(['race', 'compas_score']).indices
 	# import ipdb; ipdb.set_trace()
 	X_train = total_dataset[:train_examples]
 	X_validation = total_dataset[train_examples:train_examples + validation_size]
@@ -196,13 +195,12 @@ def before_preferential_sampling(perm, validation_size=0):
 
 
 def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_candidates, fav_pos_candidates, validation_size=0):
-	raise NotImplementedError
-	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/missing_compas_two_year_removed.csv")
+	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/compas_score_as_label.csv")
 	original_dataset['sex'] = original_dataset['sex'].replace({"Male":1, "Female":0})
 	original_dataset['race'] = original_dataset['race'].replace({"Caucasian":1, "African-American":0})
 	original_dataset['c_charge_degree'] = original_dataset['c_charge_degree'].replace({"F":1, "M":0})
-	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/normalized_compas_two_year_features.csv").to_numpy()
-	total_labels  = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/compas_two_year_labels.csv").to_numpy()
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/normalized_scores_as_labels_features.csv").to_numpy()
+	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/target_compas_score_as_label.csv").to_numpy()
 	total_labels = total_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
@@ -213,7 +211,7 @@ def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_cand
 	original_dataset = original_dataset.reindex(ordering[:train_examples])
 	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
 	x_gender = original_dataset.groupby(['race']).indices
-	x_target = original_dataset.groupby(['two_year_recid']).indices
+	x_target = original_dataset.groupby(['compas_score']).indices
 	# import ipdb; ipdb.set_trace()
 	# deprived_negative_size = int(round(x_gender[0].shape[0] * x_target[0].shape[0] / train_examples)) 	# * female_bad_credit)
 	# deprived_positive_size = int(round(x_gender[0].shape[0] * x_target[1].shape[0] / train_examples))	# * female_good_credit)
@@ -276,7 +274,7 @@ def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_cand
 def kamiran_discrimination_pairs(df):
 	# Remember 1 - female and male - 0		# reversed in this dataset
 	# for target 1 - good, 0 - bad
-	x = df.groupby(['race', 'two_year_recid']).indices		# this gives the indices in the df, no the index
+	x = df.groupby(['race', 'compas_score']).indices		# this gives the indices in the df, no the index
 	# male_good_credit = x[(1, 1)]
 	# male_bad_credit = x[(1, 0)]
 	# female_good_credit = x[(0, 1)]
@@ -297,13 +295,12 @@ def kamiran_discrimination_pairs(df):
 	
 
 def before_massaging_dataset(perm, validation_size=0):
-	raise NotImplementedError
-	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/missing_compas_two_year_removed.csv")
+	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/compas_score_as_label.csv")
 	original_dataset['sex'] = original_dataset['sex'].replace({"Male":1, "Female":0})
 	original_dataset['race'] = original_dataset['race'].replace({"Caucasian":1, "African-American":0})
 	original_dataset['c_charge_degree'] = original_dataset['c_charge_degree'].replace({"F":1, "M":0})
-	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/normalized_compas_two_year_features.csv").to_numpy()
-	total_labels  = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/compas_two_year_labels.csv").to_numpy()
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/normalized_scores_as_labels_features.csv").to_numpy()
+	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/target_compas_score_as_label.csv").to_numpy()
 	total_labels = total_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
@@ -332,13 +329,12 @@ def before_massaging_dataset(perm, validation_size=0):
 	
 
 def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation_size=0):
-	raise NotImplementedError
-	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/missing_compas_two_year_removed.csv")
+	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/compas_score_as_label.csv")
 	original_dataset['sex'] = original_dataset['sex'].replace({"Male":1, "Female":0})
 	original_dataset['race'] = original_dataset['race'].replace({"Caucasian":1, "African-American":0})
 	original_dataset['c_charge_degree'] = original_dataset['c_charge_degree'].replace({"F":1, "M":0})
-	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/normalized_compas_two_year_features.csv").to_numpy()
-	total_labels  = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/compas_two_year_labels.csv").to_numpy()
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/normalized_scores_as_labels_features.csv").to_numpy()
+	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/target_compas_score_as_label.csv").to_numpy()
 	total_labels = total_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
@@ -349,11 +345,11 @@ def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation
 	original_dataset = original_dataset.reindex(ordering[:train_examples])
 	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
 	for p, d in zip(promotion_candidates, demotion_candidates):
-		assert original_dataset.loc[d, 'race'] == original_dataset.loc[p, 'two_year_recid'] == int(total_labels[p]) == 0		# notice in the first part, p and d are flipped in these two statements
-		assert original_dataset.loc[p, 'race'] == original_dataset.loc[d, 'two_year_recid'] == int(total_labels[d]) == 1
-		original_dataset.loc[p, 'two_year_recid'] = 1		# promote the female of bad credit
+		assert original_dataset.loc[d, 'race'] == original_dataset.loc[p, 'compas_score'] == int(total_labels[p]) == 0		# notice in the first part, p and d are flipped in these two statements
+		assert original_dataset.loc[p, 'race'] == original_dataset.loc[d, 'compas_score'] == int(total_labels[d]) == 1
+		original_dataset.loc[p, 'compas_score'] = 1		# promote the female of bad credit
 		total_labels[p] = 1.0
-		original_dataset.loc[d, 'two_year_recid'] = 0		# demote the male of good credit
+		original_dataset.loc[d, 'compas_score'] = 0		# demote the male of good credit
 		total_labels[d] = 0.0
 		assert p < train_examples	# the index of both promotion and demotion candidates should be within training set
 		assert d < train_examples
