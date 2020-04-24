@@ -261,7 +261,7 @@ class soft:
         # print("No. of discriminating tests: ", len(self.causal_tests), "Score: ", score)
         discm_tests_gender0 = []
         total = 0
-        with open("race0_biased.csv", "a") as f:
+        with open("race0_biased_smalldataset.csv", "a") as f:
             f.write("Income,Neighbor-income,Race\n")
         
         while True:
@@ -269,20 +269,20 @@ class soft:
             discm_tests_gender0.append(new)
             total += 1
 
-            if total == 500:              
-                with open("race0_biased.csv", "a") as f:
+            if total == 1000:              
+                with open("race0_biased_smalldataset.csv", "a") as f:
                     for i in discm_tests_gender0:
                         f.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
                 break
 
         # check if any tests are duplicated:
-        df = pd.read_csv("race0_biased.csv")
+        df = pd.read_csv("race0_biased_smalldataset.csv")
         x = df.duplicated()
         print(x.any(), "see duplication")     # if this is False, we are all good.
         
         # This generates same examples for the other gender
         df['Race'] = 1
-        df.to_csv("race1_biased.csv", index=False)
+        df.to_csv("race1_biased_smalldataset.csv", index=False)
         
 
     def single_feature_discm_compas(self, feature, theta, confidence, epsilon, type_discm):
@@ -332,7 +332,8 @@ class soft:
         discm_tests_gender0 = []
         total = 0
         with open("race0_compas_two_year.csv", "a") as f:
-            f.write("sex,age,race,juv_fel_count,decile_score,juv_misd_count,juv_other_count,priors_count,days_b_screening_arrest,c_days_from_compas,c_charge_degree,is_recid,is_violent_recid,decile_score.1,v_decile_score,priors_count.1,start,end,event\n")
+            f.write("age,sex,race,diff_custody,diff_jail,priors_count,juv_fel_count,juv_misd_count,juv_other_count,c_charge_degree\n")
+            # f.write("sex,age,race,juv_fel_count,decile_score,juv_misd_count,juv_other_count,priors_count,days_b_screening_arrest,c_days_from_compas,c_charge_degree,is_recid,is_violent_recid,decile_score.1,v_decile_score,priors_count.1,start,end,event\n")
         
         while True:
             new = self.randomInput_gender0(feature)
@@ -340,10 +341,15 @@ class soft:
             total += 1
             x = len(discm_tests_gender0) 
             
-            if total == 1000000:            
+            if x % 10000 == 0:            
                 with open("race0_compas_two_year.csv", "a") as f:
                     for i in discm_tests_gender0:
                         f.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                discm_tests_gender0 = []
+                print(total, "done")
+            
+            if total == 1000000:
+                assert(x % 10000 == 0)
                 break
 
         # check if any tests are duplicated:

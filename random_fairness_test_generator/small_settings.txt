@@ -1,0 +1,5 @@
+number of input characteristics: 3
+1 Income continuousInt 10,1000
+2 Neighbor categorical 0,1,2
+3 Race categorical 0,1
+command: python matter.py

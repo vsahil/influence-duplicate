@@ -1,0 +1,22 @@
+number of input characteristics: 20
+1 Checking-ccount categorical 0,1,2,3
+2 Months continuousInt 4,72
+3 Credit-history categorical 0,1,2,3,4
+4 Purpose categorical 0,1,2,3,4,5,6,7,8,9
+5 Credit-mount continuousInt 250,18424
+6 Svings-ccount categorical 0,1,2,3,4
+7 Present-employment-since categorical 0,1,2,3,4
+8 Instllment-rte categorical 1,2,3,4
+9 Gender categorical 0,1
+10 Other-debtors categorical 0,1,2
+11 Present-residence-since categorical 1,2,3,4
+12 Property categorical 0,1,2,3
+13 ge continuousInt 19,75
+14 Other-instllment-plns categorical 0,1,2
+15 Housing categorical 0,1,2
+16 Number-of-existing-credits categorical 1,2,3,4
+17 Job categorical 0,1,2,3
+18 Number-of-people-being-lible categorical 1,2
+19 Telephone categorical 0,1
+20 Foreign-worker categorical 0,1
+command: python german.py
