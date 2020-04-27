@@ -109,10 +109,10 @@ def load_fair_representations(perm, total_dataset, total_labels, validation_size
 
 
 def disparate_removed_load_default(perm, validation_size=0):
-	total_dataset = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/disparate_impact_removed/normalized_disparateremoved_features-default.csv", delimiter=",")      # this is the standarised/normalised data, so no need to renormalize
-	total_labels = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/disparate_impact_removed/normalized_disparateremoved_labels-default.csv", delimiter=",")
-	
-	# total_labels = total_labels.flatten()
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/disparate_impact_removed/normalized_disparateremoved_features-default.csv").to_numpy()
+	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/disparate_impact_removed/disparateremoved_labels-default.csv").to_numpy()
+	total_labels = total_labels.flatten()
+
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)

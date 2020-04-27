@@ -88,7 +88,6 @@ model = Fully_Connected(
     scheme = f"{scheme}")
 
 
-
 if train:
     model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, 
     iter_to_switch_to_sgd=20000, save_checkpoints=True, verbose=False, plot_loss=False)
@@ -127,6 +126,11 @@ if not load_from_numpy:
 
 else:
    print("Loading from numpy")
+   initial_num = model.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
+   print(initial_num, "See")
+   size = class0_data.shape[0]/100
+   with open("results_default_noremoval.csv".format(scheme), "a") as f:
+        f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{initial_num},{initial_num/size}\n")
    sorted_training_points = list(np.load(ranked_influential_training_points))
 
 if train:
