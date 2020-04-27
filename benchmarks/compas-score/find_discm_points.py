@@ -26,16 +26,11 @@ def rescale_input_numpy_disparateremoved_compas(inp):
 def entire_test_suite(mini=False, disparateremoved=False):
     gender0 = "race0_compas_two_year"
     gender1 = "race1_compas_two_year"
-    # if mini:
-        # gender0 += "_mini"
-        # gender1 += "_mini"
-    
+
     df0 = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/{gender0}.csv")
     df1 = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/{gender1}.csv")
-    # if mini: 
-        # assert(df0.shape == df1.shape == (1000, 12))
-    # else:
-    assert(df0.shape == df1.shape == (1000000, 10))
+
+    assert(df0.shape == df1.shape == (615000, 10))
 
     assert(not df0.equals(df1))
     assert(df0.drop('race', axis=1).equals(df1.drop('race', axis=1)))     # after dropping sex they should be equal dataframe
