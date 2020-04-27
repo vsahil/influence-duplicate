@@ -44,9 +44,6 @@ def entire_test_suite(mini=True, disparateremoved=False):
     class0_ = df0.to_numpy(dtype=np.float64)
     class1_ = df1.to_numpy(dtype=np.float64)
 
-    # class0_ = np.genfromtxt(f"/Users/sahilverma/research/influence-duplicate/adult-income-dataset/{gender0}.csv", delimiter=",")
-    # class1_ = np.genfromtxt(f"/Users/sahilverma/research/influence-duplicate/adult-income-dataset/{gender1}.csv", delimiter=",")
-    
     if disparateremoved:
         class0 = rescale_input_numpy_disparateremoved(class0_)
         class1 = rescale_input_numpy_disparateremoved(class1_)
