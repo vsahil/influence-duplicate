@@ -35,7 +35,7 @@ def entire_test_suite(mini=False, disparateremoved=False):
     # if mini: 
         # assert(df0.shape == df1.shape == (1000, 12))
     # else:
-    assert(df0.shape == df1.shape == (100000, 32))
+    assert(df0.shape == df1.shape == (64900, 32))
 
     assert(not df0.equals(df1))
     assert(df0.drop('sex', axis=1).equals(df1.drop('sex', axis=1)))     # after dropping sex they should be equal dataframe
