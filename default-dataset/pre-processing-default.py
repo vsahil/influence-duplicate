@@ -38,11 +38,17 @@ def print_mins_and_ranges():
 
     target = df['target']
     df_new = df.drop(columns=['target'])
-    means_and_ranges = []
+    mins_and_ranges = []
     for j in list(df_new):
         i = df[j]
-        means_and_ranges.append((np.min(i), np.max(i) - np.min(i)))
-    print(len(means_and_ranges), "\n", means_and_ranges)
+        mins_and_ranges.append((np.min(i), np.max(i) - np.min(i)))
+    print(len(mins_and_ranges), "\n", mins_and_ranges)
+
+
+def convert_to_nosensitive():
+    df = pd.read_csv("normalized_default_features.csv")
+    df['sex'] = 1
+    df.to_csv("normalized_default_nosensitive_features.csv", index=False, header=True)
 
 
 import sys
@@ -52,6 +58,10 @@ if __name__ == "__main__":
         raw_to_no_missing()
     elif cleaning_level == 2:
        missing_to_normalized() 
-    else:
+    elif cleaning_level == 3:
         print_mins_and_ranges()
+    elif cleaning_level == 4:
+        convert_to_nosensitive()
+    else:
+        assert False
         
