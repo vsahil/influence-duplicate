@@ -76,8 +76,7 @@ Income,Shopping,Gender,Decision
 0.5,0.9,0,0
 1.0,0.8,0,1 (6 - second most biased)
 5: [1, 6, 2, 0, 3, 5, 4]
-Initial discrimination - 26.4% discrimination (132/500)
-If datapoint 1 is removed discrimination goes to 0.2% (1/500)
-If datapoints 1 and 6 are removed discrimination jumps back to 17.4%
-If datapoints 1, 6 and 2 are removed discrimination is down to 14.4%
-
+Initial discrimination - 26.6% discrimination (266/1000)
+If datapoint 1 is removed discrimination goes to 0.1% (1/1000)
+If datapoints 1 and 6 are removed discrimination jumps back to 19.3% (193/1000)
+If datapoints 1, 6 and 2 are removed discrimination is down to 16.4% (164/1000)

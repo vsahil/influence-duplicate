@@ -77,8 +77,10 @@ def print_mins_and_ranges():
     print(mins_and_ranges)
 
 
-
-
+def convert_to_nosensitive():
+    df = pd.read_csv("normalized_groundtruth_as_labels_features.csv")
+    df['race'] = 1
+    df.to_csv("normalized_groundtruth_as_labels_nosensitive_features.csv", index=False, header=True)
 
 
 import sys
@@ -88,6 +90,10 @@ if __name__ == "__main__":
         raw_to_no_missing()
     elif cleaning_level == 2:
        missing_to_normalized() 
-    else:
+    elif cleaning_level == 3:
         print_mins_and_ranges()
+    elif cleaning_level == 4:
+        convert_to_nosensitive()
+    else:
+        assert False
         

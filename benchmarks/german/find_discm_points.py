@@ -30,8 +30,8 @@ def entire_test_suite(mini=True, disparateremoved=False):
         assert False
         gender0 += "_mini"
         gender1 += "_mini"
-    class0_ = np.genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/{gender0}.csv", delimiter=",")
-    class1_ = np.genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-credit-dataset/{gender1}.csv", delimiter=",")
+    class0_ = np.genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-dataset/{gender0}.csv", delimiter=",")
+    class1_ = np.genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-dataset/{gender1}.csv", delimiter=",")
 
     if disparateremoved:
         class0 = rescale_input_numpy_disparateremoved_german(class0_)

@@ -31,8 +31,8 @@ def entire_test_suite(mini=True, disparateremoved=False):
         gender1 += "_mini"
     
     # now I can have headers in the tests files
-    df0 = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-income-dataset/{gender0}.csv")
-    df1 = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-income-dataset/{gender1}.csv")
+    df0 = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-dataset/{gender0}.csv")
+    df1 = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-dataset/{gender1}.csv")
     if mini: 
         assert(df0.shape == df1.shape == (1000, 12))
     else:
@@ -44,9 +44,6 @@ def entire_test_suite(mini=True, disparateremoved=False):
     class0_ = df0.to_numpy(dtype=np.float64)
     class1_ = df1.to_numpy(dtype=np.float64)
 
-    # class0_ = np.genfromtxt(f"/Users/sahilverma/research/influence-duplicate/adult-income-dataset/{gender0}.csv", delimiter=",")
-    # class1_ = np.genfromtxt(f"/Users/sahilverma/research/influence-duplicate/adult-income-dataset/{gender1}.csv", delimiter=",")
-    
     if disparateremoved:
         class0 = rescale_input_numpy_disparateremoved(class0_)
         class1 = rescale_input_numpy_disparateremoved(class1_)

@@ -15,6 +15,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
+os.system("rm -rf trained_models HVP_files throw")
 import influence.experiments as experiments
 from influence.fully_connected import Fully_Connected
 
@@ -65,7 +66,7 @@ model = Fully_Connected(
     decay_epochs=decay_epochs,
     mini_batch=True,
     train_dir=f'trained_models/output_count{model_count}', 
-    log_dir=f'log{model_count}',
+    log_dir=f'throw/log{model_count}',
     hvp_files = f"HVP_files/inverse_HVP_schm{scheme}_count{model_count}",
     model_name=f"paper_example{model_count}",
     scheme = f"{scheme}"
@@ -76,8 +77,8 @@ train_acc, test_acc = model.print_model_eval()
 # exit(0)
 
 def entire_test_suite():
-    class0 = np.genfromtxt(f"normalized_race0.csv", delimiter=",")
-    class1 = np.genfromtxt(f"normalized_race1.csv", delimiter=",")
+    class0 = np.genfromtxt(f"normalized_race0_smalldataset.csv", delimiter=",")
+    class1 = np.genfromtxt(f"normalized_race1_smalldataset.csv", delimiter=",")
     return class0, class1
 
 

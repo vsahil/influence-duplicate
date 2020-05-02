@@ -18,7 +18,7 @@ from influence.fully_connected import Fully_Connected
 from load_compas_score_as_labels import load_compas_two_year, load_compas_two_year_partial
 from find_discm_points import entire_test_suite
 
-train = True
+train = False
 
 input_dim = 10
 weight_decay = 0.002
@@ -99,7 +99,7 @@ if train:
 ranked_influential_training_points = f"ranking_points_ordered_two_year/{name}.npy"
 # if not train and ranking of influential training points is stored in numpy file, then True
 load_from_numpy = False if train else (True if os.path.exists(ranked_influential_training_points) else False)       
-# assert load_from_numpy
+assert load_from_numpy
 class0_data, class1_data = entire_test_suite(mini=False)     # False means loads entire data
 if not load_from_numpy:
     if not train:
@@ -127,6 +127,11 @@ if not load_from_numpy:
 
 else:
    print("Loading from numpy")
+   initial_num = model.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
+   print(initial_num, "See")
+   size = class0_data.shape[0]/100
+   with open("results_compas-ground_noremoval.csv".format(scheme), "a") as f:
+        f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{initial_num},{initial_num/size}\n")
    sorted_training_points = list(np.load(ranked_influential_training_points))
 
 if train:
