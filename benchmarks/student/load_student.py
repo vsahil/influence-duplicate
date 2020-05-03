@@ -71,14 +71,14 @@ def load_student(perm=-1, validation_size=0):
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
-	train_examples = 500		# testing set is 149		# weird size (about 20% - similar to german credit dataset and adult income dataset)
+	train_examples = 649		# testing set is 149		# weird size (about 20% - similar to german credit dataset and adult income dataset)
 	X_train = total_dataset[:train_examples]
 	X_validation = total_dataset[train_examples:train_examples + validation_size]
 	X_test  = total_dataset[train_examples + validation_size:]
 	Y_train = total_labels[:train_examples]
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
-	assert(len(Y_test) == 149)
+	# assert(len(Y_test) == 149)
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -92,14 +92,14 @@ def load_fair_representations(perm, total_dataset, total_labels, validation_size
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
-	train_examples = 500		# testing set is 149		# weird size (about 20% - similar to german credit dataset and adult income dataset)
+	train_examples = 649		# testing set is 149		# weird size (about 20% - similar to german credit dataset and adult income dataset)
 	X_train = total_dataset[:train_examples]
 	X_validation = total_dataset[train_examples:train_examples + validation_size]
 	X_test  = total_dataset[train_examples + validation_size:]
 	Y_train = total_labels[:train_examples]
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
-	assert(len(Y_test) == 149)
+	# assert(len(Y_test) == 149)
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -116,14 +116,14 @@ def disparate_removed_load_student(perm, validation_size=0):
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
-	train_examples = 500		# testing set is 149		# weird size (about 20% - similar to german credit dataset and adult income dataset)
+	train_examples = 649		# testing set is 149		# weird size (about 20% - similar to german credit dataset and adult income dataset)
 	X_train = total_dataset[:train_examples]
 	X_validation = total_dataset[train_examples:train_examples + validation_size]
 	X_test  = total_dataset[train_examples + validation_size:]
 	Y_train = total_labels[:train_examples]
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
-	assert(len(Y_test) == 149)
+	# assert(len(Y_test) == 149)
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -140,7 +140,7 @@ def load_student_partial(index, perm=-1, validation_size=0):
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
-	train_examples = 500
+	train_examples = 649
 	X_train = total_dataset[:train_examples]
 	X_train = X_train[index]		# removes the biased train examples here
 	assert(len(X_train) == len(index))
@@ -151,7 +151,7 @@ def load_student_partial(index, perm=-1, validation_size=0):
 	
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
-	assert(len(Y_test) == 149)
+	# assert(len(Y_test) == 149)
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -171,7 +171,7 @@ def before_preferential_sampling(perm, validation_size=0):
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 	# import ipdb; ipdb.set_trace()
-	train_examples = 500		# testing set is 149
+	train_examples = 649		# testing set is 149
 	original_dataset = original_dataset.reindex(ordering[:train_examples])
 	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
 	x_both = original_dataset.groupby(['sex', 'G3']).indices
@@ -183,7 +183,7 @@ def before_preferential_sampling(perm, validation_size=0):
 	Y_train = total_labels[:train_examples]
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
-	assert(len(Y_test) == 149)
+	# assert(len(Y_test) == 149)
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -203,7 +203,7 @@ def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_cand
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
-	train_examples = 500		# testing set is 149
+	train_examples = 649		# testing set is 149
 	original_dataset = original_dataset.reindex(ordering[:train_examples])
 	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
 	x_gender = original_dataset.groupby(['sex']).indices
@@ -259,7 +259,7 @@ def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_cand
 	Y_train = total_labels[final_order]
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
-	assert(len(Y_test) == 149)
+	# assert(len(Y_test) == 149)
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -302,7 +302,7 @@ def before_massaging_dataset(perm, validation_size=0):
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 	
-	train_examples = 500		# testing set is 149
+	train_examples = 649		# testing set is 149
 	original_dataset = original_dataset.reindex(ordering[:train_examples])
 	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
 	# import ipdb; ipdb.set_trace()
@@ -315,7 +315,7 @@ def before_massaging_dataset(perm, validation_size=0):
 	Y_train = total_labels[:train_examples]
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
-	assert(len(Y_test) == 149)
+	# assert(len(Y_test) == 149)
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -335,7 +335,7 @@ def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
-	train_examples = 500		# testing set is 149
+	train_examples = 649		# testing set is 149
 	original_dataset = original_dataset.reindex(ordering[:train_examples])
 	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
 	for p, d in zip(promotion_candidates, demotion_candidates):
@@ -364,7 +364,7 @@ def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation
 	Y_train = total_labels[:train_examples]
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
-	assert(len(Y_test) == 149)
+	# assert(len(Y_test) == 149)
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
