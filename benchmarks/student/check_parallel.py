@@ -18,9 +18,11 @@ def experiment_command(setting, removal_percent):
 # print("DONE!")
 
 
-# def run_command(setting):
-#     os.system(f"python train_all_permutations.py {setting}")
+def run_command(setting):
+    os.system(f"python train_all_permutations.py {setting}")
 
+def run_nosensitive(setting):
+    os.system(f"python train_all_permutations_nosensitive.py {setting}")
 
 def run_discm_find(setting):
     os.system(f"python train_using_train_test_sets.py {setting}")
