@@ -26,8 +26,8 @@ def run_command(setting):
 
 # pool = multiprocessing.Pool(120)
 # l = [i for i in range(240)]
-# mr = pool.map_async(run_command, l)
-# # mr = pool.map_async(run_nosensitive, l)
+# # mr = pool.map_async(run_command, l)
+# mr = pool.map_async(run_nosensitive, l)
 # while not mr.ready():
 #     sys.stdout.flush()
 #     mr.wait(0.1)

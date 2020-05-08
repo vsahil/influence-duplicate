@@ -7,8 +7,8 @@ def experiment_command(setting, removal_percent):
     os.system(f"python -W ignore train_all_permutations.py {setting} {removal_percent}")
     # process = subprocess.check_output(['python', 'train_all_permutations.py', str(index)], stdout=subprocess.PIPE)
 
-# pool = multiprocessing.Pool(240)
-# l = [i for i in range(0, 400)]
+# pool = multiprocessing.Pool(48)
+# l = [i for i in range(0, 100)]
 # # mr = pool.map_async(run_command, l)
 # settings = [i for i in range(240)]       # for first 120 settings in total
 # mr = pool.starmap_async(experiment_command, product(settings, l))
@@ -18,13 +18,11 @@ def experiment_command(setting, removal_percent):
 # print("DONE!")
 
 
-# def run_command(setting):
-#     os.system(f"python train_all_permutations.py {setting}")
+def run_command(setting):
+    os.system(f"python train_all_permutations.py {setting}")
 
-
-# def run_nosensitive(setting):
-#     os.system(f"python train_all_permutations_nosensitive.py {setting}")
-
+def run_nosensitive(setting):
+    os.system(f"python train_all_permutations_nosensitive.py {setting}")
 
 def run_discm_find(setting):
     os.system(f"python train_using_train_test_sets.py {setting}")
