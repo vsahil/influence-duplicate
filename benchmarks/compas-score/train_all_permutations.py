@@ -51,15 +51,14 @@ def variation(setting_now):
                     # print(setting_now, "done", perm, h1units, h2units, batch)
                     return perm, h1units, h2units, batch, model_count
 
-
-
+modify_test = True
 perm, h1units, h2units, batch, model_count = variation(setting_now)
 assert(model_count == setting_now)
 hidden1_units = h1units
 hidden2_units = h2units
 hidden3_units = 0
 batch_size = batch
-data_sets = load_compas_two_year(perm)
+data_sets = load_compas_two_year(perm, modify_test=modify_test)
 
 
 print("Start: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
@@ -83,7 +82,6 @@ model = Fully_Connected(
     hvp_files = f"inverse_HVP_compas_method1/inverse_HVP_schm{scheme}_count{model_count}",
     model_name=name,
     scheme = f"{scheme}")
-
 
 
 if train:
@@ -124,13 +122,15 @@ if not load_from_numpy:
     del model   # so that weights of the original model are not used. This will not help
 
 else:
-   print("Loading from numpy")
-#    initial_num = model.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
-#    print(initial_num, "See")
-#    size = class0_data.shape[0]/100
-#    with open("results_compas-score_noremoval.csv".format(scheme), "a") as f:
-#         f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{initial_num},{initial_num/size}\n")
-   sorted_training_points = list(np.load(ranked_influential_training_points))
+    print("Loading from numpy")
+    if modify_test:
+        initial_num = model.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
+        train_acc, test_acc = model.print_model_eval()
+        size = class0_data.shape[0]/100
+        with open("results_compas-score_noremoval.csv".format(scheme), "a") as f:
+                f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{initial_num},{initial_num/size}\n")
+        exit(0)
+    sorted_training_points = list(np.load(ranked_influential_training_points))
 
 if train:
     exit(0)
@@ -172,7 +172,7 @@ for percentage in np.linspace(removal-1, removal-0.2, 5):
     print("Training")
     print("Percentage: ", percentage, " Points removed: ", p) 
     model_partial_data.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
-    # train_acc, test_acc = model.print_model_eval()
+    # train_acc, test_acc = model_partial_data.print_model_eval()
     print("Percentage: ", percentage, " Points removed: ", p)
     num = model_partial_data.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
     # with open("results_compas-score_final.csv".format(scheme), "a") as f:

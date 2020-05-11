@@ -87,7 +87,7 @@ def load_compas_two_year_nosensitive(perm=-1, validation_size=0):
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
-def load_compas_two_year(perm=-1, validation_size=0):
+def load_compas_two_year(perm=-1, modify_test=False, validation_size=0):
 	total_dataset = pd.read_csv("../../compas-dataset/normalized_scores_as_labels_features.csv").to_numpy()
 	total_labels = pd.read_csv("../../compas-dataset/target_compas_score_as_label.csv").to_numpy()
 	total_labels = total_labels.flatten()
@@ -99,11 +99,26 @@ def load_compas_two_year(perm=-1, validation_size=0):
 	train_examples = 5000		# testing set is 1150		# weird size (about 20% - similar to german credit dataset and adult income dataset)
 	X_train = total_dataset[:train_examples]
 	X_validation = total_dataset[train_examples:train_examples + validation_size]
-	X_test  = total_dataset[train_examples + validation_size:]
+	
 	Y_train = total_labels[:train_examples]
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
+	
+	X_test  = total_dataset[train_examples + validation_size:]
 	Y_test  = total_labels[train_examples + validation_size:]
-	assert(len(Y_test) == 1150)
+	if not modify_test:	
+		assert(len(Y_test) == 1150)
+	else:
+		test_points = np.array(ordering[train_examples + validation_size:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/compas-score_biased_points.npy")
+		# intersection = np.intersect1d(test_points, biased_test_points)
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+	
+	print(len(Y_test), len(Y_train), "see the length of test and train")
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -226,7 +241,7 @@ def disparate_removed_load_compas(perm, validation_size=0):
 		i = new_df[j]
 		mins_and_ranges.append((np.min(i), np.max(i) - np.min(i)))
 	assert(len(mins_and_ranges) == 10)
-	
+
 	df_ = new_df.apply(lambda x: (x - np.min(x)) / (np.max(x) - np.min(x)))
 	X_train = df_.to_numpy()
 	Y_train = target.to_numpy()
