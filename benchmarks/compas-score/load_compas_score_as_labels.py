@@ -225,8 +225,8 @@ def disparate_removed_load_compas(perm, validation_size=0):
 	from aif360.algorithms.preprocessing import DisparateImpactRemover
 	from sklearn.preprocessing import MinMaxScaler
 
-	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/disparate_impact_removed/normalized_disparateremoved_features-compas_score.csv").to_numpy()
-	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/disparate_impact_removed/normalized_disparateremoved_labels-compas_score.csv").to_numpy()
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/normalized_scores_as_labels_features.csv").to_numpy()
+	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/target_compas_score_as_label.csv").to_numpy()
 	total_labels = total_labels.flatten()
 
 	assert(perm < 20)		# we only have 20 permutations
