@@ -17,17 +17,17 @@ def experiment_command(setting, removal_percent):
 # print("DONE!")
 
 
-def run_command(setting):
-    os.system(f"python train_all_permutations.py {setting}")
+# def run_command(setting):
+#     os.system(f"python train_all_permutations.py {setting}")
     # os.system(f"python methodology1.py {setting}")
 
-# def run_nosensitive(setting):
-#     os.system(f"python train_all_permutations_nosensitive.py {setting}")
+def run_nosensitive(setting):
+    os.system(f"python train_all_permutations_nosensitive.py {setting}")
 
 pool = multiprocessing.Pool(240)
 l = [i for i in range(240)]
-mr = pool.map_async(run_command, l)
-# mr = pool.map_async(run_nosensitive, l)
+# mr = pool.map_async(run_command, l)
+mr = pool.map_async(run_nosensitive, l)
 while not mr.ready():
     sys.stdout.flush()
     mr.wait(0.1)

@@ -42,6 +42,7 @@ def entire_test_suite(mini=False, disparateremoved=False, mins_and_ranges=None):
         class0 = rescale_input_numpy_disparateremoved_compas(class0_, mins_and_ranges)
         class1 = rescale_input_numpy_disparateremoved_compas(class1_, mins_and_ranges)
     else:
+        assert mins_and_ranges == None
         class0 = rescale_input_numpy(class0_)
         class1 = rescale_input_numpy(class1_)
 

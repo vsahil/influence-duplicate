@@ -64,7 +64,8 @@ def exclude_some_examples(exclude, validation_size=0, remove_biased_test=True):
 
 
 def load_compas_two_year_nosensitive(perm=-1, validation_size=0):
-	total_dataset = pd.read_csv("../../compas-dataset/normalized_scores_as_labels_nosensitive_features.csv").to_numpy()
+	total_dataset = pd.read_csv("../../compas-dataset/normalized_scores_as_labels_features.csv")
+	total_dataset = total_dataset.drop(columns=['race']).to_numpy()		# drop the sensitive attribute. 
 	total_labels = pd.read_csv("../../compas-dataset/target_compas_score_as_label.csv").to_numpy()
 	total_labels = total_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
@@ -79,7 +80,19 @@ def load_compas_two_year_nosensitive(perm=-1, validation_size=0):
 	Y_train = total_labels[:train_examples]
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
-	assert(len(Y_test) == 1150)
+	
+	test_points = np.array(ordering[train_examples + validation_size:])
+	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/compas-score_biased_points.npy")
+	# intersection = np.intersect1d(test_points, biased_test_points)
+	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+	mask_new = ~mask			# invert it		# this is a boolean vector
+	X_test = X_test[mask_new]
+	Y_test = Y_test[mask_new]
+	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+	assert(len(Y_test) == len(test_points)-sum(mask))
+	print(len(Y_test), len(Y_train), "see the length of test and train")
+	# assert(len(Y_test) == 1150)
+
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
