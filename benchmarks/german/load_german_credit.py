@@ -36,7 +36,7 @@ def exclude_some_examples(exclude, validation_size=0, remove_biased_test=False):
 		
 	# import ipdb; ipdb.set_trace()
 
-	train_examples = 1000		# size changed from 750 to 800, testing set is 200
+	train_examples = 800		# size changed from 750 to 800, testing set is 200
 	X_train = total_dataset[:train_examples]
 	X_validation = total_dataset[train_examples:train_examples + validation_size]
 	X_test  = total_dataset[train_examples + validation_size:]
@@ -71,7 +71,8 @@ def exclude_some_examples(exclude, validation_size=0, remove_biased_test=False):
 
 
 def load_german_credit_nosensitive(perm, validation_size=0):
-	total_dataset = pd.read_csv("../../german-dataset/normalized_german_nosensitive_features.csv").to_numpy()
+	total_dataset = pd.read_csv("../../german-dataset/german_redone_normalized_withheader.csv")
+	total_dataset = total_dataset.drop(columns=['Gender']).to_numpy()		# drop the sensitive attribute. 
 	total_labels = pd.read_csv("../../german-dataset/german_labels_withheader.csv").to_numpy()
 	total_labels = total_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
@@ -87,6 +88,17 @@ def load_german_credit_nosensitive(perm, validation_size=0):
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
 
+	test_points = np.array(ordering[train_examples + validation_size:])
+	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/german_biased_points.npy")
+	# intersection = np.intersect1d(test_points, biased_test_points)
+	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+	mask_new = ~mask			# invert it		# this is a boolean vector
+	X_test = X_test[mask_new]
+	Y_test = Y_test[mask_new]
+	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+	assert(len(Y_test) == len(test_points)-sum(mask))
+	print(len(Y_test), len(Y_train), "see the length of test and train")
+
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -94,7 +106,7 @@ def load_german_credit_nosensitive(perm, validation_size=0):
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
-def load_german_credit(perm, validation_size=0):
+def load_german_credit(perm, modify_test=False, validation_size=0):
 	total_dataset = pd.read_csv("../../german-dataset/german_redone_normalized_withheader.csv").to_numpy()
 	total_labels = pd.read_csv("../../german-dataset/german_labels_withheader.csv").to_numpy()
 	total_labels = total_labels.flatten()
@@ -103,14 +115,27 @@ def load_german_credit(perm, validation_size=0):
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
-	train_examples = 1000		# size changed from 750 to 800, testing set is 200
+	train_examples = 800		# testing set is 200
 	X_train = total_dataset[:train_examples]
 	X_validation = total_dataset[train_examples:train_examples + validation_size]
 	X_test  = total_dataset[train_examples + validation_size:]
 	Y_train = total_labels[:train_examples]
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
-
+	if not modify_test:	
+		assert(len(Y_test) == 200)
+	else:
+		test_points = np.array(ordering[train_examples + validation_size:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/german_biased_points.npy")
+		# intersection = np.intersect1d(test_points, biased_test_points)
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+	
+	print(len(Y_test), len(Y_train), "see the length of test and train")
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -142,19 +167,76 @@ def load_german_credit_debiased(perm, train_index, test_index, validation_size=0
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
-def load_fair_representations(perm, total_dataset, total_labels, validation_size=0):
+def load_german_partial_method1(perm, model_count, train_pts_removed, name, validation_size=0):
+	total_dataset = pd.read_csv("../../german-dataset/german_redone_normalized_withheader.csv").to_numpy()
+	total_labels = pd.read_csv("../../german-dataset/german_labels_withheader.csv").to_numpy()
+	total_labels = total_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
-	train_examples = 1000
+	train_examples = 800		# testing set is 1150
+	X_train = total_dataset[:train_examples]
+	Y_train = total_labels[:train_examples]
+
+	ranked_influential_training_points = f"ranking_points_ordered_method1/{name}.npy"
+	sorted_training_points = list(np.load(ranked_influential_training_points))
+	remaining_train_indexes = np.array(sorted_training_points[train_pts_removed:])
+	assert len(remaining_train_indexes) <= len(X_train)
+	X_train = X_train[remaining_train_indexes]
+	Y_train = Y_train[remaining_train_indexes]
+
+	X_validation = total_dataset[train_examples:train_examples + validation_size]
+	Y_validation = total_labels[train_examples:train_examples + validation_size]
+
+	X_test  = total_dataset[train_examples + validation_size:]
+	Y_test  = total_labels[train_examples + validation_size:]
+	test_points = np.array(ordering[train_examples + validation_size:])
+	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/german_biased_points.npy")
+	# intersection = np.intersect1d(test_points, biased_test_points)
+	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+	mask_new = ~mask			# invert it		# this is a boolean vector
+	X_test = X_test[mask_new]
+	Y_test = Y_test[mask_new]
+	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+	assert(len(Y_test) == len(test_points)-sum(mask))
+	print(len(Y_test), len(Y_train), "see the length of test and train")
+
+	train = DataSet(X_train, Y_train)
+	validation = DataSet(X_validation, Y_validation)
+	test = DataSet(X_test, Y_test)
+
+	return base.Datasets(train=train, validation=validation, test=test)
+
+
+def load_fair_representations(perm, training_dataset, training_labels, validation_size=0):
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-dataset/german_redone_normalized_withheader.csv").to_numpy()
+	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-dataset/german_labels_withheader.csv").to_numpy()
+	total_labels = total_labels.flatten()
+	assert(perm < 20)		# we only have 20 permutations
+	if perm >= 0:	# for negative number don't do
+		ordering = permutations(perm)
+		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
+
+	train_examples = 800
 	X_train = total_dataset[:train_examples]
 	X_validation = total_dataset[train_examples:train_examples + validation_size]
-	X_test  = total_dataset[train_examples + validation_size:]
 	Y_train = total_labels[:train_examples]
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
+
+	X_test  = total_dataset[train_examples + validation_size:]
 	Y_test  = total_labels[train_examples + validation_size:]
+	test_points = np.array(ordering[train_examples + validation_size:])
+	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/german_biased_points.npy")
+	# intersection = np.intersect1d(test_points, biased_test_points)
+	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+	mask_new = ~mask			# invert it		# this is a boolean vector
+	X_test = X_test[mask_new]
+	Y_test = Y_test[mask_new]
+	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+	assert(len(Y_test) == len(test_points)-sum(mask))
+	print(len(Y_test), len(Y_train), "see the length of test and train")
 	# assert(len(Y_test) == 200)
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
@@ -164,26 +246,68 @@ def load_fair_representations(perm, total_dataset, total_labels, validation_size
 
 
 def disparate_removed_load_german(perm, validation_size=0):
-	total_dataset = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/disparate_impact_removed/normalized_disparateremoved_features-german.csv", delimiter=",")
-	total_labels = genfromtxt(f"{os.path.dirname(os.path.realpath(__file__))}/disparate_impact_removed/normalized_disparateremoved_labels-german.csv", delimiter=",")
+	sys.path.insert(1, "../")
+	sys.path.append("../../../")
+	sys.path.append("../../../competitors/AIF360/")
+	from aif360.datasets import MyGermanDataset
+	from aif360.metrics import BinaryLabelDatasetMetric
+	from aif360.algorithms.preprocessing import DisparateImpactRemover
+	from sklearn.preprocessing import MinMaxScaler
+
+	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-dataset/german_redone_normalized_withheader.csv").to_numpy()
+	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-dataset/german_labels_withheader.csv").to_numpy()
+	total_labels = total_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
-	train_examples = 1000		# size changed from 750 to 800, testing set is 200
-	X_train = total_dataset[:train_examples]
+	dataset_orig = MyGermanDataset(
+		protected_attribute_names=['Gender'],                   
+		privileged_classes=[[1]], 
+		normalized = False,
+		permute = perm
+	)
+
+	train_examples = 800		# testing set is 200
+	dataset_orig_train, dataset_orig_test = dataset_orig.split([train_examples], shuffle=False)
+	assert(len(dataset_orig_train.convert_to_dataframe()[0]) == train_examples)
+	di = DisparateImpactRemover(repair_level=1.0)
+	train_repd = di.fit_transform(dataset_orig_train)
+	new_df = train_repd.convert_to_dataframe()[0]		# this also has labels
+	target = new_df['target']
+	new_df = new_df.drop(columns=['target'])
+	mins_and_ranges = []
+	for j in list(new_df):
+		i = new_df[j]
+		mins_and_ranges.append((np.min(i), np.max(i) - np.min(i)))
+	assert(len(mins_and_ranges) == 20)
+
+	df_ = new_df.apply(lambda x: (x - np.min(x)) / (np.max(x) - np.min(x)))
+	X_train = df_.to_numpy()
+	Y_train = target.to_numpy()
+
 	X_validation = total_dataset[train_examples:train_examples + validation_size]
-	X_test  = total_dataset[train_examples + validation_size:]
-	Y_train = total_labels[:train_examples]
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
+
+	X_test  = total_dataset[train_examples + validation_size:]
 	Y_test  = total_labels[train_examples + validation_size:]
+	test_points = np.array(ordering[train_examples + validation_size:])
+	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/german_biased_points.npy")
+	# intersection = np.intersect1d(test_points, biased_test_points)
+	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+	mask_new = ~mask			# invert it		# this is a boolean vector
+	X_test = X_test[mask_new]
+	Y_test = Y_test[mask_new]
+	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+	assert(len(Y_test) == len(test_points)-sum(mask))
+	print(len(Y_test), len(Y_train), "see the length of test and train")
 
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
 
-	return base.Datasets(train=train, validation=validation, test=test)
+	return base.Datasets(train=train, validation=validation, test=test), mins_and_ranges
 
 
 def load_german_credit_partial(perm, index, validation_size=0):
@@ -194,7 +318,7 @@ def load_german_credit_partial(perm, index, validation_size=0):
 	ordering = permutations(perm)
 	total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
-	train_examples = 1000
+	train_examples = 800
 	X_train = total_dataset[:train_examples]
 	X_train = X_train[index]
 	X_validation = total_dataset[train_examples:train_examples + validation_size]
@@ -205,6 +329,7 @@ def load_german_credit_partial(perm, index, validation_size=0):
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
 
+	assert(len(Y_test) == 200)
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -241,20 +366,18 @@ def before_massaging_dataset(perm, validation_size=0):
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 	
-	train_examples = 1000		# size 800, testing set is 200
+	train_examples = 800		# size 800, testing set is 200
 	original_dataset = original_dataset.reindex(ordering[:train_examples])
 	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
-	# import ipdb; ipdb.set_trace()
 	discm, pairs_to_flip, male_good_credit, male_bad_credit, female_good_credit, female_bad_credit = kamiran_discrimination_pairs(original_dataset)
-	# print(perm, discm, pairs_to_flip)
-	# return
 	X_train = total_dataset[:train_examples]
 	X_validation = total_dataset[train_examples:train_examples + validation_size]
 	X_test  = total_dataset[train_examples + validation_size:]
 	Y_train = total_labels[:train_examples]
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
-
+	
+	assert(len(Y_test) == 200)
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -272,7 +395,7 @@ def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
-	train_examples = 1000		# size 800, testing set is 200
+	train_examples = 800		# size 800, testing set is 200
 	original_dataset = original_dataset.reindex(ordering[:train_examples])
 	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
 	for p, d in zip(promotion_candidates, demotion_candidates):
@@ -292,15 +415,23 @@ def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation
 	# df_target = pd.DataFrame(total_labels, columns=['target'])
 	# df_feature = pd.DataFrame(total_dataset, columns=original_dataset.columns.tolist()[:-1])		# column names remove target
 	# df_feature['target'] = df_target
-	# import ipdb; ipdb.set_trace()
-	# print(perm, discm, pairs_to_flip)
-	# return
 	X_train = total_dataset[:train_examples]
-	X_validation = total_dataset[train_examples:train_examples + validation_size]
-	X_test  = total_dataset[train_examples + validation_size:]
 	Y_train = total_labels[:train_examples]
+	X_validation = total_dataset[train_examples:train_examples + validation_size]
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
+
+	X_test  = total_dataset[train_examples + validation_size:]
 	Y_test  = total_labels[train_examples + validation_size:]
+	test_points = np.array(ordering[train_examples + validation_size:])
+	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/german_biased_points.npy")
+	# intersection = np.intersect1d(test_points, biased_test_points)
+	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+	mask_new = ~mask			# invert it		# this is a boolean vector
+	X_test = X_test[mask_new]
+	Y_test = Y_test[mask_new]
+	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+	assert(len(Y_test) == len(test_points)-sum(mask))
+	print(len(Y_test), len(Y_train), "see the length of test and train")
 
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
@@ -319,11 +450,11 @@ def before_preferential_sampling(perm, validation_size=0):
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 	# import ipdb; ipdb.set_trace()
-	train_examples = 1000
+	train_examples = 800
 	original_dataset = original_dataset.reindex(ordering[:train_examples])
 	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
 	x_both = original_dataset.groupby(['Gender', 'target']).indices
-	# import ipdb; ipdb.set_trace()
+
 	X_train = total_dataset[:train_examples]
 	X_validation = total_dataset[train_examples:train_examples + validation_size]
 	X_test  = total_dataset[train_examples + validation_size:]
@@ -331,7 +462,7 @@ def before_preferential_sampling(perm, validation_size=0):
 	Y_train = total_labels[:train_examples]
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
-	# assert(len(Y_test) == 200)
+	assert(len(Y_test) == 200)
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -349,7 +480,7 @@ def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_cand
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
-	train_examples = 1000
+	train_examples = 800
 	original_dataset = original_dataset.reindex(ordering[:train_examples])
 	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
 	x_gender = original_dataset.groupby(['Gender']).indices
@@ -405,6 +536,17 @@ def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_cand
 	Y_train = total_labels[final_order]
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
+	
+	test_points = np.array(ordering[train_examples + validation_size:])
+	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/german_biased_points.npy")
+	# intersection = np.intersect1d(test_points, biased_test_points)
+	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+	mask_new = ~mask			# invert it		# this is a boolean vector
+	X_test = X_test[mask_new]
+	Y_test = Y_test[mask_new]
+	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+	assert(len(Y_test) == len(test_points)-sum(mask))
+	print(len(Y_test), len(Y_train), "see the length of test and train")
 	# assert(len(Y_test) == 200)
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
