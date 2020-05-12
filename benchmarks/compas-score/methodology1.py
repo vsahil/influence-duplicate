@@ -94,6 +94,6 @@ size = class0_data.shape[0]/100.0
 num = model.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
 train_acc, test_acc = model.print_model_eval()
 # print(train_acc, test_acc, "see accuracies", model_count)
-with open(f"results_{dataset}_method1_.csv".format(scheme), "a") as f:
+with open(f"results_{dataset}_method1.csv".format(scheme), "a") as f:
     print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{percentage},{train_pts_removed[0]},{num},{num/size}", file=f)
 

@@ -19,6 +19,7 @@ from load_compas_score_as_labels import load_compas_two_year, load_compas_two_ye
 from find_discm_points import entire_test_suite
 
 train = False
+modify_test = False
 
 if not train:
     x = len(os.listdir('ranking_points_ordered_method1'))
@@ -51,7 +52,7 @@ def variation(setting_now):
                     # print(setting_now, "done", perm, h1units, h2units, batch)
                     return perm, h1units, h2units, batch, model_count
 
-modify_test = True
+
 perm, h1units, h2units, batch, model_count = variation(setting_now)
 assert(model_count == setting_now)
 hidden1_units = h1units
@@ -136,7 +137,6 @@ if train:
     exit(0)
 
 removal = int(sys.argv[2])
-# import ipdb; ipdb.set_trace()
 training_size = 5000
 dataset = "compas-score"
 size = class0_data.shape[0]/100

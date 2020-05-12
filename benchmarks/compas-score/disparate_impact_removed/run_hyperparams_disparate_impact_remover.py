@@ -82,6 +82,6 @@ train_acc, test_acc = model.print_model_eval()
 
 print("Discrimination:", num_dicsm)
 size = class0_data.shape[0]/100
-with open("results_disparate_removed_compas-score.csv", "a") as f:
+with open("results_disparate_removed_compas-score_.csv", "a") as f:
     print(f'{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{num_dicsm},{num_dicsm/size}', file=f)
 
