@@ -1,4 +1,4 @@
-Train-Acc,Test-Acc,Dataperm,Discriminating-points,Discm_percent
+Train_acc,Test_acc,Dataperm,Discriminating-points,Discm_percent
 0.7412,0.7521739130434782,6,86,0.013983739837398375
 0.757,0.7539130434782608,9,336,0.054634146341463415
 0.7536,0.7591304347826087,14,187,0.03040650406504065

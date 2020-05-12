@@ -1,4 +1,4 @@
-H1Units,H2Units,Batch,Dataperm,train_acc,test_acc,Discriminating-Points,Discm_percent
+H1Units,H2Units,Batch,Dataperm,Train_acc,Test_acc,Discriminating-Points,Discm_percent
 24,8,512,16,0.9894,0.7222222222222222,311,0.05056910569105691
 24,12,1048,1,0.994,0.7704918032786885,490,0.07967479674796749
 24,12,512,16,0.9894,0.7189542483660131,310,0.05040650406504065

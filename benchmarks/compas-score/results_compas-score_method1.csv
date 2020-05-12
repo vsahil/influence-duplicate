@@ -1,4 +1,4 @@
-Model-count,Dataperm,H1Units,H2Units,Batch,train_acc,test_acc,Removal-percentage,Points-Removed,Discrimination-points,Discm_percent
+Model-count,Dataperm,H1Units,H2Units,Batch,Train_acc,Test_acc,Removal-percentage,Points-Removed,Discrimination-points,Discm_percent
 0,0,16,8,512,0.9915662650602408,0.9965277777777778,0.6679999999999999,3340,11,0.0017886178861788618
 1,0,16,8,1048,0.9923076923076924,0.9965277777777778,0.662,3310,11,0.0017886178861788618
 2,0,16,12,512,0.9909638554216867,0.9965277777777778,0.6679999999999999,3340,12,0.001951219512195122
