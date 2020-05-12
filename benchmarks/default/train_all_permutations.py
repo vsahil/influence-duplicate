@@ -51,7 +51,7 @@ def variation(setting_now):
                     # print(setting_now, "done", perm, h1units, h2units, batch)
                     return perm, h1units, h2units, batch, model_count
 
-
+modify_test = True
 perm, h1units, h2units, batch, model_count = variation(setting_now)
 assert(model_count == setting_now)
 hidden1_units = h1units
@@ -59,7 +59,7 @@ hidden2_units = h2units
 hidden3_units = 0
 batch_size = batch
 
-data_sets = load_default(perm)
+data_sets = load_default(perm, modify_test=modify_test)
 
 
 print("Start: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
@@ -124,13 +124,15 @@ if not load_from_numpy:
     del model   # so that weights of the original model are not used. This will not help
 
 else:
-   print("Loading from numpy")
-#    initial_num = model.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
-#    print(initial_num, "See")
-#    size = class0_data.shape[0]/100
-#    with open("results_default_noremoval.csv".format(scheme), "a") as f:
-#         f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{initial_num},{initial_num/size}\n")
-   sorted_training_points = list(np.load(ranked_influential_training_points))
+    print("Loading from numpy")
+    if modify_test:
+        initial_num = model.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
+        train_acc, test_acc = model.print_model_eval()
+        size = class0_data.shape[0]/100
+        with open("results_default_noremoval.csv".format(scheme), "a") as f:
+                f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{initial_num},{initial_num/size}\n")
+        exit(0)
+    sorted_training_points = list(np.load(ranked_influential_training_points))
 
 if train:
     exit(0)
