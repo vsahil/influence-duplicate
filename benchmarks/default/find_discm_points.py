@@ -13,9 +13,9 @@ def rescale_input_numpy(inp):
     return out
 
 
-def rescale_input_numpy_disparateremoved_compas(inp):
+def rescale_input_numpy_disparateremoved_compas(inp, mins_and_ranges):
     assert(inp.shape[1] == 23)  # 23 features for default prediction dataset
-    mins_and_ranges  = [(10000, 790000), (0, 1), (0, 6), (0, 3), (21, 54), (-2, 10), (-2, 9), (-2, 9), (-2, 9), (-2, 9), (-2, 9), (-165580, 912394), (-69777, 716547), (-157264, 850395), (-170000, 798699), (-81334, 904874), (-339603, 1039547), (0, 505000), (0, 388126), (0, 508229), (0, 528897), (0, 332000), (0, 527143)]
+    # mins_and_ranges  = [(10000, 790000), (0, 1), (0, 6), (0, 3), (21, 54), (-2, 10), (-2, 9), (-2, 9), (-2, 9), (-2, 9), (-2, 9), (-165580, 912394), (-69777, 716547), (-157264, 850395), (-170000, 798699), (-81334, 904874), (-339603, 1039547), (0, 505000), (0, 388126), (0, 508229), (0, 528897), (0, 332000), (0, 527143)]
     r = np.arange(23)
     out = copy.deepcopy(inp)
     for col, (min_, range_) in zip(r, mins_and_ranges):
@@ -23,7 +23,7 @@ def rescale_input_numpy_disparateremoved_compas(inp):
     return out
 
 
-def entire_test_suite(mini=False, disparateremoved=False):
+def entire_test_suite(mini=False, disparateremoved=False, mins_and_ranges=None):
     gender0 = "sex0_default"
     gender1 = "sex1_default"
     # if mini:
@@ -44,9 +44,10 @@ def entire_test_suite(mini=False, disparateremoved=False):
     class1_ = df1.to_numpy(dtype=np.float64)
 
     if disparateremoved:
-        class0 = rescale_input_numpy_disparateremoved_compas(class0_)
-        class1 = rescale_input_numpy_disparateremoved_compas(class1_)
+        class0 = rescale_input_numpy_disparateremoved_compas(class0_, mins_and_ranges)
+        class1 = rescale_input_numpy_disparateremoved_compas(class1_, mins_and_ranges)
     else:
+        assert mins_and_ranges == None
         class0 = rescale_input_numpy(class0_)
         class1 = rescale_input_numpy(class1_)
 

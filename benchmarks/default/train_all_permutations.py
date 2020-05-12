@@ -21,7 +21,7 @@ from find_discm_points import entire_test_suite
 train = False
 
 if not train:
-    x = len(os.listdir('ranking_points_ordered'))
+    x = len(os.listdir('ranking_points_ordered_method1'))
     assert x == 240
 
 input_dim = 23
@@ -52,20 +52,13 @@ def variation(setting_now):
                     return perm, h1units, h2units, batch, model_count
 
 
-if setting_now >= 0:
-    perm, h1units, h2units, batch, model_count = variation(setting_now)
-    assert(model_count == setting_now)
-    hidden1_units = h1units
-    hidden2_units = h2units
-    hidden3_units = 0
-    batch_size = batch
-else:
-    perm = -1
-    hidden1_units = 16
-    hidden2_units = 8
-    hidden3_units = 0
-    batch_size = 3000
-    model_count = 1003
+perm, h1units, h2units, batch, model_count = variation(setting_now)
+assert(model_count == setting_now)
+hidden1_units = h1units
+hidden2_units = h2units
+hidden3_units = 0
+batch_size = batch
+
 data_sets = load_default(perm)
 
 
@@ -85,9 +78,9 @@ model = Fully_Connected(
     damping=3e-2,
     decay_epochs=decay_epochs,
     mini_batch=True,
-    train_dir=f'trained_models/output_count{model_count}', 
+    train_dir=f'trained_models_method1/output_count{model_count}', 
     log_dir=f'throw/log{model_count}',
-    hvp_files = f"inverse_HVP_default/inverse_HVP_schm{scheme}_count{model_count}",
+    hvp_files = f"inverse_HVP_default_method1/inverse_HVP_schm{scheme}_count{model_count}",
     model_name=name,
     scheme = f"{scheme}")
 
@@ -99,12 +92,12 @@ if train:
     # print(train_acc, test_acc, "see accuracies", model_count)
     # exit(0)
 
-ranked_influential_training_points = f"ranking_points_ordered/{name}.npy"
+ranked_influential_training_points = f"ranking_points_ordered_method1/{name}.npy"
 # if not train and ranking of influential training points is stored in numpy file, then True
 load_from_numpy = False if train else (True if os.path.exists(ranked_influential_training_points) else False)       
-if not os.path.exists("ranking_points_ordered"):
-    os.mkdir("ranking_points_ordered")
-assert(load_from_numpy)
+if not os.path.exists("ranking_points_ordered_method1"):
+    os.mkdir("ranking_points_ordered_method1")
+# assert(load_from_numpy)
 class0_data, class1_data = entire_test_suite(mini=False)     # False means loads entire data
 if not load_from_numpy:
     if not train:
@@ -142,64 +135,15 @@ else:
 if train:
     exit(0)
 
-# for percentage in range(5, 4, 0.5):
-# for percentage in np.arange(0, 5.0, 0.2):
-# removal = int(sys.argv[2])
-# # import ipdb; ipdb.set_trace()
-# # for p in removal:
+percentage = int(sys.argv[2])
+percentage = percentage/10.0        # increments of 0.1%
+training_size = 24000
+dataset = "default"
+size = class0_data.shape[0]/100
 # for percentage in np.linspace(removal-1, removal-0.2, 5):
-#     tf.reset_default_graph()
-#     training_size = 24000
-#     p = int(training_size * percentage / 100)
-#     remaining_indexes = np.array(sorted_training_points[p:])
-#     data_sets_partial = load_default_partial(perm=perm, index=remaining_indexes)
-#     try:
-#         assert(len(remaining_indexes) == training_size - p)
-#         assert(data_sets_partial.train.num_examples == training_size - p)
-#     except:
-#         print(p, percentage, removal, data_sets_partial.train.num_examples, "hello")
-#         assert False
-#     model_partial_data = Fully_Connected(
-#         input_dim=input_dim, 
-#         hidden1_units=hidden1_units, 
-#         hidden2_units=hidden2_units,
-#         hidden3_units=hidden3_units,
-#         weight_decay=weight_decay,
-#         num_classes=num_classes, 
-#         batch_size=batch_size,
-#         data_sets=data_sets_partial,
-#         initial_learning_rate=initial_learning_rate,
-#         damping=1e-2,
-#         decay_epochs=decay_epochs,
-#         mini_batch=False,
-#         train_dir='output_partial', 
-#         log_dir='log_partial',
-#         hvp_files = "inverse_HVP_scheme1_",
-#         model_name='default_partial',
-#         scheme = "scheme8_par")
-#     print("Training")
-#     # print("Points removed: ", p)
-#     print("Percentage: ", percentage, " Points removed: ", p) 
-#     model_partial_data.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
-#     train_acc, test_acc = model.print_model_eval()
-#     # print("Percentage: ", percentage, " Points removed: ", p)
-#     # print("Points removed: ", p)
-#     print("Percentage: ", percentage, " Points removed: ", p)
-#     num = model_partial_data.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
-#     with open("default_results_first120.csv".format(scheme), "a") as f:
-#         # f.write("Percentage: " + str(percentage) + ", Discriminating Tests: " + str(num) + "\n")
-#         # f.write("Points: " + str(p) + ", Discriminating Tests: " + str(num) + "\n")
-#         f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{percentage},{p},{num},{num/30000.0}\n")     # the last ones gives percentage of discrimination
-    
-#     del model_partial_data          # to remove any chance of reusing variables and reduce memory
-
-
-p = int(sys.argv[2])
-
-tf.reset_default_graph()
-training_size = 30000
-# p = int(training_size * percentage / 100)
-percentage = (p * 100) / training_size
+tf.reset_default_graph()    
+p = int(training_size * percentage / 100)
+# percentage = (p * 100) / training_size
 remaining_indexes = np.array(sorted_training_points[p:])
 data_sets_partial = load_default_partial(perm=perm, index=remaining_indexes)
 try:
@@ -209,30 +153,28 @@ except:
     print(p, percentage, data_sets_partial.train.num_examples, "hello")
     assert False
 model_partial_data = Fully_Connected(
-    input_dim=input_dim, 
-    hidden1_units=hidden1_units, 
-    hidden2_units=hidden2_units,
-    hidden3_units=hidden3_units,
-    weight_decay=weight_decay,
-    num_classes=num_classes, 
-    batch_size=batch_size,
-    data_sets=data_sets_partial,
-    initial_learning_rate=initial_learning_rate,
-    damping=1e-2,
-    decay_epochs=decay_epochs,
-    mini_batch=True,
-    train_dir='throw/output_partial', 
-    log_dir='throw/log_partial',
-    hvp_files = "inverse_HVP_scheme1_",
-    model_name='default_partial',
-    scheme = "scheme8_par")
+        input_dim=input_dim, 
+        hidden1_units=hidden1_units, 
+        hidden2_units=hidden2_units,
+        hidden3_units=hidden3_units,
+        weight_decay=weight_decay,
+        num_classes=num_classes, 
+        batch_size=batch_size,
+        data_sets=data_sets_partial,
+        initial_learning_rate=initial_learning_rate,
+        damping=3e-2,
+        decay_epochs=decay_epochs,
+        mini_batch=True,
+        train_dir='throw/output_partial', 
+        log_dir='throw/log_partial',
+        hvp_files = "inverse_HVP_scheme1_",
+        model_name='default_partial',
+        scheme = "scheme8_par")
 print("Training")
 print("Percentage: ", percentage, " Points removed: ", p)
 model_partial_data.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
 # train_acc, test_acc = model_partial_data.print_model_eval()
 # print("Percentage: ", percentage, " Points removed: ", p)
 num = model_partial_data.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
-with open("results_default_full.csv".format(scheme), "a") as f:
-    f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{percentage},{p},{num},{num/30000.0}\n")     # the last ones gives percentage of discrimination
-
-
+with open(f"results_{dataset}_debiasedtrain_80percentof_total.csv".format(scheme), "a") as f:
+    f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{percentage},{p},{num},{num/size}\n")     # the last ones gives percentage of discrimination
