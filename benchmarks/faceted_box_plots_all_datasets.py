@@ -52,7 +52,7 @@ def boxplots_datasets(dataset, plot):
     df_our['Baseline'] = "Our"
 
     # Massaging
-    df_massaging = process_dfs("Massaging", batches, pd.read_csv(f"{dataset}/massaging/results_massaged_{dataset}.csv"))
+    df_massaging = process_dfs("MAssaging", batches, pd.read_csv(f"{dataset}/massaging/results_massaged_{dataset}.csv"))
     # Preferential Sampling
     df_ps = process_dfs("Prefer. Sampling", batches, pd.read_csv(f"{dataset}/preferential_sampling/results_resampling_{dataset}.csv"))
     # Learning Fair representations
@@ -67,8 +67,21 @@ def boxplots_datasets(dataset, plot):
     df_adver['Techniques'] = "Adversa. debias"
     df_adver['Baseline'] = "AD"
 
-    df_main = pd.concat([df_our, df_massaging, df_ps, df_lfr, df_DIR, df_adver])
-    assert(len(df_main) == 5*240 + 20)
+    # Sensitive Attribute all set to 1
+    df_nosensitive = process_dfs("Sensitive Removed", batches, pd.read_csv(f"{dataset}/results_{dataset}_nosensitive.csv"))
+
+    # No technique used
+    df_noremoval = process_dfs("FULL", batches, pd.read_csv(f"{dataset}/results_{dataset}_noremoval.csv"))
+
+    df_main = pd.concat([df_our, df_massaging, df_ps, df_lfr, df_DIR, df_adver, df_nosensitive, df_noremoval])
+    assert(len(df_main) == 7*240 + 20)
+    
+    # df_main = pd.concat([df_our, df_massaging, df_ps, df_lfr, df_DIR, df_adver, df_nosensitive])
+    # assert(len(df_main) == 6*240 + 20)
+    if dataset == "compas-score":
+        dataset = "Recidivism-score"
+    elif dataset == "compas-ground":
+        dataset = "Recidivism-ground"
     df_main['Dataset'] = dataset.capitalize()
 
     if dataset == "german":
@@ -76,16 +89,20 @@ def boxplots_datasets(dataset, plot):
     elif dataset == "adult":
         sizeofPSI = 4522200
     elif dataset == "student":
-        sizeofPSI = 100000
+        sizeofPSI = 65000
     elif dataset == "default":
         sizeofPSI = 3000000
+    elif dataset == "Recidivism-score" or dataset == "Recidivism-ground":
+        sizeofPSI = 615000
     else:
         raise NotImplementedError
     
-    rounding = 3
+    precision = 1
 
     if plot == 0:
-        x = ' & '.join([f"{dataset.capitalize()}", f"{sizeofPSI}", f"{df_DIR['Discm_percent'].min().round(rounding)}", f"{df_ps['Discm_percent'].min().round(rounding)}", f"{df_massaging['Discm_percent'].min().round(rounding)}", f"{df_lfr['Discm_percent'].min().round(rounding)}", f"{df_adver['Discm_percent'].min().round(rounding)}", "\\textbf{%s}"%(f"{df_our['Discm_percent'].min().round(rounding)}")])
+        # x = ' & '.join([f"{dataset.capitalize()}", str(float(f"{df_DIR['Discm_percent'].min():.{precision}e}")), str(float(f"{df_ps['Discm_percent'].min():.{precision}e}")), str(float(f"{df_massaging['Discm_percent'].min():.{precision}e}")), str(float(f"{df_lfr['Discm_percent'].min():.{precision}e}")), str(float(f"{df_adver['Discm_percent'].min():.{precision}e}")), str(float(f"{df_nosensitive['Discm_percent'].min():.{precision}e}")), str(float(f"{df_noremoval['Discm_percent'].min():.{precision}e}")), "\\textbf{%s}"%(str(float(f"{df_our['Discm_percent'].min():.{precision}e}")))])
+    
+        x = ' & '.join([f"{dataset.capitalize()}", f"{df_DIR['Discm_percent'].min():.{precision}e}", f"{df_ps['Discm_percent'].min():.{precision}e}", f"{df_massaging['Discm_percent'].min():.{precision}e}", f"{df_lfr['Discm_percent'].min():.{precision}e}", f"{df_adver['Discm_percent'].min():.{precision}e}", f"{df_nosensitive['Discm_percent'].min():.{precision}e}", f"{df_noremoval['Discm_percent'].min():.{precision}e}", "\\textbf{%s}"%(f"{df_our['Discm_percent'].min():.{precision}e}")])
         if dataset == "adult":
             mode = "w"
         else:
@@ -110,7 +127,7 @@ def boxplots_datasets(dataset, plot):
 
 def main(plot):
     df_main = None
-    benchmarks = ["adult", "german", "student", "default"]
+    benchmarks = ["adult", "german", "student", "compas-ground", "compas-score", "default"]
     for dataset in benchmarks:
     # for dataset in ["adult", "default"]:
         df_onedataset = boxplots_datasets(dataset, plot)
@@ -123,22 +140,47 @@ def main(plot):
     if plot == 0:
         return 
     # import ipdb; ipdb.set_trace()
-    labels = ['DIR', 'PS', 'Ma', 'LFR', 'AD', 'Our']
-    tech_cat = pd.Categorical(df_main['Baseline'], categories=labels)
+    labels = ['DIR', 'PS', 'MA', 'LFR', 'AD', 'SR', 'FU', 'Our']
+    
+    # labels = ['DIR', 'PS', 'MA', 'LFR', 'AD', 'SR', 'Our']
+    # indexNames = df_main[df_main['Baseline'] == 'FU' ].index
+    # df_main.drop(indexNames , inplace=True)
+
+    tech_cat = pd.Categorical(df_main['Baseline'], categories=labels)    
     df_main = df_main.assign(Technique_x = tech_cat)
     
-    x = (ggplot(aes(x='Technique_x', y='Discm_percent', color='Techniques'), data=df_main) +\
+    dataset_order = ["Adult", "German", "Student", "Recidivism-ground", "Recidivism-score", "Default"]
+    data_cat = pd.Categorical(df_main['Dataset'], categories=dataset_order)    
+    df_main = df_main.assign(Dataset_x = data_cat)
+
+    # x = (ggplot(aes(x='Technique_x', y='Discm_percent', color='Techniques'), data=df_main) +\
+    #         geom_boxplot() +\
+    #         facet_wrap(['Dataset'], scales = 'free', nrow=2, labeller='label_both', shrink=False) + \
+    #         ylab("Remaining Individual Discrimination") + \
+    #         xlab("Discrimination reducing techniques") + \
+    #         # ylim(0, 20) + \
+    #         # ggtitle("Box plot showing remaining discrimination for each technique in each dataset") +\
+    #         theme(axis_text_x = element_text(size=6), dpi=151) + \
+    #         theme_seaborn()
+    #         )
+
+    # This is responsible for the legend - remove color='Techniques'
+
+    x = (ggplot(aes(x='Technique_x', y='Discm_percent'), data=df_main) +\
             geom_boxplot() +\
-            facet_wrap(['Dataset'], scales = 'free', nrow=1, ncol=len(benchmarks), labeller='label_both', shrink=False) + \
+            facet_wrap(['Dataset_x'], scales = 'free', nrow=1, labeller='label_value', shrink=True) + \
             ylab("Remaining Individual Discrimination") + \
             xlab("Discrimination reducing techniques") + \
+            # ylim(0, 20) + \
             # ggtitle("Box plot showing remaining discrimination for each technique in each dataset") +\
-            theme(axis_text_x = element_text(size=6), dpi=151) +\
+            theme(axis_text_x = element_text(size=6), dpi=151) + \
             theme_seaborn()
             )
 
-    x.save(f"boxplot_discm_freeaxis.png", height=5, width=12)
+    x.save(f"boxplot_discm_freeaxis.png", height=8, width=18)
+    # x.save(f"boxplot_discm_freeaxis_withoutfull.png", height=12, width=15)
     # x.save(f"boxplot_discm_fixedaxis.png", height=5, width=12)
+
 
 if __name__ == "__main__":
     plot = int(sys.argv[1])
