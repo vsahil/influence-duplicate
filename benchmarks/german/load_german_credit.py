@@ -220,10 +220,10 @@ def load_fair_representations(perm, training_dataset, training_labels, validatio
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
 	train_examples = 800
-	X_train = total_dataset[:train_examples]
-	X_validation = total_dataset[train_examples:train_examples + validation_size]
-	Y_train = total_labels[:train_examples]
-	Y_validation = total_labels[train_examples:train_examples + validation_size]
+	X_train = training_dataset		# this is already permuted in the right order
+	X_validation = training_dataset[train_examples:train_examples + validation_size]
+	Y_train = training_labels
+	Y_validation = training_dataset[train_examples:train_examples + validation_size]
 
 	X_test  = total_dataset[train_examples + validation_size:]
 	Y_test  = total_labels[train_examples + validation_size:]
