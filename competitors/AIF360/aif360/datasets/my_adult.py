@@ -79,13 +79,13 @@ class MyAdultDataset(StandardDataset):
             used for more descriptive visualizations.
         """
         if normalized:
-            features_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'adult-income-dataset', 'normalized_adult_features.csv')
-            labels_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'adult-income-dataset', 'adult_labels.csv')
+            features_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'adult-dataset', 'normalized_adult_features.csv')
+            labels_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'adult-dataset', 'adult_labels.csv')
             df = pd.read_csv(features_path)
             df2 = pd.read_csv(labels_path)
             df['target'] = df2
         else:
-            train_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'adult-income-dataset', 'adult_no_missing.csv')
+            train_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'adult-dataset', 'adult_no_missing.csv')
             df = pd.read_csv(train_path)
             assert len(df.columns[df.isnull().any()]) == 0
                                   
