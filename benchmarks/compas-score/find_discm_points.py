@@ -13,9 +13,9 @@ def rescale_input_numpy(inp):
     return out
 
 
-def rescale_input_numpy_disparateremoved_compas(inp):
+def rescale_input_numpy_disparateremoved_compas(inp, mins_and_ranges):
     assert(inp.shape[1] == 10)  # 10 features for compas dataset
-    mins_and_ranges  = [(18.0, 59.0), (0.0, 1.0), (0.0, 1.0), (0.0, 1940.0), (0.0, 530.0), (0.0, 36.0), (0.0, 8.0), (0.0, 6.0), (0.0, 7.0), (0.0, 1.0)]
+    # mins_and_ranges  = [(18.0, 59.0), (0.0, 1.0), (0.0, 1.0), (0.0, 1940.0), (0.0, 530.0), (0.0, 36.0), (0.0, 8.0), (0.0, 6.0), (0.0, 7.0), (0.0, 1.0)]
     r = np.arange(10)
     out = copy.deepcopy(inp)
     for col, (min_, range_) in zip(r, mins_and_ranges):
@@ -23,7 +23,7 @@ def rescale_input_numpy_disparateremoved_compas(inp):
     return out
 
 
-def entire_test_suite(mini=False, disparateremoved=False):
+def entire_test_suite(mini=False, disparateremoved=False, mins_and_ranges=None):
     gender0 = "race0_compas_two_year"
     gender1 = "race1_compas_two_year"
 
@@ -39,9 +39,10 @@ def entire_test_suite(mini=False, disparateremoved=False):
     class1_ = df1.to_numpy(dtype=np.float64)
 
     if disparateremoved:
-        class0 = rescale_input_numpy_disparateremoved_compas(class0_)
-        class1 = rescale_input_numpy_disparateremoved_compas(class1_)
+        class0 = rescale_input_numpy_disparateremoved_compas(class0_, mins_and_ranges)
+        class1 = rescale_input_numpy_disparateremoved_compas(class1_, mins_and_ranges)
     else:
+        assert mins_and_ranges == None
         class0 = rescale_input_numpy(class0_)
         class1 = rescale_input_numpy(class1_)
 

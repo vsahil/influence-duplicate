@@ -1,11 +1,12 @@
 import sys
 sys.path.insert(1, "../")  
 sys.path.append("../../../")
+sys.path.append("../../../competitors/AIF360/")
 
 import numpy as np
 np.random.seed(0)
 
-from aif360.datasets import GermanDataset, BinaryLabelDataset, StructuredDataset, MyGermanDataset
+from aif360.datasets import MyGermanDataset, BinaryLabelDataset, StructuredDataset, MyGermanDataset
 from aif360.metrics import BinaryLabelDatasetMetric
 from aif360.metrics import ClassificationMetric
 
@@ -24,7 +25,9 @@ dataset_orig = MyGermanDataset(
     permute=perm 
 )
 
-dataset_orig_train, dataset_orig_test = dataset_orig.split([0.8], shuffle=False)
+train_examples = 800
+dataset_orig_train, dataset_orig_test = dataset_orig.split([train_examples], shuffle=False)
+assert(len(dataset_orig_train.convert_to_dataframe()[0]) == train_examples)
 
 privileged_groups = [{'Gender': 1}]
 unprivileged_groups = [{'Gender': 0}]

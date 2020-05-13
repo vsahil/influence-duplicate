@@ -32,7 +32,7 @@ def variation(setting_now):
     for perm in range(20):
         for h1units in [16, 24, 32]:
             for h2units in [8, 12]:
-                for batch in [3000, 6000]:
+                for batch in [2048, 4096]:      # different batch sizes for this dataset
                     if model_count < setting_now:
                         model_count += 1
                         continue
@@ -49,7 +49,6 @@ hidden3_units = 0
 batch_size = batch
 print("Start: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
 
-
 model = Fully_Connected(
     input_dim=input_dim, 
     hidden1_units=hidden1_units, 
@@ -60,7 +59,7 @@ model = Fully_Connected(
     batch_size=batch_size,
     data_sets=data_sets_init,
     initial_learning_rate=initial_learning_rate,
-    damping=1e-2,
+    damping=3e-2,
     decay_epochs=decay_epochs,
     mini_batch=True,
     train_dir=f'throw/output_dont_save{model_count}', 
@@ -69,7 +68,6 @@ model = Fully_Connected(
     model_name=f"default_count{model_count}",
     scheme = f"{scheme}"
     )
-
 
 model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
 train_acc, test_acc = model.print_model_eval()
@@ -95,7 +93,7 @@ model_ = Fully_Connected(
     batch_size=batch_size,
     data_sets=data_sets_final,
     initial_learning_rate=initial_learning_rate,
-    damping=1e-2,
+    damping=3e-2,
     decay_epochs=decay_epochs,
     mini_batch=True,
     train_dir=f'throw/output_dont_save{model_count}', 
@@ -105,7 +103,8 @@ model_ = Fully_Connected(
     scheme = f"{scheme}"
     )
 
-model_.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
+model_.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, 
+        iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
 class0_data, class1_data = entire_test_suite(mini=False, disparateremoved=False)     # False means loads entire data
 num_dicsm = model_.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
 train_acc, test_acc = model_.print_model_eval()
@@ -113,4 +112,4 @@ train_acc, test_acc = model_.print_model_eval()
 print("Discrimination:", num_dicsm, "pairs_to_flip", pairs_to_flip)
 size = class0_data.shape[0]/100
 with open("results_massaged_default.csv", "a") as f:
-    f.write(f'{h1units},{h2units},{batch},{perm},{pairs_to_flip},{train_acc*100},{test_acc*100},{num_dicsm},{num_dicsm/size}\n')
+    print(f'{h1units},{h2units},{batch},{perm},{pairs_to_flip},{train_acc},{test_acc},{num_dicsm},{num_dicsm/size}', file=f)

@@ -25,7 +25,9 @@ dataset_orig = DefaultDataset(
     permute = perm   
 )
 
-dataset_orig_train, dataset_orig_test = dataset_orig.split([0.8], shuffle=False)
+train_examples = 24000
+dataset_orig_train, dataset_orig_test = dataset_orig.split([train_examples], shuffle=False)
+assert(len(dataset_orig_train.convert_to_dataframe()[0]) == train_examples)
 
 privileged_groups = [{'sex': 1}]
 unprivileged_groups = [{'sex': 0}]

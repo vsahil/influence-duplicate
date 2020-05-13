@@ -33,7 +33,7 @@ def variation(setting_now):
     for perm in range(20):
         for h1units in [16, 24, 32]:
             for h2units in [8, 12]:
-                for batch in [500, 1000]:      # different batch sizes for this dataset
+                for batch in [512, 1048]:      # different batch sizes for this dataset
                     if model_count < setting_now:
                         model_count += 1
                         continue
@@ -62,7 +62,7 @@ model = Fully_Connected(
     batch_size=batch_size,
     data_sets=data_sets_init,
     initial_learning_rate=initial_learning_rate,
-    damping=1e-2,
+    damping=3e-2,
     decay_epochs=decay_epochs,
     mini_batch=True,
     train_dir=f'throw/output_dont_save{model_count}', 
@@ -97,7 +97,7 @@ model_ = Fully_Connected(
     batch_size=batch_size,
     data_sets=data_sets_final,
     initial_learning_rate=initial_learning_rate,
-    damping=1e-2,
+    damping=3e-2,
     decay_epochs=decay_epochs,
     mini_batch=True,
     train_dir=f'throw/output_dont_save{model_count}', 
@@ -114,5 +114,6 @@ train_acc, test_acc = model_.print_model_eval()
 
 print("Discrimination:", num_dicsm, "pairs_to_flip", pairs_to_flip)
 size = class0_data.shape[0]/100
-with open("results_massaged_compas-score.csv", "a") as f:
-    f.write(f'{h1units},{h2units},{batch},{perm},{pairs_to_flip},{train_acc*100},{test_acc*100},{num_dicsm},{num_dicsm/size}\n')
+dataset = "compas-score"
+with open(f"results_massaged_{dataset}.csv", "a") as f:
+    print(f'{h1units},{h2units},{batch},{perm},{pairs_to_flip},{train_acc},{test_acc},{num_dicsm},{num_dicsm/size}', file=f)

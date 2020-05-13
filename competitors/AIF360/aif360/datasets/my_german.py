@@ -28,13 +28,13 @@ class MyGermanDataset(StandardDataset):
         """
 
         if normalized:
-            features_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'german-credit-dataset', 'german_redone_normalized_withheader.csv')
-            labels_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'german-credit-dataset', 'german_labels_withheader.csv')
+            features_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'german-dataset', 'german_redone_normalized_withheader.csv')
+            labels_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'german-dataset', 'german_labels_withheader.csv')
             df = pd.read_csv(features_path)
             df2 = pd.read_csv(labels_path)
             df['target'] = df2
         else:
-            train_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'german-credit-dataset', 'german_redone.csv')
+            train_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', '..', 'german-dataset', 'german_redone.csv')
             df = pd.read_csv(train_path)
             assert len(df.columns[df.isnull().any()]) == 0
         if permute == -1:

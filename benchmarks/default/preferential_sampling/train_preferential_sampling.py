@@ -13,7 +13,6 @@ from influence.fully_connected import Fully_Connected
 from load_default import before_preferential_sampling, resampled_dataset, load_default
 from find_discm_points import entire_test_suite
 
-
 input_dim = 23
 weight_decay = 0.001
 
@@ -33,7 +32,7 @@ def variation(setting_now):
     for perm in range(20):
         for h1units in [16, 24, 32]:
             for h2units in [8, 12]:
-                for batch in [3000, 6000]:      # different batch sizes for this dataset
+                for batch in [2048, 4096]:      # different batch sizes for this dataset
                     if model_count < setting_now:
                         model_count += 1
                         continue
@@ -42,6 +41,7 @@ def variation(setting_now):
 
 perm, h1units, h2units, batch, model_count = variation(setting_now)
 assert(model_count == setting_now)
+
 data_sets_init, x_both = before_preferential_sampling(perm = perm)
 
 male_good_credit_indices = x_both[(1, 1)]
@@ -67,7 +67,7 @@ model = Fully_Connected(
     batch_size=batch_size,
     data_sets=data_sets_init,
     initial_learning_rate=initial_learning_rate,
-    damping=1e-2,
+    damping=3e-2,
     decay_epochs=decay_epochs,
     mini_batch=True,
     train_dir=f'throw/output_dont_save{model_count}', 
@@ -78,7 +78,7 @@ model = Fully_Connected(
     )
 
 model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
-train_acc, test_acc = model.print_model_eval()
+# train_acc, test_acc = model.print_model_eval()
 # import ipdb; ipdb.set_trace()
 losses = model.loss_per_instance()          # these losses will be different for all the 240 models so need to re-evaluate each time
 del data_sets_init, model
@@ -101,7 +101,7 @@ model_ = Fully_Connected(
     batch_size=batch_size,
     data_sets=data_sets_final,
     initial_learning_rate=initial_learning_rate,
-    damping=1e-2,
+    damping=3e-2,
     decay_epochs=decay_epochs,
     mini_batch=True,
     train_dir=f'throw/output_dont_save{model_count}', 
@@ -123,4 +123,4 @@ print("Discrimination:", num_dicsm)
 
 size = class0_data.shape[0]/100
 with open("results_resampling_default.csv", "a") as f:
-    f.write(f'{h1units},{h2units},{batch},{perm},{train_acc*100},{test_acc*100},{num_dicsm},{num_dicsm/size}\n')
+    f.write(f'{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{num_dicsm},{num_dicsm/size}\n')
