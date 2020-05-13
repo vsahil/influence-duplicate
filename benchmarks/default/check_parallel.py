@@ -24,7 +24,7 @@ def experiment_command(setting, removal_percent):
 def run_nosensitive(setting):
     os.system(f"python train_all_permutations_nosensitive.py {setting}")
 
-pool = multiprocessing.Pool(100)
+pool = multiprocessing.Pool(120)
 l = [i for i in range(240)]
 # mr = pool.map_async(run_command, l)
 mr = pool.map_async(run_nosensitive, l)
