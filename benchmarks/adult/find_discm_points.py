@@ -13,9 +13,9 @@ def rescale_input_numpy(inp):
     return out
 
 
-def rescale_input_numpy_disparateremoved(inp):
+def rescale_input_numpy_disparateremoved(inp, mins_and_ranges):
     assert(inp.shape[1] == 12)  # 12 features for adult income dataset
-    mins_and_ranges  = [(0.0, 4.0), (0.0, 6.0), (13492.0, 1441943.0), (0.0, 15.0), (0.0, 6.0), (0.0, 13.0), (0.0, 4.0), (0.0, 1.0), (0.0, 4.0), (0.0, 4.0), (0.0, 4.0), (0.0, 39.0)]
+    # mins_and_ranges  = [(0.0, 4.0), (0.0, 6.0), (13492.0, 1441943.0), (0.0, 15.0), (0.0, 6.0), (0.0, 13.0), (0.0, 4.0), (0.0, 1.0), (0.0, 4.0), (0.0, 4.0), (0.0, 4.0), (0.0, 39.0)]
     r = np.arange(12)
     out = copy.deepcopy(inp)
     for col, (min_, range_) in zip(r, mins_and_ranges):
@@ -23,7 +23,7 @@ def rescale_input_numpy_disparateremoved(inp):
     return out
 
 
-def entire_test_suite(mini=True, disparateremoved=False):
+def entire_test_suite(mini=True, disparateremoved=False, mins_and_ranges=None):
     gender0 = "gender0_adult"
     gender1 = "gender1_adult"
     if mini:
@@ -45,9 +45,10 @@ def entire_test_suite(mini=True, disparateremoved=False):
     class1_ = df1.to_numpy(dtype=np.float64)
 
     if disparateremoved:
-        class0 = rescale_input_numpy_disparateremoved(class0_)
-        class1 = rescale_input_numpy_disparateremoved(class1_)
+        class0 = rescale_input_numpy_disparateremoved(class0_, mins_and_ranges)
+        class1 = rescale_input_numpy_disparateremoved(class1_, mins_and_ranges)
     else:
+        assert mins_and_ranges == None
         class0 = rescale_input_numpy(class0_)
         class1 = rescale_input_numpy(class1_)
 
