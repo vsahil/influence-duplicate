@@ -14,6 +14,7 @@ from aif360.datasets import MyCompasScoreDataset
 from aif360.algorithms.preprocessing.lfr import LFR
 
 real_accuracy = True
+debiased_real_accuracy = False
 
 input_dim = 10
 weight_decay = 0.002
@@ -78,7 +79,7 @@ if write:
 from load_compas_score_as_labels import load_fair_representations
 from find_discm_points import entire_test_suite
 
-data_sets = load_fair_representations(perm, train_features, train_labels, real_accuracy = real_accuracy)
+data_sets = load_fair_representations(perm, train_features, train_labels, real_accuracy=real_accuracy, debiased_real_accuracy=debiased_real_accuracy)
 
 hidden1_units = h1units
 hidden2_units = h2units
@@ -120,6 +121,10 @@ if not real_accuracy:
         print(f'{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{num_dicsm},{num_dicsm/size}', file=f)
 
 if real_accuracy:
-    with open(f"results_lfr_{dataset}_real_accuracy.csv", "a") as f:
-        print(f'{model_count},{h1units},{h2units},{batch},{perm},{test_acc}', file=f)
+    if debiased_real_accuracy:
+        with open(f"results_lfr_{dataset}_real_accuracy_debiased.csv", "a") as f:
+            print(f'{model_count},{h1units},{h2units},{batch},{perm},{test_acc}', file=f)
+    else:
+        with open(f"results_lfr_{dataset}_real_accuracy_full.csv", "a") as f:
+            print(f'{model_count},{h1units},{h2units},{batch},{perm},{test_acc}', file=f)
 
