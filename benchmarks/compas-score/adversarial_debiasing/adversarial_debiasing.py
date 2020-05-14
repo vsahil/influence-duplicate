@@ -21,6 +21,7 @@ perm = int(sys.argv[1])
 ordering = load_file.permutations(perm)
 biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-ground/compas-ground_biased_points.npy")
 real_accuracy = True
+debiased_real_accuracy = False
 
 if not real_accuracy:
     dataset_orig = MyCompasScoreDataset(
@@ -54,12 +55,15 @@ else:
     assert(len(dataset_orig_train.convert_to_dataframe()[0]) == train_examples)
     # import ipdb; ipdb.set_trace()
     _, dataset_orig_test = dataset_orig2.split([train_examples], shuffle=False)
-    test_points = np.array(ordering[train_examples:])
-    mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
-    mask_new = ~mask
-    x = mask_new.astype(int).nonzero()[0]
-    dataset_orig_test = dataset_orig_test.subset(x)
-    # assert(len(dataset_orig_train.convert_to_dataframe()[0]) == train_examples)
+    if debiased_real_accuracy:
+        test_points = np.array(ordering[train_examples:])
+        mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+        mask_new = ~mask
+        x = mask_new.astype(int).nonzero()[0]
+        dataset_orig_test = dataset_orig_test.subset(x)
+        # assert(len(dataset_orig_train.convert_to_dataframe()[0]) == train_examples)
+    else:
+        assert(len(dataset_orig_test.convert_to_dataframe()[0]) == 6150 - train_examples)
 
 
 privileged_groups = [{'race': 1}]
@@ -130,5 +134,9 @@ if not real_accuracy:
         f.write(f'{train_acc},{test_acc},{perm},{num_dicsm},{num_dicsm/size}\n')
 
 else:
-    with open("results_adversarial_debiased_compas-score_real_accuracy.csv", "a") as f:
-        f.write(f'{perm},{test_acc}\n')
+    if debiased_real_accuracy:
+        with open("results_adversarial_debiased_compas-score_real_accuracy_debiased.csv", "a") as f:
+            f.write(f'{perm},{test_acc}\n')
+    else:
+        with open("results_adversarial_debiased_compas-score_real_accuracy_full.csv", "a") as f:
+            f.write(f'{perm},{test_acc}\n')
