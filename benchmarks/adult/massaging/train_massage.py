@@ -17,10 +17,11 @@ input_dim = 12
 weight_decay = 0.001
 
 initial_learning_rate = 1e-5 
+decay_epochs = [30000, 40000]
 num_classes = 2
 keep_probs = [1.0, 1.0]
-num_steps = 30000
-decay_epochs = [30000, 40000]
+num_steps = 20000
+
 scheme = 8
 assert(scheme == 8)     # now always
 
@@ -31,23 +32,26 @@ def variation(setting_now):
     for perm in range(20):
         for h1units in [16, 24, 32]:
             for h2units in [8, 12]:
-                for batch in [3000, 6000]:
+                for batch in [2048, 4096]:      # different batch sizes for this dataset
                     if model_count < setting_now:
                         model_count += 1
                         continue
                     # print(setting_now, "done", perm, h1units, h2units, batch)
                     return perm, h1units, h2units, batch, model_count
 
+
 perm, h1units, h2units, batch, model_count = variation(setting_now)
 assert(model_count == setting_now)
 
-data_sets_init, male_good_credit_indices, male_bad_credit_indices, female_good_credit_indices, female_bad_credit_indices, pairs_to_flip = before_massaging_dataset(perm = perm)
 hidden1_units = h1units
 hidden2_units = h2units
 hidden3_units = 0
 batch_size = batch
-print("Start: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
+damping = 3e-2
 
+data_sets_init, male_good_credit_indices, male_bad_credit_indices, female_good_credit_indices, female_bad_credit_indices, pairs_to_flip = before_massaging_dataset(perm = perm)
+
+print("Start: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
 
 model = Fully_Connected(
     input_dim=input_dim, 
@@ -59,7 +63,7 @@ model = Fully_Connected(
     batch_size=batch_size,
     data_sets=data_sets_init,
     initial_learning_rate=initial_learning_rate,
-    damping=1e-2,
+    damping=damping,
     decay_epochs=decay_epochs,
     mini_batch=True,
     train_dir=f'throw1/output_dont_save{model_count}', 
@@ -71,7 +75,7 @@ model = Fully_Connected(
 
 
 model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
-train_acc, test_acc = model.print_model_eval()
+# train_acc, test_acc = model.print_model_eval()
 losses = model.loss_per_instance()
 del data_sets_init, model
 tf.reset_default_graph()
@@ -94,7 +98,7 @@ model_ = Fully_Connected(
     batch_size=batch_size,
     data_sets=data_sets_final,
     initial_learning_rate=initial_learning_rate,
-    damping=1e-2,
+    damping=damping,
     decay_epochs=decay_epochs,
     mini_batch=True,
     train_dir=f'throw1/output_dont_save{model_count}', 
@@ -111,5 +115,6 @@ train_acc, test_acc = model_.print_model_eval()
 
 print("Discrimination:", num_dicsm, "pairs_to_flip", pairs_to_flip)
 size = class0_data.shape[0]/100
-with open("results_massaged_adult.csv", "a") as f:
-    f.write(f'{h1units},{h2units},{batch},{perm},{pairs_to_flip},{train_acc*100},{test_acc*100},{num_dicsm},{num_dicsm/size}\n')
+dataset = "adult"
+with open(f"results_massaged_{dataset}.csv", "a") as f:
+    print(f'{h1units},{h2units},{batch},{perm},{pairs_to_flip},{train_acc},{test_acc},{num_dicsm},{num_dicsm/size}', file=f)
