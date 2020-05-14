@@ -54,12 +54,13 @@ hidden3_units = 0
 batch_size = batch
 damping = 3e-2
 
-our_approach = True
-full = True
+our_approach = False
+noremoval = False
 sensitive_removed = True
+debiased_real_accuracy = True
 
 if our_approach:
-    data_sets = load_recidivism_groundtruth_as_test_our_approach(perm)
+    data_sets = load_recidivism_groundtruth_as_test_our_approach(perm, debiased_real_accuracy=debiased_real_accuracy)
     print("Start: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
     tf.reset_default_graph()
     name = f"compas_two_year{model_count}"
@@ -84,12 +85,18 @@ if our_approach:
 
     # We are not training the models, directly evaluating them. 
     train_acc, test_acc = model.print_model_eval()
-    with open(f"results_real_accuracy_debiased.csv", "a") as f:
-        f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{test_acc}\n")     # the last ones gives percentage of discrimination
+    if debiased_real_accuracy:
+        with open(f"results_our_real_accuracy_debiased.csv", "a") as f:
+            f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{test_acc}\n")     # the last ones gives percentage of discrimination
+    else:
+        with open(f"results_our_real_accuracy_full.csv", "a") as f:
+            f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{test_acc}\n")     # the last ones gives percentage of discrimination
+
     del model
 
-if full:
-    data_sets = load_recidivism_groundtruth_as_test_full(perm)
+
+if noremoval:
+    data_sets = load_recidivism_groundtruth_as_test_full(perm, debiased_real_accuracy=debiased_real_accuracy)
     print("Start: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
     tf.reset_default_graph()
     name = f"compas_two_year{model_count}"
@@ -114,12 +121,18 @@ if full:
 
     model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
     train_acc, test_acc = model.print_model_eval()
-    with open(f"results_real_accuracy_full_debiased.csv", "a") as f:
-        f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{test_acc}\n")     # the last ones gives percentage of discrimination
+    if debiased_real_accuracy:
+        with open(f"results_noremoval_real_accuracy_debiased.csv", "a") as f:
+            f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{test_acc}\n")     # the last ones gives percentage of discrimination
+    else:
+        with open(f"results_noremoval_real_accuracy_full.csv", "a") as f:
+            f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{test_acc}\n")     # the last ones gives percentage of discrimination
+        
     del model
 
+
 if sensitive_removed:
-    data_sets = load_recidivism_groundtruth_as_test_sensitive_removed(perm)
+    data_sets = load_recidivism_groundtruth_as_test_sensitive_removed(perm, debiased_real_accuracy=debiased_real_accuracy)
     print("Start: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
     input_dim = input_dim - 1
     tf.reset_default_graph()
@@ -145,7 +158,12 @@ if sensitive_removed:
 
     model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
     train_acc, test_acc = model.print_model_eval()
-    with open(f"results_real_accuracy_nosensitive_debiased.csv", "a") as f:
-        f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{test_acc}\n")     # the last ones gives percentage of discrimination
+    if debiased_real_accuracy:
+        with open(f"results_nosensitive_real_accuracy_debiased.csv", "a") as f:
+            f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{test_acc}\n")     # the last ones gives percentage of discrimination
+    else:
+        with open(f"results_nosensitive_real_accuracy_full.csv", "a") as f:
+            f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{test_acc}\n")     # the last ones gives percentage of discrimination
+
     del model
     
