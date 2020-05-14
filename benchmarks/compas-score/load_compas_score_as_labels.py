@@ -182,10 +182,12 @@ def load_compas_partial_method1(perm, model_count, train_pts_removed, name, vali
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
-def load_fair_representations(perm, training_dataset, training_labels, validation_size=0):
+def load_fair_representations(perm, training_dataset, training_labels, real_accuracy=False, validation_size=0):
 	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/normalized_scores_as_labels_features.csv").to_numpy()
 	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/target_compas_score_as_label.csv").to_numpy()
 	total_labels = total_labels.flatten()
+	ground_truth_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/target_groundtruth_as_label.csv").to_numpy()
+	ground_truth_labels = ground_truth_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
@@ -197,18 +199,32 @@ def load_fair_representations(perm, training_dataset, training_labels, validatio
 	Y_train = training_labels
 	Y_validation = training_dataset[train_examples:train_examples + validation_size]
 
-	X_test  = total_dataset[train_examples + validation_size:]
-	Y_test  = total_labels[train_examples + validation_size:]
-	test_points = np.array(ordering[train_examples + validation_size:])
-	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/compas-score_biased_points.npy")
-	# intersection = np.intersect1d(test_points, biased_test_points)
-	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
-	mask_new = ~mask			# invert it		# this is a boolean vector
-	X_test = X_test[mask_new]
-	Y_test = Y_test[mask_new]
-	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
-	assert(len(Y_test) == len(test_points)-sum(mask))
+	if not real_accuracy:
+		X_test  = total_dataset[train_examples + validation_size:]
+		Y_test  = total_labels[train_examples + validation_size:]
+		test_points = np.array(ordering[train_examples + validation_size:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/compas-score_biased_points.npy")
+		# intersection = np.intersect1d(test_points, biased_test_points)
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+	else:
+		X_test  = total_dataset[:]
+		Y_test  = ground_truth_labels[:]
+		test_points = np.array(ordering[:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/../compas-ground/compas-ground_biased_points.npy")
 
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+		assert(len(Y_test) == 6150 - len(biased_test_points))
+	
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -216,7 +232,7 @@ def load_fair_representations(perm, training_dataset, training_labels, validatio
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
-def disparate_removed_load_compas(perm, validation_size=0):
+def disparate_removed_load_compas(perm, real_accuracy=False, validation_size=0):
 	sys.path.insert(1, "../")
 	sys.path.append("../../../")
 	sys.path.append("../../../competitors/AIF360/")
@@ -228,6 +244,8 @@ def disparate_removed_load_compas(perm, validation_size=0):
 	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/normalized_scores_as_labels_features.csv").to_numpy()
 	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/target_compas_score_as_label.csv").to_numpy()
 	total_labels = total_labels.flatten()
+	ground_truth_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/target_groundtruth_as_label.csv").to_numpy()
+	ground_truth_labels = ground_truth_labels.flatten()
 
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
@@ -262,17 +280,30 @@ def disparate_removed_load_compas(perm, validation_size=0):
 	X_validation = total_dataset[train_examples:train_examples + validation_size]
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 
-	X_test  = total_dataset[train_examples + validation_size:]
-	Y_test  = total_labels[train_examples + validation_size:]
-	test_points = np.array(ordering[train_examples + validation_size:])
-	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/compas-score_biased_points.npy")
-	# intersection = np.intersect1d(test_points, biased_test_points)
-	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
-	mask_new = ~mask			# invert it		# this is a boolean vector
-	X_test = X_test[mask_new]
-	Y_test = Y_test[mask_new]
-	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
-	assert(len(Y_test) == len(test_points)-sum(mask))
+	if not real_accuracy:
+		X_test  = total_dataset[train_examples + validation_size:]
+		Y_test  = total_labels[train_examples + validation_size:]
+		test_points = np.array(ordering[train_examples + validation_size:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/compas-score_biased_points.npy")
+		# intersection = np.intersect1d(test_points, biased_test_points)
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+	else:
+		X_test  = total_dataset[:]
+		Y_test  = ground_truth_labels[:]
+		test_points = np.array(ordering[:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/../compas-ground/compas-ground_biased_points.npy")
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+		assert(len(Y_test) == 6150 - len(biased_test_points))
 
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
@@ -342,7 +373,7 @@ def before_preferential_sampling(perm, validation_size=0):
 	return base.Datasets(train=train, validation=validation, test=test), x_both
 
 
-def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_candidates, fav_pos_candidates, validation_size=0):
+def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_candidates, fav_pos_candidates, real_accuracy=False, validation_size=0):
 	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/compas_score_as_label.csv")
 	original_dataset['sex'] = original_dataset['sex'].replace({"Male":1, "Female":0})
 	original_dataset['race'] = original_dataset['race'].replace({"Caucasian":1, "African-American":0})
@@ -350,6 +381,8 @@ def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_cand
 	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/normalized_scores_as_labels_features.csv").to_numpy()
 	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/target_compas_score_as_label.csv").to_numpy()
 	total_labels = total_labels.flatten()
+	ground_truth_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/target_groundtruth_as_label.csv").to_numpy()
+	ground_truth_labels = ground_truth_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
@@ -411,18 +444,33 @@ def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_cand
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	# assert(len(Y_test) == 1150)
 	
-	X_test  = total_dataset[train_examples + validation_size:]
-	Y_test  = total_labels[train_examples + validation_size:]
-	test_points = np.array(ordering[train_examples + validation_size:])
-	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/compas-score_biased_points.npy")
-	# intersection = np.intersect1d(test_points, biased_test_points)
-	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
-	mask_new = ~mask			# invert it		# this is a boolean vector
-	X_test = X_test[mask_new]
-	Y_test = Y_test[mask_new]
-	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
-	assert(len(Y_test) == len(test_points)-sum(mask))
-	
+	if not real_accuracy:
+		X_test  = total_dataset[train_examples + validation_size:]
+		Y_test  = total_labels[train_examples + validation_size:]
+		test_points = np.array(ordering[train_examples + validation_size:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/compas-score_biased_points.npy")
+		# intersection = np.intersect1d(test_points, biased_test_points)
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+	else:
+		X_test  = total_dataset[:]
+		Y_test  = ground_truth_labels[:]
+		test_points = np.array(ordering[:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/../compas-ground/compas-ground_biased_points.npy")
+
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+		assert(len(Y_test) == 6150 - len(biased_test_points))
+
+
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -484,7 +532,7 @@ def before_massaging_dataset(perm, validation_size=0):
 	return base.Datasets(train=train, validation=validation, test=test), male_good_credit, male_bad_credit, female_good_credit, female_bad_credit, pairs_to_flip
 	
 
-def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation_size=0):
+def massaged_dataset(perm, promotion_candidates, demotion_candidates, real_accuracy=False, validation_size=0):
 	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/compas_score_as_label.csv")
 	original_dataset['sex'] = original_dataset['sex'].replace({"Male":1, "Female":0})
 	original_dataset['race'] = original_dataset['race'].replace({"Caucasian":1, "African-American":0})
@@ -492,6 +540,9 @@ def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation
 	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/normalized_scores_as_labels_features.csv").to_numpy()
 	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/target_compas_score_as_label.csv").to_numpy()
 	total_labels = total_labels.flatten()
+	ground_truth_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/target_groundtruth_as_label.csv").to_numpy()
+	ground_truth_labels = ground_truth_labels.flatten()
+
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
@@ -519,11 +570,68 @@ def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation
 	Y_train = total_labels[:train_examples]
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	
-	X_test  = total_dataset[train_examples + validation_size:]
-	Y_test  = total_labels[train_examples + validation_size:]
-	test_points = np.array(ordering[train_examples + validation_size:])
-	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/compas-score_biased_points.npy")
-	# intersection = np.intersect1d(test_points, biased_test_points)
+	if not real_accuracy:
+		X_test  = total_dataset[train_examples + validation_size:]
+		Y_test  = total_labels[train_examples + validation_size:]
+		test_points = np.array(ordering[train_examples + validation_size:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/compas-score_biased_points.npy")
+		# intersection = np.intersect1d(test_points, biased_test_points)
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+
+	else:
+		X_test  = total_dataset[:]
+		Y_test  = ground_truth_labels[:]
+		test_points = np.array(ordering[:])
+		# biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/compas-score_biased_points.npy")
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/../compas-ground/compas-ground_biased_points.npy")
+
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+		assert(len(Y_test) == 6150 - len(biased_test_points))
+
+	# assert(len(Y_test) == 1150)
+	train = DataSet(X_train, Y_train)
+	validation = DataSet(X_validation, Y_validation)
+	test = DataSet(X_test, Y_test)
+
+	return base.Datasets(train=train, validation=validation, test=test)
+
+
+def load_recidivism_groundtruth_as_test_our_approach(perm=-1, validation_size=0):
+	total_dataset = pd.read_csv("../../compas-dataset/normalized_scores_as_labels_features.csv").to_numpy()
+	# total_labels = pd.read_csv("../../compas-dataset/target_compas_score_as_label.csv").to_numpy()
+	total_labels = pd.read_csv("../../compas-dataset/target_groundtruth_as_label.csv").to_numpy()
+	total_labels = total_labels.flatten()
+	assert(perm < 20)		# we only have 20 permutations
+	if perm >= 0:	# for negative number don't do
+		ordering = permutations(perm)
+		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
+
+	train_examples = 5000		# testing set is 1150		# weird size (about 20% - similar to german credit dataset and adult income dataset)
+	X_train = total_dataset[:train_examples]
+	X_validation = total_dataset[train_examples:train_examples + validation_size]
+	
+	Y_train = total_labels[:train_examples]
+	Y_validation = total_labels[train_examples:train_examples + validation_size]
+	
+	# X_test  = total_dataset[train_examples + validation_size:]
+	# Y_test  = total_labels[train_examples + validation_size:]
+	# test_points = np.array(ordering[train_examples + validation_size:])
+	X_test  = total_dataset[:]
+	Y_test  = total_labels[:]
+	test_points = np.array(ordering[:])
+	# biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/compas-score_biased_points.npy")
+	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/../compas-ground/compas-ground_biased_points.npy")
+
 	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
 	mask_new = ~mask			# invert it		# this is a boolean vector
 	X_test = X_test[mask_new]
@@ -531,7 +639,101 @@ def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation
 	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
 	assert(len(Y_test) == len(test_points)-sum(mask))
 
-	# assert(len(Y_test) == 1150)
+	assert(len(Y_test) == 6150 - len(biased_test_points))
+	# print(len(Y_test), "SEEE")
+	# assert(len(Y_train) ==  len(Y_validation) == 0)
+
+	train = DataSet(X_train, Y_train)
+	validation = DataSet(X_validation, Y_validation)
+	test = DataSet(X_test, Y_test)
+
+	return base.Datasets(train=train, validation=validation, test=test)
+
+
+def load_recidivism_groundtruth_as_test_full(perm=-1, validation_size=0):
+	total_dataset      = pd.read_csv("../../compas-dataset/normalized_scores_as_labels_features.csv").to_numpy()
+	total_labels_train = pd.read_csv("../../compas-dataset/target_compas_score_as_label.csv").to_numpy()
+	total_labels_train = total_labels_train.flatten()
+	total_labels_test  = pd.read_csv("../../compas-dataset/target_groundtruth_as_label.csv").to_numpy()
+	total_labels_test  = total_labels_test.flatten()
+	assert(perm < 20)		# we only have 20 permutations
+	if perm >= 0:	# for negative number don't do
+		ordering = permutations(perm)
+		total_dataset, total_labels_train, total_labels_test = total_dataset[ordering], total_labels_train[ordering], total_labels_test[ordering]
+
+	train_examples = 5000		# testing set is 1150		# weird size (about 20% - similar to german credit dataset and adult income dataset)
+	X_train = total_dataset[:train_examples]
+	X_validation = total_dataset[train_examples:train_examples + validation_size]
+	
+	Y_train = total_labels_train[:train_examples]
+	Y_validation = total_labels_train[train_examples:train_examples + validation_size]
+	
+	# X_test  = total_dataset[train_examples + validation_size:]
+	# Y_test  = total_labels_test[train_examples + validation_size:]
+	# test_points = np.array(ordering[train_examples + validation_size:])
+	X_test  = total_dataset[:]
+	Y_test  = total_labels_test[:]
+	test_points = np.array(ordering[:])
+	# biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/compas-score_biased_points.npy")
+	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/../compas-ground/compas-ground_biased_points.npy")
+
+	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+	mask_new = ~mask			# invert it		# this is a boolean vector
+	X_test = X_test[mask_new]
+	Y_test = Y_test[mask_new]
+	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+	assert(len(Y_test) == len(test_points)-sum(mask))
+
+	assert(len(Y_test) == 6150 - len(biased_test_points) == 1760)
+	assert(len(Y_train) == 5000)
+	assert len(Y_validation) == 0
+
+	train = DataSet(X_train, Y_train)
+	validation = DataSet(X_validation, Y_validation)
+	test = DataSet(X_test, Y_test)
+
+	return base.Datasets(train=train, validation=validation, test=test)
+
+
+def load_recidivism_groundtruth_as_test_sensitive_removed(perm=-1, validation_size=0):
+	total_dataset = pd.read_csv("../../compas-dataset/normalized_scores_as_labels_features.csv")
+	total_dataset = total_dataset.drop(columns=['race']).to_numpy()		# drop the sensitive attribute. 
+	# total_dataset = pd.read_csv("../../compas-dataset/normalized_scores_as_labels_features.csv").to_numpy()
+	# total_labels = pd.read_csv("../../compas-dataset/target_compas_score_as_label.csv").to_numpy()
+	total_labels = pd.read_csv("../../compas-dataset/target_groundtruth_as_label.csv").to_numpy()
+	total_labels = total_labels.flatten()
+	assert(perm < 20)		# we only have 20 permutations
+	if perm >= 0:	# for negative number don't do
+		ordering = permutations(perm)
+		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
+
+	train_examples = 5000		# testing set is 1150		# weird size (about 20% - similar to german credit dataset and adult income dataset)
+	X_train = total_dataset[:train_examples]
+	X_validation = total_dataset[train_examples:train_examples + validation_size]
+	
+	Y_train = total_labels[:train_examples]
+	Y_validation = total_labels[train_examples:train_examples + validation_size]
+	
+	# X_test  = total_dataset[train_examples + validation_size:]
+	# Y_test  = total_labels[train_examples + validation_size:]
+	# test_points = np.array(ordering[train_examples + validation_size:])
+	X_test  = total_dataset[:]
+	Y_test  = total_labels[:]
+	test_points = np.array(ordering[:])
+	# biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/compas-score_biased_points.npy")
+	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/../compas-ground/compas-ground_biased_points.npy")
+
+	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+	mask_new = ~mask			# invert it		# this is a boolean vector
+	X_test = X_test[mask_new]
+	Y_test = Y_test[mask_new]
+	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+	assert(len(Y_test) == len(test_points)-sum(mask))
+
+	assert(len(Y_test) == 6150 - len(biased_test_points) == 1760)
+	# print(len(Y_test), "SEEE")
+	# assert(len(Y_train) ==  len(Y_validation) == 0)
+
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
