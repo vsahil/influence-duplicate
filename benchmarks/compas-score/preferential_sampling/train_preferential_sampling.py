@@ -14,6 +14,8 @@ from load_compas_score_as_labels import before_preferential_sampling, resampled_
 from find_discm_points import entire_test_suite
 
 real_accuracy = True
+debiased_real_accuracy = False
+
 input_dim = 10
 weight_decay = 0.002
 
@@ -92,7 +94,7 @@ dep_pos_candidates = male_good_credit_indices[np.argsort(losses[male_good_credit
 fav_neg_candidates = female_bad_credit_indices[np.argsort(losses[female_bad_credit_indices])[::-1]]     # sorted in decreasing order of loss
 fav_pos_candidates = female_good_credit_indices[np.argsort(losses[female_good_credit_indices])[::-1]]    # sorted in decreasing order of loss
 
-data_sets_final = resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_candidates, fav_pos_candidates, real_accuracy=real_accuracy)
+data_sets_final = resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_candidates, fav_pos_candidates, real_accuracy=real_accuracy, debiased_real_accuracy=debiased_real_accuracy)
 
 # import ipdb; ipdb.set_trace()
 model_ = Fully_Connected(
@@ -126,9 +128,16 @@ train_acc, test_acc = model_.print_model_eval()
 print("Discrimination:", num_dicsm)
 size = class0_data.shape[0]/100
 dataset = "compas-score"
+
 if not real_accuracy:
     with open(f"results_resampling_{dataset}.csv", "a") as f:
         print(f'{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{num_dicsm},{num_dicsm/size}', file=f)
+
 if real_accuracy:
-    with open(f"results_resampling_{dataset}_real_accuracy.csv", "a") as f:
-        print(f'{model_count},{h1units},{h2units},{batch},{perm},{test_acc}', file=f)
+    if debiased_real_accuracy:
+        with open(f"results_resampling_{dataset}_real_accuracy_debiased.csv", "a") as f:
+            print(f'{model_count},{h1units},{h2units},{batch},{perm},{test_acc}', file=f)
+    else:
+        with open(f"results_resampling_{dataset}_real_accuracy_full.csv", "a") as f:
+            print(f'{model_count},{h1units},{h2units},{batch},{perm},{test_acc}', file=f)
+
