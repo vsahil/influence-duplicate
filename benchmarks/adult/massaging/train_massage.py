@@ -75,7 +75,7 @@ model = Fully_Connected(
 
 
 model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
-train_acc, test_acc = model.print_model_eval()
+# train_acc, test_acc = model.print_model_eval()
 losses = model.loss_per_instance()
 del data_sets_init, model
 tf.reset_default_graph()
