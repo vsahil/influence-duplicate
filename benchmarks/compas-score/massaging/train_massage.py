@@ -13,6 +13,9 @@ from influence.fully_connected import Fully_Connected
 from load_compas_score_as_labels import before_massaging_dataset, massaged_dataset
 from find_discm_points import entire_test_suite
 
+real_accuracy = True
+debiased_real_accuracy = False
+
 input_dim = 10
 weight_decay = 0.002
 # batch_size = 3000
@@ -85,8 +88,8 @@ demotion_candidates_ = losses[male_good_credit_indices]
 demotion_candidates = male_good_credit_indices[np.argsort(demotion_candidates_)[-1:-pairs_to_flip-1:-1]]  # the highest loss members, closest to decision boundary, gives the last x items from the list x = pairs_to_flip
 
 assert len(promotion_candidates) == len(demotion_candidates)
-real_accuracy = True
-data_sets_final = massaged_dataset(perm, promotion_candidates, demotion_candidates, real_accuracy=real_accuracy)
+
+data_sets_final = massaged_dataset(perm, promotion_candidates, demotion_candidates, real_accuracy=real_accuracy, debiased_real_accuracy=debiased_real_accuracy)
 
 model_ = Fully_Connected(
     input_dim=input_dim, 
@@ -120,5 +123,9 @@ if not real_accuracy:
     with open(f"results_massaged_{dataset}.csv", "a") as f:
         print(f'{h1units},{h2units},{batch},{perm},{pairs_to_flip},{train_acc},{test_acc},{num_dicsm},{num_dicsm/size}', file=f)
 else:
-    with open(f"results_massaged_{dataset}_real_accuracy.csv", "a") as f:
-        print(f'{model_count},{h1units},{h2units},{batch},{perm},{test_acc}', file=f)
+    if debiased_real_accuracy:
+        with open(f"results_massaged_{dataset}_real_accuracy_debiased.csv", "a") as f:
+            print(f'{model_count},{h1units},{h2units},{batch},{perm},{test_acc}', file=f)
+    else:
+        with open(f"results_massaged_{dataset}_real_accuracy_full.csv", "a") as f:
+            print(f'{model_count},{h1units},{h2units},{batch},{perm},{test_acc}', file=f)
