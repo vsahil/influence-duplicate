@@ -14,6 +14,7 @@ from load_compas_score_as_labels import disparate_removed_load_compas
 from find_discm_points import entire_test_suite
 
 real_accuracy = True
+debiased_real_accuracy = False 
 
 input_dim = 10
 weight_decay = 0.002
@@ -49,7 +50,7 @@ hidden2_units = h2units
 hidden3_units = 0
 batch_size = batch
 
-data_sets, mins_and_ranges = disparate_removed_load_compas(perm = perm, real_accuracy = real_accuracy)
+data_sets, mins_and_ranges = disparate_removed_load_compas(perm=perm, real_accuracy=real_accuracy, debiased_real_accuracy=debiased_real_accuracy)
 print("Start: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
 
 model = Fully_Connected(
@@ -86,6 +87,10 @@ if not real_accuracy:
     with open("results_disparate_removed_compas-score.csv", "a") as f:
         print(f'{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{num_dicsm},{num_dicsm/size}', file=f)
 if real_accuracy:
-    with open("results_disparate_removed_compas-score_real_accuracy.csv", "a") as f:
-        print(f'{model_count},{h1units},{h2units},{batch},{perm},{test_acc}', file=f)
+    if debiased_real_accuracy:
+        with open("results_disparate_removed_compas-score_real_accuracy_debiased.csv", "a") as f:
+            print(f'{model_count},{h1units},{h2units},{batch},{perm},{test_acc}', file=f)
+    else:
+        with open("results_disparate_removed_compas-score_real_accuracy_full.csv", "a") as f:
+            print(f'{model_count},{h1units},{h2units},{batch},{perm},{test_acc}', file=f)
 
