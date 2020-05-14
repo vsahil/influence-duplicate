@@ -5,7 +5,7 @@ from itertools import product
 def run_command(setting):
     os.system(f"python train_massage.py {setting}")
 
-pool = multiprocessing.Pool(120)
+pool = multiprocessing.Pool(240)
 l = [i for i in range(240)]
 mr = pool.map_async(run_command, l)
 while not mr.ready():
