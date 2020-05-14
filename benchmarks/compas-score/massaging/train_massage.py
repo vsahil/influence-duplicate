@@ -74,7 +74,7 @@ model = Fully_Connected(
 
 
 model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
-train_acc, test_acc = model.print_model_eval()
+# train_acc, test_acc = model.print_model_eval()
 losses = model.loss_per_instance()
 del data_sets_init, model
 tf.reset_default_graph()
@@ -85,7 +85,8 @@ demotion_candidates_ = losses[male_good_credit_indices]
 demotion_candidates = male_good_credit_indices[np.argsort(demotion_candidates_)[-1:-pairs_to_flip-1:-1]]  # the highest loss members, closest to decision boundary, gives the last x items from the list x = pairs_to_flip
 
 assert len(promotion_candidates) == len(demotion_candidates)
-data_sets_final = massaged_dataset(perm, promotion_candidates, demotion_candidates)
+real_accuracy = True
+data_sets_final = massaged_dataset(perm, promotion_candidates, demotion_candidates, real_accuracy=real_accuracy)
 
 model_ = Fully_Connected(
     input_dim=input_dim, 
@@ -115,5 +116,9 @@ train_acc, test_acc = model_.print_model_eval()
 print("Discrimination:", num_dicsm, "pairs_to_flip", pairs_to_flip)
 size = class0_data.shape[0]/100
 dataset = "compas-score"
-with open(f"results_massaged_{dataset}.csv", "a") as f:
-    print(f'{h1units},{h2units},{batch},{perm},{pairs_to_flip},{train_acc},{test_acc},{num_dicsm},{num_dicsm/size}', file=f)
+if not real_accuracy:
+    with open(f"results_massaged_{dataset}.csv", "a") as f:
+        print(f'{h1units},{h2units},{batch},{perm},{pairs_to_flip},{train_acc},{test_acc},{num_dicsm},{num_dicsm/size}', file=f)
+else:
+    with open(f"results_massaged_{dataset}_real_accuracy.csv", "a") as f:
+        print(f'{model_count},{h1units},{h2units},{batch},{perm},{test_acc}', file=f)
