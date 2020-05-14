@@ -30,7 +30,7 @@ ranked_points_after_removing_permutation_effect = {}
 biasness_of_each_point = {}
 
 df = pd.read_csv(f"results_{dataset}_debiasedtrain_80percentof_total.csv")
-removal_df = df.sort_values("Discm_percent").groupby("Model-count", as_index=False).first()    
+removal_df = df.sort_values(by=['Discm_percent', 'Points-removed']).groupby("Model-count", as_index=False).first()
 assert len(removal_df) == 240
 
 training_size = len(ranked_training_points_in_original_permutation[0])

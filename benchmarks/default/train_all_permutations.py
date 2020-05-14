@@ -19,6 +19,7 @@ from load_default import load_default, load_default_partial
 from find_discm_points import entire_test_suite
 
 train = False
+modify_test = True
 
 if not train:
     x = len(os.listdir('ranking_points_ordered_method1'))
@@ -51,7 +52,7 @@ def variation(setting_now):
                     # print(setting_now, "done", perm, h1units, h2units, batch)
                     return perm, h1units, h2units, batch, model_count
 
-modify_test = True
+
 perm, h1units, h2units, batch, model_count = variation(setting_now)
 assert(model_count == setting_now)
 hidden1_units = h1units

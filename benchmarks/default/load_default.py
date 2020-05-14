@@ -128,8 +128,8 @@ def load_default(perm=-1, modify_test=False, validation_size=0):
 		Y_test = Y_test[mask_new]
 		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
 		assert(len(Y_test) == len(test_points)-sum(mask))
-		print(len(Y_test), len(Y_train), "see the length of test and train")
 	
+	print(len(Y_test), len(Y_train), "see the length of test and train")
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)

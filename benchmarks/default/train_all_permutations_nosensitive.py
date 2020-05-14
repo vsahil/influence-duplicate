@@ -86,6 +86,6 @@ train_acc, test_acc = model.print_model_eval()
 # class0_data, class1_data = entire_test_suite(mini=False)     # False means loads entire data
 # initial_num = model.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
 # size = class0_data.shape[0]/100
-with open("results_default_nosensitive.csv".format(scheme), "a") as f:
+with open("results_default_nosensitive.csv", "a") as f:
      f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc}\n")
 
