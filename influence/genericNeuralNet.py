@@ -138,10 +138,12 @@ class GenericNeuralNet(object):
         
         self.train_op = self.get_train_op(self.total_loss, self.global_step, self.learning_rate)
         self.train_sgd_op = self.get_train_sgd_op(self.total_loss, self.global_step, self.learning_rate)
-        self.accuracy_op = self.get_accuracy_op(self.logits, self.labels_placeholder)        
+    
+        self.accuracy_op = self.get_accuracy_op(self.logits, self.labels_placeholder)
+        self.confusion_matrix_op = self.get_confusion_matrix(self.logits, self.labels_placeholder)
         self.preds = self.predictions(self.logits)
 
-         # summary
+        # summary
         tf.summary.scalar('loss_val', self.total_loss)
         tf.summary.scalar('train_acc', self.accuracy_op)
         self.write_op = tf.summary.merge_all()
@@ -271,8 +273,7 @@ class GenericNeuralNet(object):
         return feed_dict        
 
 
-    def minibatch_mean_eval(self, ops, data_set):
-        
+    def minibatch_mean_eval(self, ops, data_set):  
         num_examples = data_set.num_examples
         print(num_examples, self.batch_size)
         assert num_examples % self.batch_size == 0
@@ -306,12 +307,13 @@ class GenericNeuralNet(object):
         ori = self.mini_batch
         self.mini_batch = False
         if self.mini_batch == True:
+            # This code is never executed
             grad_loss_val, loss_no_reg_val, loss_val, train_acc_val = self.minibatch_mean_eval(
                 [self.grad_total_loss_op, self.loss_no_reg, self.total_loss, self.accuracy_op],
                 self.data_sets.train)
             
-            test_loss_val, test_acc_val = self.minibatch_mean_eval(
-                [self.loss_no_reg, self.accuracy_op],
+            test_loss_val, test_acc_val, test_confusion_matrix = self.minibatch_mean_eval(
+                [self.loss_no_reg, self.accuracy_op, self.confusion_matrix_op],
                 self.data_sets.test)
 
         else:
@@ -319,8 +321,8 @@ class GenericNeuralNet(object):
                 [self.grad_total_loss_op, self.loss_no_reg, self.total_loss, self.accuracy_op, self.logits], 
                 feed_dict=self.all_train_feed_dict)
 
-            test_loss_val, test_acc_val = self.sess.run(
-                [self.loss_no_reg, self.accuracy_op], 
+            test_loss_val, test_acc_val, test_confusion_matrix = self.sess.run(
+                [self.loss_no_reg, self.accuracy_op, self.confusion_matrix_op],
                 feed_dict=self.all_test_feed_dict)
             
         pred = np.argmax(ans, axis=1)
@@ -339,7 +341,7 @@ class GenericNeuralNet(object):
 
             print('Norm of the mean of gradients: %s' % np.linalg.norm(np.concatenate(grad_loss_val)))
             print('Norm of the params: %s' % np.linalg.norm(np.concatenate(params_val)))
-        return train_acc_val, test_acc_val
+        return train_acc_val, test_acc_val, test_confusion_matrix
 
 
     def retrain(self, num_steps, feed_dict):        
@@ -637,6 +639,7 @@ class GenericNeuralNet(object):
         """ 
         predictions = tf.argmax(logits, 1, name='preds')
         confusion_matrix = tf.math.confusion_matrix(labels, predictions)
+        return confusion_matrix
         # correct = tf.nn.in_top_k(logits, labels, 1)
         # return tf.reduce_sum(tf.cast(correct, tf.int32)) / tf.shape(labels)[0]    
     
