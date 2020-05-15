@@ -454,7 +454,7 @@ class GenericNeuralNet(object):
         assert (predictions_class1_ == predictions_class1).all()    #"""This should hold"""
         
         # for german credit dataset
-        if "german" in self.model_name or "student" in self.model_name:
+        if "german" in self.model_name or "student" in self.model_name or "paper_example" in self.model_name:
             loss_class0_label_0 = loss_class0_label_0
             loss_class0_label_1 = loss_class0_label_1
             loss_class1_label_1 = loss_class1_label_1
@@ -626,6 +626,21 @@ class GenericNeuralNet(object):
         return train_op
 
 
+    def get_confusion_matrix(self, logits, labels):
+        """Evaluate the quality of the logits at predicting the label.
+        Args:
+          logits: Logits tensor, float - [batch_size, NUM_CLASSES].
+          labels: Labels tensor, int32 - [batch_size], with values in the
+            range [0, NUM_CLASSES).
+        Returns:
+          False positive and false negative rates 
+        """ 
+        predictions = tf.argmax(logits, 1, name='preds')
+        confusion_matrix = tf.math.confusion_matrix(labels, predictions)
+        # correct = tf.nn.in_top_k(logits, labels, 1)
+        # return tf.reduce_sum(tf.cast(correct, tf.int32)) / tf.shape(labels)[0]    
+    
+    
     def get_accuracy_op(self, logits, labels):
         """Evaluate the quality of the logits at predicting the label.
         Args:
@@ -643,13 +658,14 @@ class GenericNeuralNet(object):
     def loss_per_instance(self):
         ops = self.indiv_loss_no_reg
         loss_each_training_points = self.sess.run(ops, feed_dict=self.all_train_feed_dict)
-        if "german" in self.model_name or "student" in self.model_name:
+        if "german" in self.model_name or "student" in self.model_name or "paper_example" in self.model_name:
             return loss_each_training_points
 
         # for adult income
         elif "adult" in self.model_name or "compas" in self.model_name or "default" in self.model_name:
             return loss_each_training_points[0]
 
+        
         else:
             assert False
 
@@ -687,7 +703,7 @@ class GenericNeuralNet(object):
             loss_no_reg = tf.reduce_mean(xent, name='xentropy_mean')
         
         # for german credit dataset
-        elif "german" in self.model_name or "student" in self.model_name:
+        elif "german" in self.model_name or "student" in self.model_name or "paper_example" in self.model_name:
             indiv_loss_no_reg = cross_entropy
             loss_no_reg = tf.reduce_mean(cross_entropy, name='xentropy_mean')
 
