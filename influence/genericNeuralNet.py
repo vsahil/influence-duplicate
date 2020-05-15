@@ -321,8 +321,8 @@ class GenericNeuralNet(object):
                 [self.grad_total_loss_op, self.loss_no_reg, self.total_loss, self.accuracy_op, self.logits], 
                 feed_dict=self.all_train_feed_dict)
 
-            test_loss_val, test_acc_val, test_confusion_matrix = self.sess.run(
-                [self.loss_no_reg, self.accuracy_op, self.confusion_matrix_op],
+            test_loss_val, test_acc_val, test_predictions = self.sess.run(
+                [self.loss_no_reg, self.accuracy_op, self.logits],
                 feed_dict=self.all_test_feed_dict)
             
         pred = np.argmax(ans, axis=1)
@@ -341,7 +341,7 @@ class GenericNeuralNet(object):
 
             print('Norm of the mean of gradients: %s' % np.linalg.norm(np.concatenate(grad_loss_val)))
             print('Norm of the params: %s' % np.linalg.norm(np.concatenate(params_val)))
-        return train_acc_val, test_acc_val, test_confusion_matrix
+        return train_acc_val, test_acc_val, test_predictions
 
 
     def retrain(self, num_steps, feed_dict):        
