@@ -66,7 +66,6 @@ def load_adult_income_nosensitive(perm=-1, validation_size=0):
 	total_dataset = total_dataset.drop(columns=['sex']).to_numpy()		# drop the sensitive attribute. 
 	total_labels = pd.read_csv("../../adult-dataset/adult_labels.csv").to_numpy()
 	total_labels = total_labels.flatten()
-	# import ipdb; ipdb.set_trace()
 	assert(perm < 20)		# we only have 20 permutations
 	if perm >= 0:	# for negative number don't do
 		ordering = permutations(perm)
