@@ -94,8 +94,29 @@ model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000,
 class0_data, class1_data = entire_test_suite(mini=False)     # False means loads entire data
 size = class0_data.shape[0]/100.0
 num = model.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
-train_acc, test_acc = model.print_model_eval()
-# print(train_acc, test_acc, "see accuracies", model_count)
-with open(f"results_{dataset}_method1.csv".format(scheme), "a") as f:
-    print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{percentage},{train_pts_removed[0]},{num},{num/size}", file=f)
 
+sensitive_attr = 2
+assert len(np.unique(data_sets.test.x[:, sensitive_attr])) == 2
+class0_index = (data_sets.test.x[:, sensitive_attr] == 0).astype(int).nonzero()[0]
+class1_index = (data_sets.test.x[:, sensitive_attr] == 1).astype(int).nonzero()[0]
+train_acc, test_acc, test_predictions = model.print_model_eval()
+test_predictions = np.argmax(test_predictions, axis=1)
+class0_pred = test_predictions[class0_index]
+class1_pred = test_predictions[class1_index]
+class0_truth = data_sets.test.labels[class0_index]
+class1_truth = data_sets.test.labels[class1_index]
+assert(len(class0_pred) + len(class1_pred) == len(test_predictions))
+assert(len(class0_truth) + len(class1_truth) == len(data_sets.test.labels))
+import sklearn
+class0_cm = sklearn.metrics.confusion_matrix(class0_truth, class0_pred)
+class1_cm = sklearn.metrics.confusion_matrix(class1_truth, class1_pred)
+tn, fp, fn, tp = class0_cm.ravel()
+class0_fpr = fp / (fp + tn)
+class0_fnr = fn / (fn + tp)
+del tn, fp, fn, tp
+tn, fp, fn, tp = class1_cm.ravel()
+class1_fpr = fp / (fp + tn)
+class1_fnr = fn / (fn + tp)
+
+with open(f"results_{dataset}_method1.csv".format(scheme), "a") as f:
+    print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class1_fpr},{class1_fnr},{percentage},{train_pts_removed[0]},{num},{num/size}", file=f)
