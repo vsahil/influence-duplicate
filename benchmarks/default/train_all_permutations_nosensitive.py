@@ -15,7 +15,7 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 import influence.experiments as experiments
 from influence.fully_connected import Fully_Connected
 
-from load_default import load_default_nosensitive
+from load_default import load_default_nosensitive, load_default_partial_method1
 from find_discm_points import entire_test_suite
 
 input_dim = 23 - 1
@@ -81,11 +81,43 @@ model = Fully_Connected(
 
 model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, 
 iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False, plot_loss=False)
-train_acc, test_acc = model.print_model_eval()
+
+
+sensitive_attr = 1
+import pandas as pd
+dataset = "default"
+# df = pd.read_csv(f"results_{dataset}_debiasedtrain_80percentof_total.csv")
+# removal_df = df.sort_values(by=['Discm_percent', 'Points-removed']).groupby("Model-count", as_index=False).first()
+removal_df = pd.read_csv(f"removal_df_{dataset}.csv")
+assert len(removal_df) == 240
+train_pts_removed = removal_df.loc[removal_df['Model-count'] == model_count, 'Points-removed'].values
+assert len(train_pts_removed) == 1
+data_sets2 = load_default_partial_method1(perm=perm, model_count=model_count, train_pts_removed=train_pts_removed[0], name=name)
+assert(len(data_sets2.test.labels) == len(data_sets.test.labels))
+class0_index = (data_sets2.test.x[:, sensitive_attr] == 0).astype(int).nonzero()[0]
+class1_index = (data_sets2.test.x[:, sensitive_attr] == 1).astype(int).nonzero()[0]
+train_acc, test_acc, test_predictions = model.print_model_eval()
+test_predictions = np.argmax(test_predictions, axis=1)
+class0_pred = test_predictions[class0_index]
+class1_pred = test_predictions[class1_index]
+class0_truth = data_sets.test.labels[class0_index]
+class1_truth = data_sets.test.labels[class1_index]
+assert(len(class0_pred) + len(class1_pred) == len(test_predictions))
+assert(len(class0_truth) + len(class1_truth) == len(data_sets.test.labels))
+import sklearn
+class0_cm = sklearn.metrics.confusion_matrix(class0_truth, class0_pred)
+class1_cm = sklearn.metrics.confusion_matrix(class1_truth, class1_pred)
+tn, fp, fn, tp = class0_cm.ravel()
+class0_fpr = fp / (fp + tn)
+class0_fnr = fn / (fn + tp)
+del tn, fp, fn, tp
+tn, fp, fn, tp = class1_cm.ravel()
+class1_fpr = fp / (fp + tn)
+class1_fnr = fn / (fn + tp)
 
 # class0_data, class1_data = entire_test_suite(mini=False)     # False means loads entire data
 # initial_num = model.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
 # size = class0_data.shape[0]/100
 with open("results_default_nosensitive.csv", "a") as f:
-     f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc}\n")
+    f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class1_fpr},{class1_fnr}\n")
 
