@@ -1,0 +1,14 @@
+number of input characteristics: 12
+1 age categorical 0,1,2,3,4
+2 workclass categorical 0,1,2,3,4,5,6
+3 fnlwgt continuousInt 13769,1490400
+4 education categorical 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
+5 marital-status categorical 0,1,2,3,4,5,6
+6 occupation categorical 0,1,2,3,4,5,6,7,8,9,10,11,12,13
+7 race categorical 0,1
+8 sex categorical 0,1
+9 capitalgain categorical 0,1,2,3,4
+10 capitalloss categorical 0,1,2,3,4
+11 hoursperweek categorical 0,1,2,3,4
+12 native-country continuousInt 0,40
+command: python nothing.py
