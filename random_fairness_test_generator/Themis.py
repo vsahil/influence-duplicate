@@ -219,10 +219,10 @@ class soft:
             discm_tests_gender0.append(new)
             total += 1
             x = len(discm_tests_gender0) 
-            if x == 1000000:
+            if x == 100000:
             # if x == self.MaxSamples:
                 print(total, "hello")
-                with open("gender0_adult.csv", "a") as f:
+                with open("race0_adult.csv", "a") as f:
                     for i in discm_tests_gender0:
                         f.write(str(i)[1:-1].replace(" ", "") + "\n")
                 discm_tests_gender0 = []
