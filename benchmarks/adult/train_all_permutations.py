@@ -19,7 +19,7 @@ from load_adult_income import load_adult_income, load_adult_income_partial
 from find_discm_points import entire_test_suite
 
 train = False
-modify_test = True
+modify_test = False
 
 if not train:       
     x = len(os.listdir('ranking_points_ordered_method1'))
@@ -54,7 +54,7 @@ def variation(setting_now):
 
 perm, h1units, h2units, batch, model_count = variation(setting_now)
 assert(model_count == setting_now)
-data_sets = load_adult_income(perm)
+data_sets = load_adult_income(perm, modify_test=modify_test)
 
 hidden1_units = h1units
 hidden2_units = h2units
@@ -83,7 +83,6 @@ model = Fully_Connected(
     hvp_files = f"inverse_HVP_adult_method1/inverse_HVP_schm{scheme}_count{model_count}",
     model_name=name,
     scheme = f"{scheme}")
-
 
 if train:
     model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=True, verbose=False)
