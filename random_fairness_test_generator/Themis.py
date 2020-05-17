@@ -203,6 +203,50 @@ class soft:
             # print("Discriminates against: ", self.attr_names[feature])
 
 
+    def single_feature_discm_adult_race(self, feature, theta, confidence, epsilon, type_discm):
+        assert(isinstance(feature, int))
+        assert(feature <= len(self.attr_names))
+        # score = self.causalDiscrimination([feature], confidence, epsilon)
+        # print("No. of discriminating tests: ", len(self.causal_tests), "Score: ", score)
+        discm_tests_gender0 = []
+        total = 0
+        with open("race0_adult.csv", "a") as f:
+            f.write("age,workclass,fnlwgt,education,marital-status,occupation,race,sex,capitalgain,capitalloss,hoursperweek,native-country\n")
+        
+        while True:
+            new = self.randomInput_gender0(feature)
+            # if not new in discm_tests_gender0:      # its fine for 2 or more tests to be identical, we generate it randomly
+            discm_tests_gender0.append(new)
+            total += 1
+            x = len(discm_tests_gender0) 
+            if x == 1000000:
+            # if x == self.MaxSamples:
+                print(total, "hello")
+                with open("gender0_adult.csv", "a") as f:
+                    for i in discm_tests_gender0:
+                        f.write(str(i)[1:-1].replace(" ", "") + "\n")
+                discm_tests_gender0 = []
+            
+            if total == 43131*100:
+            # if total == self.MaxSamples:                
+                with open("race0_adult.csv", "a") as f:
+                    for i in discm_tests_gender0:
+                        f.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                break
+
+        # check if any tests are duplicated:
+        df = pd.read_csv("race0_adult.csv")
+        x = df.duplicated()
+        print(x.any(), "see duplication")     # if this is False, we are all good.
+        # np.where(x) # if this is an empty list we are good, For adult we are good.
+        
+        # This generates same examples for the other gender
+        
+        # df = pd.read_csv("gender0_adult.csv")
+        df['sex'] = 1
+        df.to_csv("race1_adult.csv", index=False)
+
+
     def single_feature_discm_german(self, feature, theta, confidence, epsilon, type_discm):
         assert(isinstance(feature, int))
         assert(feature <= len(self.attr_names))     # feature is the sensitive feature
@@ -269,7 +313,7 @@ class soft:
             discm_tests_gender0.append(new)
             total += 1
 
-            if total == 1000:              
+            if total == 700:              
                 with open("race0_biased_smalldataset.csv", "a") as f:
                     for i in discm_tests_gender0:
                         f.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
@@ -341,16 +385,17 @@ class soft:
             total += 1
             x = len(discm_tests_gender0) 
             
-            if x % 10000 == 0:            
+            if total == 615000:
                 with open("race0_compas_two_year.csv", "a") as f:
                     for i in discm_tests_gender0:
                         f.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
-                discm_tests_gender0 = []
+                # discm_tests_gender0 = []
                 print(total, "done")
-            
-            if total == 1000000:
-                assert(x % 10000 == 0)
                 break
+            
+            # if total == 615000:
+            #     assert(x % 10000 == 0)
+            #     break
 
         # check if any tests are duplicated:
         df = pd.read_csv("race0_compas_two_year.csv")
@@ -376,7 +421,7 @@ class soft:
             total += 1
             x = len(discm_tests_gender0) 
             
-            if total == 100000:            
+            if total == 64900: 
                 with open("sex0_student.csv", "a") as f:
                     for i in discm_tests_gender0:
                         f.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
