@@ -1,0 +1,7 @@
+number of input characteristics: 5
+1 sex categorical 0,1
+2 rank categorical 1,2,3
+3 year continuousInt 0,25
+4 degree categorical 0,1
+5 Experience continuousInt 1,35
+command: python nothing.py

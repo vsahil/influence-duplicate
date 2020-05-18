@@ -247,6 +247,38 @@ class soft:
         df.to_csv("race1_adult.csv", index=False)
 
 
+    def single_feature_discm_salary(self, feature, theta, confidence, epsilon, type_discm):
+        assert(isinstance(feature, int))
+        assert(feature <= len(self.attr_names))
+        discm_tests_gender0 = []
+        total = 0
+        with open("sex0_salary.csv", "a") as f:
+            f.write("sex,rank,year,degree,Experience\n")
+        
+        while True:
+            new = self.randomInput_gender0(feature)
+            discm_tests_gender0.append(new)
+            total += 1
+            # x = len(discm_tests_gender0)    
+            if total == 52*100:             
+                with open("sex0_salary.csv", "a") as f:
+                    for i in discm_tests_gender0:
+                        f.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                break
+
+        # check if any tests are duplicated:
+        df = pd.read_csv("sex0_salary.csv")
+        x = df.duplicated()
+        print(x.any(), "see duplication")     # if this is False, we are all good.
+        # np.where(x) # if this is an empty list we are good, For adult we are good.
+        
+        # This generates same examples for the other class
+        
+        # df = pd.read_csv("gender0_adult.csv")
+        df['sex'] = 1
+        df.to_csv("sex1_salary.csv", index=False)    
+
+
     def single_feature_discm_german(self, feature, theta, confidence, epsilon, type_discm):
         assert(isinstance(feature, int))
         assert(feature <= len(self.attr_names))     # feature is the sensitive feature
