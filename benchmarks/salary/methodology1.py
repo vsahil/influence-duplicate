@@ -124,7 +124,6 @@ if len(np.unique(data_sets.test.x[:, sensitive_attr])) == 2:
     class1_fpr = fp / (fp + tn)
     class1_fnr = fn / (fn + tp)
     class1_pos = (tp + fp) / len(class1_index)        # proportion that got positive outcome
-
 else:
     assert len(np.unique(data_sets.test.x[:, sensitive_attr])) == 1     # only one class
     class_pred = np.argmax(test_predictions, axis=1)
@@ -152,7 +151,11 @@ else:
     else:
         raise NotImplementedError
 
-with open(f"results_{dataset}_method1_fulltest.csv".format(scheme), "a") as f:
+if debiased_test:
+    with open(f"results_{dataset}_method1.csv".format(scheme), "a") as f:
+        print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{percentage},{train_pts_removed[0]},{num},{num/size}", file=f)
+else:
+    with open(f"results_{dataset}_method1_fulltest.csv".format(scheme), "a") as f:
         print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{percentage},{train_pts_removed[0]},{num},{num/size}", file=f)
     
     # with open(f"results_{dataset}_method1.csv".format(scheme), "a") as f:
