@@ -1,3 +1,4 @@
+Model-count,H1Units,H2Units,Batch,Dataperm,Train_acc,Test_acc,Class0_FPR,Class0_FNR,Class0_Pos,Class1_FPR,Class1_FNR,Class1_Pos,Discrimination-points,Discm_percent
 55,24,12,4,4,0.95,1.0,0.0,nan,0.0,0.0,0.0,0.4,493,9.48076923076923
 115,24,12,4,9,0.95,1.0,0.0,nan,0.0,0.0,0.0,0.5,499,9.596153846153847
 57,32,8,4,4,0.95,1.0,0.0,nan,0.0,0.0,0.0,0.4,495,9.51923076923077
