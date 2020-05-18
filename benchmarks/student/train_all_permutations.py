@@ -126,8 +126,10 @@ if not load_from_numpy:
 else:
     print("Loading from numpy")
     if modify_test:
+        iter_to_load = num_steps - 1
+        model.load_checkpoint(iter_to_load=iter_to_load, do_checks=False)
         initial_num = model.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
-        train_acc, test_acc = model.print_model_eval()
+        train_acc, test_acc, _ = model.print_model_eval()
         size = class0_data.shape[0]/100
         with open("results_student_noremoval.csv".format(scheme), "a") as f:
                 f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{initial_num},{initial_num/size}\n")
