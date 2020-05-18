@@ -1,7 +1,6 @@
 import os
 
 import pandas as pd
-
 import sys
 sys.path.append("../../../benchmarks/compas-score/")
 import load_compas_score_as_labels
