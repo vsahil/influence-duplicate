@@ -90,7 +90,6 @@ if train:
     iter_to_switch_to_sgd=20000, save_checkpoints=True, verbose=False, plot_loss=False)
     # train_acc, test_acc = model.print_model_eval()
     # print(train_acc, test_acc, "see accuracies", model_count)
-    # exit(0)
 
 ranked_influential_training_points = f"ranking_points_ordered_method1/{name}.npy"
 # if not train and ranking of influential training points is stored in numpy file, then True
@@ -124,8 +123,10 @@ if not load_from_numpy:
 else:
    print("Loading from numpy")
    if modify_test:
+        iter_to_load = num_steps - 1
+        model.load_checkpoint(iter_to_load=iter_to_load, do_checks=False)
         initial_num = model.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
-        train_acc, test_acc = model.print_model_eval()
+        train_acc, test_acc, _ = model.print_model_eval()
         size = class0_data.shape[0]/100
         with open("results_compas-ground_noremoval.csv".format(scheme), "a") as f:
                 f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{initial_num},{initial_num/size}\n")
