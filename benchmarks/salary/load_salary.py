@@ -19,7 +19,6 @@ def load_salary_nosensitive(perm=-1, debiased_test=True, validation_size=0):
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
-	# no. of 1's in adult dataset is 11208, and 8947 in training set.
 	train_examples = 40		# testing set is 12		# weird size (about 20% - similar to german credit dataset)
 	X_train = total_dataset[:train_examples]
 	X_validation = total_dataset[train_examples:train_examples + validation_size]
@@ -48,7 +47,7 @@ def load_salary_nosensitive(perm=-1, debiased_test=True, validation_size=0):
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
-def load_salary(perm=-1, modify_test=False, validation_size=0):
+def load_salary(perm=-1, debiased_test=False, validation_size=0):
 	total_dataset = pd.read_csv("../../salary-dataset/normalized_salary_features.csv").to_numpy()
 	total_labels = pd.read_csv("../../salary-dataset/salary_labels.csv").to_numpy()
 	total_labels = total_labels.flatten()
@@ -58,7 +57,6 @@ def load_salary(perm=-1, modify_test=False, validation_size=0):
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
-	# no. of 1's in adult dataset is 11208, and 8947 in training set.
 	train_examples = 40		# testing set is 12		# weird size (about 20% - similar to german credit dataset)
 	X_train = total_dataset[:train_examples]
 	X_validation = total_dataset[train_examples:train_examples + validation_size]
@@ -66,9 +64,8 @@ def load_salary(perm=-1, modify_test=False, validation_size=0):
 	Y_train = total_labels[:train_examples]
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
-	if not modify_test:	
-		assert(len(Y_test) == 12)
-	else:
+		
+	if debiased_test:
 		test_points = np.array(ordering[train_examples + validation_size:])
 		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/salary_biased_points.npy")
 		# intersection = np.intersect1d(test_points, biased_test_points)
@@ -78,7 +75,10 @@ def load_salary(perm=-1, modify_test=False, validation_size=0):
 		Y_test = Y_test[mask_new]
 		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
 		assert(len(Y_test) == len(test_points)-sum(mask))
-		print(len(Y_test), len(Y_train), "see the length of test and train")
+	else:
+		assert(len(Y_test) == 12)
+
+	print(len(Y_test), len(Y_train), "see the length of test and train")
 
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
@@ -132,7 +132,7 @@ def load_salary_partial_method1(perm, model_count, train_pts_removed, name, debi
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
-def load_fair_representations(perm, training_dataset, training_labels, validation_size=0):
+def load_fair_representations(perm, training_dataset, training_labels, debiased_test=True, validation_size=0):
 	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../salary-dataset/normalized_salary_features.csv").to_numpy()
 	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../salary-dataset/salary_labels.csv").to_numpy()
 	total_labels = total_labels.flatten()
@@ -141,7 +141,6 @@ def load_fair_representations(perm, training_dataset, training_labels, validatio
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
-	# no. of 1's in adult dataset is 11208, and 8947 in training set.
 	train_examples = 40		# testing set is 12		# weird size (about 20% - similar to german credit dataset)
 	X_train = training_dataset		# this is already permuted in the right order
 	X_validation = training_dataset[train_examples:train_examples + validation_size]
@@ -151,18 +150,22 @@ def load_fair_representations(perm, training_dataset, training_labels, validatio
 	X_test  = total_dataset[train_examples + validation_size:]
 	Y_test  = total_labels[train_examples + validation_size:]
 
-	test_points = np.array(ordering[train_examples + validation_size:])
-	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/salary_biased_points.npy")
-	# intersection = np.intersect1d(test_points, biased_test_points)
-	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
-	mask_new = ~mask			# invert it		# this is a boolean vector
-	X_test = X_test[mask_new]
-	Y_test = Y_test[mask_new]
-	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
-	assert(len(Y_test) == len(test_points)-sum(mask))
+	if debiased_test:
+		test_points = np.array(ordering[train_examples + validation_size:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/salary_biased_points.npy")
+		# intersection = np.intersect1d(test_points, biased_test_points)
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+		assert(len(Y_test) < 12)
+	else:
+		assert(len(Y_test) == 12)
+	
 	print(len(Y_test), len(Y_train), "see the length of test and train")
-	assert(len(Y_test) < 12)
-
+	
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -170,11 +173,11 @@ def load_fair_representations(perm, training_dataset, training_labels, validatio
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
-def disparate_removed_load_salary(perm, validation_size=0):
+def disparate_removed_load_salary(perm, debiased_test=True, validation_size=0):
 	sys.path.insert(1, "../")
 	sys.path.append("../../../")
 	sys.path.append("../../../competitors/AIF360/")
-	from aif360.datasets import MyAdultDataset
+	from aif360.datasets import SalaryDataset
 	from aif360.metrics import BinaryLabelDatasetMetric
 	from aif360.algorithms.preprocessing import DisparateImpactRemover
 	from sklearn.preprocessing import MinMaxScaler
@@ -187,7 +190,7 @@ def disparate_removed_load_salary(perm, validation_size=0):
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
-	dataset_orig = MyAdultDataset(
+	dataset_orig = SalaryDataset(
 		protected_attribute_names=['sex'],                   
 		privileged_classes=[[1]], 
 		normalized = False,
@@ -200,13 +203,13 @@ def disparate_removed_load_salary(perm, validation_size=0):
 	di = DisparateImpactRemover(repair_level=1.0)
 	train_repd = di.fit_transform(dataset_orig_train)
 	new_df = train_repd.convert_to_dataframe()[0]		# this also has labels
-	target = new_df['target']
-	new_df = new_df.drop(columns=['target'])
+	target = new_df['salary']
+	new_df = new_df.drop(columns=['salary'])
 	mins_and_ranges = []
 	for j in list(new_df):
 		i = new_df[j]
 		mins_and_ranges.append((np.min(i), np.max(i) - np.min(i)))
-	assert(len(mins_and_ranges) == 12)
+	assert(len(mins_and_ranges) == 5)
 
 	df_ = new_df.apply(lambda x: (x - np.min(x)) / (np.max(x) - np.min(x)))
 	X_train = df_.to_numpy()
@@ -217,18 +220,21 @@ def disparate_removed_load_salary(perm, validation_size=0):
 
 	X_test  = total_dataset[train_examples + validation_size:]
 	Y_test  = total_labels[train_examples + validation_size:]
-	test_points = np.array(ordering[train_examples + validation_size:])
-	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/salary_biased_points.npy")
-	# intersection = np.intersect1d(test_points, biased_test_points)
-	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
-	mask_new = ~mask			# invert it		# this is a boolean vector
-	X_test = X_test[mask_new]
-	Y_test = Y_test[mask_new]
-	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
-	assert(len(Y_test) == len(test_points)-sum(mask))
-	print(len(Y_test), len(Y_train), "see the length of test and train")
-	assert(len(Y_test) < 12)
+	if debiased_test:
+		test_points = np.array(ordering[train_examples + validation_size:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/salary_biased_points.npy")
+		# intersection = np.intersect1d(test_points, biased_test_points)
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+	else:
+		assert(len(Y_test) == 12)
 
+	print(len(Y_test), len(Y_train), "see the length of test and train")
+		
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -265,10 +271,7 @@ def load_salary_partial(index, perm=-1, validation_size=0):
 
 
 def before_preferential_sampling(perm, validation_size=0):
-	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../salary-dataset/adult_no_missing.csv")
-	original_dataset.drop(original_dataset.loc[original_dataset['race']==2].index, inplace=True)
-	original_dataset.drop(original_dataset.loc[original_dataset['race']==3].index, inplace=True)
-	original_dataset.drop(original_dataset.loc[original_dataset['race']==4].index, inplace=True)
+	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../salary-dataset/numeric_salary.csv")
 	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../salary-dataset/normalized_salary_features.csv").to_numpy()
 	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../salary-dataset/salary_labels.csv").to_numpy()
 	total_labels = total_labels.flatten()
@@ -280,7 +283,7 @@ def before_preferential_sampling(perm, validation_size=0):
 	train_examples = 40
 	original_dataset = original_dataset.reindex(ordering[:train_examples])
 	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
-	x_both = original_dataset.groupby(['sex', 'target']).indices
+	x_both = original_dataset.groupby(['sex', 'salary']).indices
 	X_train = total_dataset[:train_examples]
 	X_validation = total_dataset[train_examples:train_examples + validation_size]
 	X_test  = total_dataset[train_examples + validation_size:]
@@ -296,11 +299,8 @@ def before_preferential_sampling(perm, validation_size=0):
 	return base.Datasets(train=train, validation=validation, test=test), x_both
 
 
-def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_candidates, fav_pos_candidates, validation_size=0):
-	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../salary-dataset/adult_no_missing.csv")
-	original_dataset.drop(original_dataset.loc[original_dataset['race']==2].index, inplace=True)
-	original_dataset.drop(original_dataset.loc[original_dataset['race']==3].index, inplace=True)
-	original_dataset.drop(original_dataset.loc[original_dataset['race']==4].index, inplace=True)
+def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_candidates, fav_pos_candidates, debiased_test=True, validation_size=0):
+	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../salary-dataset/numeric_salary.csv")
 	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../salary-dataset/normalized_salary_features.csv").to_numpy()
 	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../salary-dataset/salary_labels.csv").to_numpy()
 	total_labels = total_labels.flatten()
@@ -313,7 +313,7 @@ def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_cand
 	original_dataset = original_dataset.reindex(ordering[:train_examples])
 	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
 	x_gender = original_dataset.groupby(['sex']).indices
-	x_target = original_dataset.groupby(['target']).indices
+	x_target = original_dataset.groupby(['salary']).indices
 
 	deprived_negative_size = int(round(x_gender[0].shape[0] * x_target[0].shape[0] / train_examples)) 	# * female_bad_credit)
 	deprived_positive_size = int(round(x_gender[0].shape[0] * x_target[1].shape[0] / train_examples))	# * female_good_credit)
@@ -360,17 +360,21 @@ def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_cand
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
 	
-	test_points = np.array(ordering[train_examples + validation_size:])
-	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/salary_biased_points.npy")
-	# intersection = np.intersect1d(test_points, biased_test_points)
-	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
-	mask_new = ~mask			# invert it		# this is a boolean vector
-	X_test = X_test[mask_new]
-	Y_test = Y_test[mask_new]
-	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
-	assert(len(Y_test) == len(test_points)-sum(mask))
+	if debiased_test:
+		test_points = np.array(ordering[train_examples + validation_size:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/salary_biased_points.npy")
+		# intersection = np.intersect1d(test_points, biased_test_points)
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+		assert(len(Y_test) < 12)
+	else:
+		assert(len(Y_test) == 12)
+
 	print(len(Y_test), len(Y_train), "see the length of test and train")
-	assert(len(Y_test) < 12)
 
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
@@ -382,7 +386,7 @@ def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_cand
 def kamiran_discrimination_pairs(df):
 	# Remember 0 - female and male - 1
 	# for target 1 - good, 0 - bad
-	x = df.groupby(['sex','target']).indices		# this gives the indices in the df, no the index
+	x = df.groupby(['sex','salary']).indices		# this gives the indices in the df, no the index
 	male_good_credit = x[(1, 1)]
 	male_bad_credit = x[(1, 0)]
 	female_good_credit = x[(0, 1)]
@@ -397,10 +401,8 @@ def kamiran_discrimination_pairs(df):
 	
 
 def before_massaging_dataset(perm, validation_size=0):
-	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../salary-dataset/adult_no_missing.csv")
-	original_dataset.drop(original_dataset.loc[original_dataset['race']==2].index, inplace=True)
-	original_dataset.drop(original_dataset.loc[original_dataset['race']==3].index, inplace=True)
-	original_dataset.drop(original_dataset.loc[original_dataset['race']==4].index, inplace=True)
+	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../salary-dataset/numeric_salary.csv")
+	# import ipdb; ipdb.set_trace()
 	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../salary-dataset/normalized_salary_features.csv").to_numpy()
 	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../salary-dataset/salary_labels.csv").to_numpy()
 	total_labels = total_labels.flatten()
@@ -427,11 +429,8 @@ def before_massaging_dataset(perm, validation_size=0):
 	return base.Datasets(train=train, validation=validation, test=test), male_good_credit, male_bad_credit, female_good_credit, female_bad_credit, pairs_to_flip
 	
 
-def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation_size=0):
-	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../salary-dataset/adult_no_missing.csv")
-	original_dataset.drop(original_dataset.loc[original_dataset['race']==2].index, inplace=True)
-	original_dataset.drop(original_dataset.loc[original_dataset['race']==3].index, inplace=True)
-	original_dataset.drop(original_dataset.loc[original_dataset['race']==4].index, inplace=True)
+def massaged_dataset(perm, promotion_candidates, demotion_candidates, debiased_test=True, validation_size=0):
+	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../salary-dataset/numeric_salary.csv")
 	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../salary-dataset/normalized_salary_features.csv").to_numpy()
 	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../salary-dataset/salary_labels.csv").to_numpy()
 	total_labels = total_labels.flatten()
@@ -444,11 +443,11 @@ def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation
 	original_dataset = original_dataset.reindex(ordering[:train_examples])
 	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
 	for p, d in zip(promotion_candidates, demotion_candidates):
-		assert original_dataset.loc[p, 'sex'] == original_dataset.loc[p, 'target'] == int(total_labels[p]) == 0
-		assert original_dataset.loc[d, 'sex'] == original_dataset.loc[d, 'target'] == int(total_labels[d]) == 1
-		original_dataset.loc[p, 'target'] = 1		# promote the female of bad credit
+		assert original_dataset.loc[p, 'sex'] == original_dataset.loc[p, 'salary'] == int(total_labels[p]) == 0
+		assert original_dataset.loc[d, 'sex'] == original_dataset.loc[d, 'salary'] == int(total_labels[d]) == 1
+		original_dataset.loc[p, 'salary'] = 1		# promote the female of bad credit
 		total_labels[p] = 1.0
-		original_dataset.loc[d, 'target'] = 0		# demote the male of good credit
+		original_dataset.loc[d, 'salary'] = 0		# demote the male of good credit
 		total_labels[d] = 0.0
 		assert p < train_examples	# the index of both promotion and demotion candidates should be within training set
 		assert d < train_examples
@@ -467,17 +466,20 @@ def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
 	
-	test_points = np.array(ordering[train_examples + validation_size:])
-	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/salary_biased_points.npy")
-	# intersection = np.intersect1d(test_points, biased_test_points)
-	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
-	mask_new = ~mask			# invert it		# this is a boolean vector
-	X_test = X_test[mask_new]
-	Y_test = Y_test[mask_new]
-	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
-	assert(len(Y_test) == len(test_points)-sum(mask))
+	if debiased_test:
+		test_points = np.array(ordering[train_examples + validation_size:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/salary_biased_points.npy")
+		# intersection = np.intersect1d(test_points, biased_test_points)
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+		assert(len(Y_test) < 12)
+	else:
+		assert(len(Y_test) == 12)
 	print(len(Y_test), len(Y_train), "see the length of test and train")
-	assert(len(Y_test) < 12)
 
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
@@ -486,7 +488,7 @@ def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
-# These are 20 permutations of the full adult income dataset. 
+# These are 20 permutations of the full salary income dataset. 
 def permutations(perm):
 	x = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/data-permutations/split{perm}.npy")
 	return list(x)

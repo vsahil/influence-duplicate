@@ -19,7 +19,7 @@ from load_adult_income import load_adult_income, load_adult_income_partial
 from find_discm_points import entire_test_suite
 
 train = False
-modify_test = False
+modify_test = True
 
 if not train:       
     x = len(os.listdir('ranking_points_ordered_method1'))
@@ -119,8 +119,10 @@ if not load_from_numpy:
 else:
    print("Loading from numpy")
    if modify_test:
+        iter_to_load = num_steps - 1
+        model.load_checkpoint(iter_to_load=iter_to_load, do_checks=False)
         initial_num = model.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
-        train_acc, test_acc = model.print_model_eval()
+        train_acc, test_acc, _ = model.print_model_eval()
         size = class0_data.shape[0]/100
         with open("results_adult_noremoval.csv".format(scheme), "a") as f:
                 f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{initial_num},{initial_num/size}\n")

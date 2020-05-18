@@ -15,3 +15,4 @@ from aif360.datasets.default import DefaultDataset
 from aif360.datasets.my_compas_score_as_labels import MyCompasScoreDataset
 from aif360.datasets.my_compas_groundtruth_as_labels import MyCompasGroundDataset
 from aif360.datasets.student import StudentDataset
+from aif360.datasets.salary import SalaryDataset
