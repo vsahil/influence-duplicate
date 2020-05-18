@@ -53,7 +53,7 @@ hidden2_units = h2units
 hidden3_units = 0
 batch_size = batch
 damping = 3e-2
-debiased_test = False
+debiased_test = True
 
 data_sets = load_compas_two_year_nosensitive(perm, debiased_test=debiased_test)
 

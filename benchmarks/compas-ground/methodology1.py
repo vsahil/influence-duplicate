@@ -58,7 +58,7 @@ name = f"compas_two_year{model_count}"
 
 import pandas as pd
 dataset = "compas-ground"
-debiased_test = False
+debiased_test = True
 df = pd.read_csv(f"results_{dataset}_debiasedtrain_80percentof_total.csv")
 removal_df = df.sort_values(by=['Discm_percent', 'Points-removed']).groupby("Model-count", as_index=False).first()
 assert len(removal_df) == 240
