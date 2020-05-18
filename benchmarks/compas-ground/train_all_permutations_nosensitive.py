@@ -53,8 +53,9 @@ hidden2_units = h2units
 hidden3_units = 0
 batch_size = batch
 damping = 3e-2
+debiased_test = False
 
-data_sets = load_compas_two_year_nosensitive(perm)
+data_sets = load_compas_two_year_nosensitive(perm, debiased_test=debiased_test)
 
 print("Start: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
 
@@ -90,7 +91,7 @@ removal_df = pd.read_csv(f"removal_df_{dataset}.csv")
 assert len(removal_df) == 240
 train_pts_removed = removal_df.loc[removal_df['Model-count'] == model_count, 'Points-removed'].values
 assert len(train_pts_removed) == 1
-data_sets2 = load_compas_partial_method1(perm=perm, model_count=model_count, train_pts_removed=train_pts_removed[0], name=name)
+data_sets2 = load_compas_partial_method1(perm=perm, model_count=model_count, train_pts_removed=train_pts_removed[0], name=name, debiased_test=debiased_test)
 assert(len(data_sets2.test.labels) == len(data_sets.test.labels))
 class0_index = (data_sets2.test.x[:, sensitive_attr] == 0).astype(int).nonzero()[0]
 class1_index = (data_sets2.test.x[:, sensitive_attr] == 1).astype(int).nonzero()[0]
@@ -108,11 +109,20 @@ class1_cm = sklearn.metrics.confusion_matrix(class1_truth, class1_pred)
 tn, fp, fn, tp = class0_cm.ravel()
 class0_fpr = fp / (fp + tn)
 class0_fnr = fn / (fn + tp)
+class0_pos = (tp + fp) / len(class0_index)        # proportion that got positive outcome
 del tn, fp, fn, tp
 tn, fp, fn, tp = class1_cm.ravel()
 class1_fpr = fp / (fp + tn)
 class1_fnr = fn / (fn + tp)
+class1_pos = (tp + fp) / len(class1_index)        # proportion that got positive outcome
 
-with open("results_compas-ground_nosensitive.csv", "a") as f:
-    f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class1_fpr},{class1_fnr}\n")
+if debiased_test:
+    with open(f"results_{dataset}_nosensitive.csv", "a") as f:
+        print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos}", file=f)
+else:
+    with open(f"results_{dataset}_nosensitive_fulltest.csv", "a") as f:
+        print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos}", file=f)
+
+# with open("results_compas-ground_nosensitive.csv", "a") as f:
+#     f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class1_fpr},{class1_fnr}\n")
 
