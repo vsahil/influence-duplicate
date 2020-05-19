@@ -100,7 +100,7 @@ def load_adult_income_nosensitive(perm=-1, debiased_test=True, validation_size=0
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
-def load_adult_income(perm=-1, modify_test=False, validation_size=0):
+def load_adult_income(perm=-1, debiased_test=False, validation_size=0):
 	total_dataset = pd.read_csv("../../adult-dataset/normalized_adult_features.csv").to_numpy()
 	total_labels = pd.read_csv("../../adult-dataset/adult_labels.csv").to_numpy()
 	total_labels = total_labels.flatten()
@@ -118,9 +118,8 @@ def load_adult_income(perm=-1, modify_test=False, validation_size=0):
 	Y_train = total_labels[:train_examples]
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
-	if not modify_test:	
-		assert(len(Y_test) == 9222)
-	else:
+	
+	if debiased_test:
 		test_points = np.array(ordering[train_examples + validation_size:])
 		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_biased_points.npy")
 		# intersection = np.intersect1d(test_points, biased_test_points)
@@ -130,7 +129,10 @@ def load_adult_income(perm=-1, modify_test=False, validation_size=0):
 		Y_test = Y_test[mask_new]
 		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
 		assert(len(Y_test) == len(test_points)-sum(mask))
-		print(len(Y_test), len(Y_train), "see the length of test and train")
+	else:
+		assert(len(Y_test) == 9222)
+	
+	print(len(Y_test), len(Y_train), "see the length of test and train")
 
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
