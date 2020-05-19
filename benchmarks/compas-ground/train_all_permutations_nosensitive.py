@@ -122,7 +122,3 @@ if debiased_test:
 else:
     with open(f"results_{dataset}_nosensitive_fulltest.csv", "a") as f:
         print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos}", file=f)
-
-# with open("results_compas-ground_nosensitive.csv", "a") as f:
-#     f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class1_fpr},{class1_fnr}\n")
-
