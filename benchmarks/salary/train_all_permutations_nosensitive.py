@@ -53,7 +53,7 @@ hidden2_units = h2units
 hidden3_units = 0
 batch_size = batch
 damping = 3e-2
-debiased_test = False
+debiased_test = True
 
 data_sets = load_salary_nosensitive(perm, debiased_test=debiased_test)
 
@@ -96,7 +96,7 @@ assert len(train_pts_removed) == 1
 data_sets2 = load_salary_partial_method1(perm=perm, model_count=model_count, train_pts_removed=train_pts_removed[0], name=name, debiased_test=debiased_test)
 assert(len(data_sets2.test.labels) == len(data_sets.test.labels))
 train_acc, test_acc, test_predictions = model.print_model_eval()
-import sklearn
+import sklearn, math
 if len(np.unique(data_sets2.test.x[:, sensitive_attr])) == 2:
     class0_index = (data_sets2.test.x[:, sensitive_attr] == 0).astype(int).nonzero()[0]
     class1_index = (data_sets2.test.x[:, sensitive_attr] == 1).astype(int).nonzero()[0]
@@ -145,6 +145,9 @@ else:
     else:
         raise NotImplementedError
 
-
-with open(f"results_{dataset}_nosensitive_fulltest.csv", "a") as f:
-    print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos}", file=f)
+if debiased_test:
+    with open(f"results_{dataset}_nosensitive.csv", "a") as f:
+        print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos}", file=f)
+else:
+    with open(f"results_{dataset}_nosensitive_fulltest.csv", "a") as f:
+        print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos}", file=f)

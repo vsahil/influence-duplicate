@@ -243,7 +243,7 @@ class soft:
         # This generates same examples for the other gender
         
         # df = pd.read_csv("gender0_adult.csv")
-        df['sex'] = 1
+        df['race'] = 1
         df.to_csv("race1_adult.csv", index=False)
 
 
