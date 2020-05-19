@@ -55,9 +55,9 @@ batch_size = batch
 damping = 3e-2
 
 our_approach = False
-noremoval = False
-sensitive_removed = True
-debiased_real_accuracy = True
+noremoval = True        # these results will not change due to the bug in full, because here model is being trained, not loaded. 
+sensitive_removed = False
+debiased_real_accuracy = False
 
 if our_approach:
     data_sets = load_recidivism_groundtruth_as_test_our_approach(perm, debiased_real_accuracy=debiased_real_accuracy)
