@@ -93,6 +93,7 @@ class AdultDataset(StandardDataset):
             # df = pd.read_csv(train_path2)
             test = pd.read_csv(test_path, header=0, names=column_names,
                 skipinitialspace=True, na_values=na_values)
+        
         except IOError as err:
             print("IOError: {}".format(err))
             print("To use this class, please download the following files:")
