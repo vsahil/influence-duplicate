@@ -9,9 +9,9 @@ sys.path.append("../../")
 
 from influence.dataset import DataSet
 
-def load_adult_race_nosensitive(perm=-1, validation_size=0):
+def load_adult_race_nosensitive(perm=-1, debiased_test=True, validation_size=0):
 	total_dataset = pd.read_csv("../../adult-dataset/normalized_adult_features_race.csv")
-	total_dataset = total_dataset.drop(columns=['sex']).to_numpy()		# drop the sensitive attribute. 
+	total_dataset = total_dataset.drop(columns=['race']).to_numpy()		# drop the sensitive attribute. 
 	total_labels = pd.read_csv("../../adult-dataset/adult_labels_race.csv").to_numpy()
 	total_labels = total_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
@@ -20,7 +20,7 @@ def load_adult_race_nosensitive(perm=-1, validation_size=0):
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
 	# no. of 1's in adult dataset is 11208, and 8947 in training set.
-	train_examples = 34816		# testing set is 6315		# weird size (about 20% - similar to german credit dataset)
+	train_examples = 34816		# testing set is 8315		# weird size (about 20% - similar to german credit dataset)
 	X_train = total_dataset[:train_examples]
 	X_validation = total_dataset[train_examples:train_examples + validation_size]
 	X_test  = total_dataset[train_examples + validation_size:]
@@ -28,17 +28,21 @@ def load_adult_race_nosensitive(perm=-1, validation_size=0):
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
 
-	test_points = np.array(ordering[train_examples + validation_size:])
-	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_biased_points.npy")
-	# intersection = np.intersect1d(test_points, biased_test_points)
-	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
-	mask_new = ~mask			# invert it		# this is a boolean vector
-	X_test = X_test[mask_new]
-	Y_test = Y_test[mask_new]
-	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
-	assert(len(Y_test) == len(test_points)-sum(mask))
+	if debiased_test:
+		test_points = np.array(ordering[train_examples + validation_size:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_race_biased_points.npy")
+		# intersection = np.intersect1d(test_points, biased_test_points)
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+		assert(len(Y_test) < 8315)
+	else:
+		assert(len(Y_test) == 8315)
+	
 	print(len(Y_test), len(Y_train), "see the length of test and train")
-	assert(len(Y_test) < 6315)
 
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
@@ -47,7 +51,7 @@ def load_adult_race_nosensitive(perm=-1, validation_size=0):
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
-def load_adult_race(perm=-1, modify_test=False, validation_size=0):
+def load_adult_race(perm=-1, debiased_test=True, validation_size=0):
 	total_dataset = pd.read_csv("../../adult-dataset/normalized_adult_features_race.csv").to_numpy()
 	total_labels = pd.read_csv("../../adult-dataset/adult_labels_race.csv").to_numpy()
 	total_labels = total_labels.flatten()
@@ -58,18 +62,17 @@ def load_adult_race(perm=-1, modify_test=False, validation_size=0):
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
 	# no. of 1's in adult dataset is 11208, and 8947 in training set.
-	train_examples = 34816		# testing set is 6315		# weird size (about 20% - similar to german credit dataset)
+	train_examples = 34816		# testing set is 8315		# weird size (about 20% - similar to german credit dataset)
 	X_train = total_dataset[:train_examples]
 	X_validation = total_dataset[train_examples:train_examples + validation_size]
 	X_test  = total_dataset[train_examples + validation_size:]
 	Y_train = total_labels[:train_examples]
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
-	if not modify_test:	
-		assert(len(Y_test) == 6315)
-	else:
+	
+	if debiased_test:
 		test_points = np.array(ordering[train_examples + validation_size:])
-		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_biased_points.npy")
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_race_biased_points.npy")
 		# intersection = np.intersect1d(test_points, biased_test_points)
 		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
 		mask_new = ~mask			# invert it		# this is a boolean vector
@@ -77,7 +80,10 @@ def load_adult_race(perm=-1, modify_test=False, validation_size=0):
 		Y_test = Y_test[mask_new]
 		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
 		assert(len(Y_test) == len(test_points)-sum(mask))
-		print(len(Y_test), len(Y_train), "see the length of test and train")
+	else:
+		assert(len(Y_test) == 8315)
+	
+	print(len(Y_test), len(Y_train), "see the length of test and train")
 
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
@@ -86,7 +92,7 @@ def load_adult_race(perm=-1, modify_test=False, validation_size=0):
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
-def load_adult_partial_method1(perm, model_count, train_pts_removed, name, validation_size=0):
+def load_adult_race_partial_method1(perm, model_count, train_pts_removed, name, debiased_test=True, validation_size=0):
 	total_dataset = pd.read_csv("../../adult-dataset/normalized_adult_features_race.csv").to_numpy()
 	total_labels = pd.read_csv("../../adult-dataset/adult_labels_race.csv").to_numpy()
 	total_labels = total_labels.flatten()
@@ -111,15 +117,19 @@ def load_adult_partial_method1(perm, model_count, train_pts_removed, name, valid
 
 	X_test  = total_dataset[train_examples + validation_size:]
 	Y_test  = total_labels[train_examples + validation_size:]
-	test_points = np.array(ordering[train_examples + validation_size:])
-	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_biased_points.npy")
-	# intersection = np.intersect1d(test_points, biased_test_points)
-	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
-	mask_new = ~mask			# invert it		# this is a boolean vector
-	X_test = X_test[mask_new]
-	Y_test = Y_test[mask_new]
-	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
-	assert(len(Y_test) == len(test_points)-sum(mask))
+	if debiased_test:
+		test_points = np.array(ordering[train_examples + validation_size:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_race_biased_points.npy")
+		# intersection = np.intersect1d(test_points, biased_test_points)
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+	else:
+		assert len(Y_test) == 8315
+
 	print(len(Y_test), len(Y_train), "see the length of test and train")
 
 	train = DataSet(X_train, Y_train)
@@ -154,7 +164,7 @@ def load_adult_debiased(perm, train_index, test_index, validation_size=0):
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
-def load_fair_representations(perm, training_dataset, training_labels, validation_size=0):
+def load_fair_representations(perm, training_dataset, training_labels, debiased_test=True, validation_size=0):
 	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-dataset/normalized_adult_features_race.csv").to_numpy()
 	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-dataset/adult_labels_race.csv").to_numpy()
 	total_labels = total_labels.flatten()
@@ -164,7 +174,7 @@ def load_fair_representations(perm, training_dataset, training_labels, validatio
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
 	# no. of 1's in adult dataset is 11208, and 8947 in training set.
-	train_examples = 34816		# testing set is 6315		# weird size (about 20% - similar to german credit dataset)
+	train_examples = 34816		# testing set is 8315		# weird size (about 20% - similar to german credit dataset)
 	X_train = training_dataset		# this is already permuted in the right order
 	X_validation = training_dataset[train_examples:train_examples + validation_size]
 	Y_train = training_labels
@@ -173,17 +183,21 @@ def load_fair_representations(perm, training_dataset, training_labels, validatio
 	X_test  = total_dataset[train_examples + validation_size:]
 	Y_test  = total_labels[train_examples + validation_size:]
 
-	test_points = np.array(ordering[train_examples + validation_size:])
-	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_biased_points.npy")
-	# intersection = np.intersect1d(test_points, biased_test_points)
-	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
-	mask_new = ~mask			# invert it		# this is a boolean vector
-	X_test = X_test[mask_new]
-	Y_test = Y_test[mask_new]
-	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
-	assert(len(Y_test) == len(test_points)-sum(mask))
+	if debiased_test:
+		test_points = np.array(ordering[train_examples + validation_size:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_race_biased_points.npy")
+		# intersection = np.intersect1d(test_points, biased_test_points)
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+		assert(len(Y_test) < 8315)
+	else:
+		assert(len(Y_test) == 8315)
+
 	print(len(Y_test), len(Y_train), "see the length of test and train")
-	assert(len(Y_test) < 6315)
 
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
@@ -192,11 +206,11 @@ def load_fair_representations(perm, training_dataset, training_labels, validatio
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
-def disparate_removed_load_adult_race(perm, validation_size=0):
+def disparate_removed_load_adult_race(perm, debiased_test=True, validation_size=0):
 	sys.path.insert(1, "../")
 	sys.path.append("../../../")
 	sys.path.append("../../../competitors/AIF360/")
-	from aif360.datasets import MyAdultDataset
+	from aif360.datasets import AdultRaceDataset
 	from aif360.metrics import BinaryLabelDatasetMetric
 	from aif360.algorithms.preprocessing import DisparateImpactRemover
 	from sklearn.preprocessing import MinMaxScaler
@@ -209,14 +223,14 @@ def disparate_removed_load_adult_race(perm, validation_size=0):
 		ordering = permutations(perm)
 		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
 
-	dataset_orig = MyAdultDataset(
-		protected_attribute_names=['sex'],                   
-		privileged_classes=[[1]], 
+	dataset_orig = AdultRaceDataset(
+		protected_attribute_names=['race'],                   
+		privileged_classes=[[0]], 
 		normalized = False,
 		permute = perm   
 	)
 	
-	train_examples = 34816		# testing set is 6315		# weird size (about 20% - similar to german credit dataset)
+	train_examples = 34816		# testing set is 8315		# weird size (about 20% - similar to german credit dataset)
 	dataset_orig_train, dataset_orig_test = dataset_orig.split([train_examples], shuffle=False)
 	assert(len(dataset_orig_train.convert_to_dataframe()[0]) == train_examples)
 	di = DisparateImpactRemover(repair_level=1.0)
@@ -239,17 +253,22 @@ def disparate_removed_load_adult_race(perm, validation_size=0):
 
 	X_test  = total_dataset[train_examples + validation_size:]
 	Y_test  = total_labels[train_examples + validation_size:]
-	test_points = np.array(ordering[train_examples + validation_size:])
-	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_biased_points.npy")
-	# intersection = np.intersect1d(test_points, biased_test_points)
-	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
-	mask_new = ~mask			# invert it		# this is a boolean vector
-	X_test = X_test[mask_new]
-	Y_test = Y_test[mask_new]
-	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
-	assert(len(Y_test) == len(test_points)-sum(mask))
+	
+	if debiased_test:
+		test_points = np.array(ordering[train_examples + validation_size:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_race_biased_points.npy")
+		# intersection = np.intersect1d(test_points, biased_test_points)
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+		assert(len(Y_test) < 8315)
+	else:
+		assert(len(Y_test) == 8315)
+	
 	print(len(Y_test), len(Y_train), "see the length of test and train")
-	assert(len(Y_test) < 6315)
 
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
@@ -287,10 +306,10 @@ def load_adult_race_partial(index, perm=-1, validation_size=0):
 
 
 def before_preferential_sampling(perm, validation_size=0):
-	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-dataset/adult_no_missing.csv")
-	original_dataset.drop(original_dataset.loc[original_dataset['race']==2].index, inplace=True)
-	original_dataset.drop(original_dataset.loc[original_dataset['race']==3].index, inplace=True)
-	original_dataset.drop(original_dataset.loc[original_dataset['race']==4].index, inplace=True)
+	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-dataset/adult_race_no_missing.csv")
+	# original_dataset.drop(original_dataset.loc[original_dataset['race']==2].index, inplace=True)
+	# original_dataset.drop(original_dataset.loc[original_dataset['race']==3].index, inplace=True)
+	# original_dataset.drop(original_dataset.loc[original_dataset['race']==4].index, inplace=True)
 	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-dataset/normalized_adult_features_race.csv").to_numpy()
 	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-dataset/adult_labels_race.csv").to_numpy()
 	total_labels = total_labels.flatten()
@@ -302,7 +321,7 @@ def before_preferential_sampling(perm, validation_size=0):
 	train_examples = 34816
 	original_dataset = original_dataset.reindex(ordering[:train_examples])
 	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
-	x_both = original_dataset.groupby(['sex', 'target']).indices
+	x_both = original_dataset.groupby(['race', 'target']).indices
 	X_train = total_dataset[:train_examples]
 	X_validation = total_dataset[train_examples:train_examples + validation_size]
 	X_test  = total_dataset[train_examples + validation_size:]
@@ -310,7 +329,7 @@ def before_preferential_sampling(perm, validation_size=0):
 	Y_train = total_labels[:train_examples]
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
-	assert(len(Y_test) == 6315)
+	assert(len(Y_test) == 8315)
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -318,11 +337,11 @@ def before_preferential_sampling(perm, validation_size=0):
 	return base.Datasets(train=train, validation=validation, test=test), x_both
 
 
-def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_candidates, fav_pos_candidates, validation_size=0):
-	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-dataset/adult_no_missing.csv")
-	original_dataset.drop(original_dataset.loc[original_dataset['race']==2].index, inplace=True)
-	original_dataset.drop(original_dataset.loc[original_dataset['race']==3].index, inplace=True)
-	original_dataset.drop(original_dataset.loc[original_dataset['race']==4].index, inplace=True)
+def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_candidates, fav_pos_candidates, debiased_test=True, validation_size=0):
+	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-dataset/adult_race_no_missing.csv")
+	# original_dataset.drop(original_dataset.loc[original_dataset['race']==2].index, inplace=True)
+	# original_dataset.drop(original_dataset.loc[original_dataset['race']==3].index, inplace=True)
+	# original_dataset.drop(original_dataset.loc[original_dataset['race']==4].index, inplace=True)
 	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-dataset/normalized_adult_features_race.csv").to_numpy()
 	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-dataset/adult_labels_race.csv").to_numpy()
 	total_labels = total_labels.flatten()
@@ -334,14 +353,21 @@ def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_cand
 	train_examples = 34816
 	original_dataset = original_dataset.reindex(ordering[:train_examples])
 	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
-	x_gender = original_dataset.groupby(['sex']).indices
+	x_gender = original_dataset.groupby(['race']).indices
 	x_target = original_dataset.groupby(['target']).indices
 
-	deprived_negative_size = int(round(x_gender[0].shape[0] * x_target[0].shape[0] / train_examples)) 	# * female_bad_credit)
-	deprived_positive_size = int(round(x_gender[0].shape[0] * x_target[1].shape[0] / train_examples))	# * female_good_credit)
+	# deprived_negative_size = int(round(x_gender[0].shape[0] * x_target[0].shape[0] / train_examples)) 	# * female_bad_credit)
+	# deprived_positive_size = int(round(x_gender[0].shape[0] * x_target[1].shape[0] / train_examples))	# * female_good_credit)
 
-	favoured_negative_size = int(round(x_gender[1].shape[0] * x_target[0].shape[0] / train_examples))	# * male_bad_credit)
-	favoured_positive_size = int(round(x_gender[1].shape[0] * x_target[1].shape[0] / train_examples))	# * male_good_credit)
+	# favoured_negative_size = int(round(x_gender[1].shape[0] * x_target[0].shape[0] / train_examples))	# * male_bad_credit)
+	# favoured_positive_size = int(round(x_gender[1].shape[0] * x_target[1].shape[0] / train_examples))	# * male_good_credit)
+
+	deprived_negative_size = int(round(x_gender[1].shape[0] * x_target[0].shape[0] / train_examples)) 	# * male_bad_credit)
+	deprived_positive_size = int(round(x_gender[1].shape[0] * x_target[1].shape[0] / train_examples))	# * male_good_credit)
+
+	favoured_negative_size = int(round(x_gender[0].shape[0] * x_target[0].shape[0] / train_examples))	# * female_bad_credit)
+	favoured_positive_size = int(round(x_gender[0].shape[0] * x_target[1].shape[0] / train_examples))	# * female_good_credit)
+
 
 	assert deprived_negative_size + deprived_positive_size + favoured_negative_size + favoured_positive_size == train_examples
 	
@@ -382,17 +408,21 @@ def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_cand
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
 	
-	test_points = np.array(ordering[train_examples + validation_size:])
-	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_biased_points.npy")
-	# intersection = np.intersect1d(test_points, biased_test_points)
-	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
-	mask_new = ~mask			# invert it		# this is a boolean vector
-	X_test = X_test[mask_new]
-	Y_test = Y_test[mask_new]
-	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
-	assert(len(Y_test) == len(test_points)-sum(mask))
+	if debiased_test:
+		test_points = np.array(ordering[train_examples + validation_size:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_race_biased_points.npy")
+		# intersection = np.intersect1d(test_points, biased_test_points)
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+		assert(len(Y_test) < 8315)
+	else:
+		assert(len(Y_test) == 8315)
+
 	print(len(Y_test), len(Y_train), "see the length of test and train")
-	assert(len(Y_test) < 6315)
 
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
@@ -404,11 +434,18 @@ def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_cand
 def kamiran_discrimination_pairs(df):
 	# Remember 0 - female and male - 1
 	# for target 1 - good, 0 - bad
-	x = df.groupby(['sex','target']).indices		# this gives the indices in the df, no the index
-	male_good_credit = x[(1, 1)]
-	male_bad_credit = x[(1, 0)]
-	female_good_credit = x[(0, 1)]
-	female_bad_credit = x[(0, 0)]
+	# import ipdb; ipdb.set_trace()
+	x = df.groupby(['race','target']).indices		# this gives the indices in the df, no the index
+	# male_good_credit = x[(1, 1)]
+	# male_bad_credit = x[(1, 0)]
+	# female_good_credit = x[(0, 1)]
+	# female_bad_credit = x[(0, 0)]
+
+	male_good_credit = x[(0, 1)]
+	male_bad_credit = x[(0, 0)]
+	female_good_credit = x[(1, 1)]
+	female_bad_credit = x[(1, 0)]
+
 	d_male = male_good_credit.shape[0] + male_bad_credit.shape[0]
 	male_half = male_good_credit.shape[0] / d_male
 	d_female = female_good_credit.shape[0] + female_bad_credit.shape[0]
@@ -419,10 +456,10 @@ def kamiran_discrimination_pairs(df):
 	
 
 def before_massaging_dataset(perm, validation_size=0):
-	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-dataset/adult_no_missing.csv")
-	original_dataset.drop(original_dataset.loc[original_dataset['race']==2].index, inplace=True)
-	original_dataset.drop(original_dataset.loc[original_dataset['race']==3].index, inplace=True)
-	original_dataset.drop(original_dataset.loc[original_dataset['race']==4].index, inplace=True)
+	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-dataset/adult_race_no_missing.csv")
+	# original_dataset.drop(original_dataset.loc[original_dataset['race']==2].index, inplace=True)
+	# original_dataset.drop(original_dataset.loc[original_dataset['race']==3].index, inplace=True)
+	# original_dataset.drop(original_dataset.loc[original_dataset['race']==4].index, inplace=True)
 	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-dataset/normalized_adult_features_race.csv").to_numpy()
 	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-dataset/adult_labels_race.csv").to_numpy()
 	total_labels = total_labels.flatten()
@@ -441,7 +478,7 @@ def before_massaging_dataset(perm, validation_size=0):
 	Y_train = total_labels[:train_examples]
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
-	assert(len(Y_test) == 6315)
+	assert(len(Y_test) == 8315)
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -449,25 +486,27 @@ def before_massaging_dataset(perm, validation_size=0):
 	return base.Datasets(train=train, validation=validation, test=test), male_good_credit, male_bad_credit, female_good_credit, female_bad_credit, pairs_to_flip
 	
 
-def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation_size=0):
-	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-dataset/adult_no_missing.csv")
-	original_dataset.drop(original_dataset.loc[original_dataset['race']==2].index, inplace=True)
-	original_dataset.drop(original_dataset.loc[original_dataset['race']==3].index, inplace=True)
-	original_dataset.drop(original_dataset.loc[original_dataset['race']==4].index, inplace=True)
+def massaged_dataset(perm, promotion_candidates, demotion_candidates, debiased_test=True, validation_size=0):
+	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-dataset/adult_race_no_missing.csv")
+	# original_dataset.drop(original_dataset.loc[original_dataset['race']==2].index, inplace=True)
+	# original_dataset.drop(original_dataset.loc[original_dataset['race']==3].index, inplace=True)
+	# original_dataset.drop(original_dataset.loc[original_dataset['race']==4].index, inplace=True)
 	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-dataset/normalized_adult_features_race.csv").to_numpy()
 	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult-dataset/adult_labels_race.csv").to_numpy()
 	total_labels = total_labels.flatten()
 	assert(perm < 20)		# we only have 20 permutations
-	if perm >= 0:	# for negative number don't do
-		ordering = permutations(perm)
-		total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
-
+	assert (original_dataset['target'].to_numpy() == total_labels[:]).all()
+	# if perm >= 0:	# for negative number don't do
+	ordering = permutations(perm)
+	total_dataset, total_labels = total_dataset[ordering], total_labels[ordering]
+	# import ipdb; ipdb.set_trace()
 	train_examples = 34816
 	original_dataset = original_dataset.reindex(ordering[:train_examples])
 	original_dataset = original_dataset.reset_index(drop=True)		# helps reset the index
+	assert (original_dataset['target'].to_numpy() == total_labels[:train_examples]).all()
 	for p, d in zip(promotion_candidates, demotion_candidates):
-		assert original_dataset.loc[p, 'sex'] == original_dataset.loc[p, 'target'] == int(total_labels[p]) == 0
-		assert original_dataset.loc[d, 'sex'] == original_dataset.loc[d, 'target'] == int(total_labels[d]) == 1
+		assert original_dataset.loc[d, 'race'] == original_dataset.loc[p, 'target'] == int(total_labels[p]) == 0
+		assert original_dataset.loc[p, 'race'] == original_dataset.loc[d, 'target'] == int(total_labels[d]) == 1
 		original_dataset.loc[p, 'target'] = 1		# promote the female of bad credit
 		total_labels[p] = 1.0
 		original_dataset.loc[d, 'target'] = 0		# demote the male of good credit
@@ -489,18 +528,22 @@ def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
 	
-	test_points = np.array(ordering[train_examples + validation_size:])
-	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_biased_points.npy")
-	# intersection = np.intersect1d(test_points, biased_test_points)
-	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
-	mask_new = ~mask			# invert it		# this is a boolean vector
-	X_test = X_test[mask_new]
-	Y_test = Y_test[mask_new]
-	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
-	assert(len(Y_test) == len(test_points)-sum(mask))
+	if debiased_test:
+		test_points = np.array(ordering[train_examples + validation_size:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_race_biased_points.npy")
+		# intersection = np.intersect1d(test_points, biased_test_points)
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+		assert(len(Y_test) < 8315)
+	else:
+		assert(len(Y_test) == 8315)
+	
 	print(len(Y_test), len(Y_train), "see the length of test and train")
-	assert(len(Y_test) < 6315)
-
+	
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -517,7 +560,7 @@ def permutations(perm):
 np.random.seed(2)
 def produce_permutations():
 	for split in range(20):
-		idx = np.random.permutation(45222)
+		idx = np.random.permutation(43131)
 		np.save(f"data-permutations/split{split}.npy", idx)
 		print(split, "done")
 
