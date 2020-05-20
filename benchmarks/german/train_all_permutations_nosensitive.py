@@ -48,13 +48,14 @@ def variation(setting_now):
 perm, h1units, h2units, batch, model_count = variation(setting_now)
 assert(model_count == setting_now)
 
-data_sets = load_german_credit_nosensitive(perm)
-
 hidden1_units = h1units
 hidden2_units = h2units
 hidden3_units = 0
 batch_size = batch
 damping = 3e-2
+debiased_test = False
+
+data_sets = load_german_credit_nosensitive(perm, debiased_test=debiased_test)
 
 print("Start: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
 
@@ -90,11 +91,13 @@ removal_df = pd.read_csv(f"removal_df_{dataset}.csv")
 assert len(removal_df) == 240
 train_pts_removed = removal_df.loc[removal_df['Model-count'] == model_count, 'Points-removed'].values
 assert len(train_pts_removed) == 1
-data_sets2 = load_german_partial_method1(perm=perm, model_count=model_count, train_pts_removed=train_pts_removed[0], name=name)
+data_sets2 = load_german_partial_method1(perm=perm, model_count=model_count, train_pts_removed=train_pts_removed[0], name=name, debiased_test=debiased_test)
 assert(len(data_sets2.test.labels) == len(data_sets.test.labels))
+train_acc, test_acc, test_predictions = model.print_model_eval()
+import sklearn, math
+assert len(np.unique(data_sets2.test.x[:, sensitive_attr])) == 2
 class0_index = (data_sets2.test.x[:, sensitive_attr] == 0).astype(int).nonzero()[0]
 class1_index = (data_sets2.test.x[:, sensitive_attr] == 1).astype(int).nonzero()[0]
-train_acc, test_acc, test_predictions = model.print_model_eval()
 test_predictions = np.argmax(test_predictions, axis=1)
 class0_pred = test_predictions[class0_index]
 class1_pred = test_predictions[class1_index]
@@ -102,17 +105,22 @@ class0_truth = data_sets.test.labels[class0_index]
 class1_truth = data_sets.test.labels[class1_index]
 assert(len(class0_pred) + len(class1_pred) == len(test_predictions))
 assert(len(class0_truth) + len(class1_truth) == len(data_sets.test.labels))
-import sklearn
-class0_cm = sklearn.metrics.confusion_matrix(class0_truth, class0_pred)
-class1_cm = sklearn.metrics.confusion_matrix(class1_truth, class1_pred)
+class0_cm = sklearn.metrics.confusion_matrix(class0_truth, class0_pred, labels=[0,1])
+class1_cm = sklearn.metrics.confusion_matrix(class1_truth, class1_pred, labels=[0,1])
 tn, fp, fn, tp = class0_cm.ravel()
 class0_fpr = fp / (fp + tn)
 class0_fnr = fn / (fn + tp)
+class0_pos = (tp + fp) / len(class0_index)
 del tn, fp, fn, tp
 tn, fp, fn, tp = class1_cm.ravel()
 class1_fpr = fp / (fp + tn)
 class1_fnr = fn / (fn + tp)
+class1_pos = (tp + fp) / len(class1_index)
 
 
-with open("results_german_nosensitive.csv", "a") as f:
-    f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class1_fpr},{class1_fnr}\n")
+if debiased_test:
+    with open(f"results_{dataset}_nosensitive.csv", "a") as f:
+        print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos}", file=f)
+else:
+    with open(f"results_{dataset}_nosensitive_fulltest.csv", "a") as f:
+        print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos}", file=f)

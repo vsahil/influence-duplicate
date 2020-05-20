@@ -19,7 +19,7 @@ def experiment_command(setting, removal_percent):
 
 
 def run_command(setting):
-#     os.system(f"python train_all_permutations.py {setting}")
+    # os.system(f"python train_all_permutations.py {setting}")
     # os.system(f"python methodology1.py {setting}")
     os.system(f"python train_all_permutations_nosensitive.py {setting}")
 
