@@ -20,7 +20,7 @@ from find_discm_points import entire_test_suite
 
 train = False
 full_test = True
-debiased_test = False
+debiased_test = True
 
 if not train:
     x = len(os.listdir('ranking_points_ordered_method1'))
