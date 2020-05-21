@@ -52,6 +52,8 @@ hidden1_units = h1units
 hidden2_units = h2units
 hidden3_units = 0
 batch_size = batch
+damping = 3e-2
+debiased_test = False
 
 import pandas as pd
 dataset = "german"
@@ -77,7 +79,7 @@ model = Fully_Connected(
     batch_size=batch_size,
     data_sets=data_sets,
     initial_learning_rate=initial_learning_rate,
-    damping=3e-2,
+    damping=damping,
     decay_epochs=decay_epochs,
     mini_batch=True,
     train_dir=f'trained_models_try', 
@@ -95,10 +97,12 @@ num = model.find_discm_examples(class0_data, class1_data, print_file=False, sche
 
 
 sensitive_attr = 8
+train_acc, test_acc, test_predictions = model.print_model_eval()
+import sklearn, math
 assert len(np.unique(data_sets.test.x[:, sensitive_attr])) == 2
+# import ipdb; ipdb.set_trace()
 class0_index = (data_sets.test.x[:, sensitive_attr] == 0).astype(int).nonzero()[0]
 class1_index = (data_sets.test.x[:, sensitive_attr] == 1).astype(int).nonzero()[0]
-train_acc, test_acc, test_predictions = model.print_model_eval()
 test_predictions = np.argmax(test_predictions, axis=1)
 class0_pred = test_predictions[class0_index]
 class1_pred = test_predictions[class1_index]
@@ -106,16 +110,25 @@ class0_truth = data_sets.test.labels[class0_index]
 class1_truth = data_sets.test.labels[class1_index]
 assert(len(class0_pred) + len(class1_pred) == len(test_predictions))
 assert(len(class0_truth) + len(class1_truth) == len(data_sets.test.labels))
-import sklearn
-class0_cm = sklearn.metrics.confusion_matrix(class0_truth, class0_pred)
-class1_cm = sklearn.metrics.confusion_matrix(class1_truth, class1_pred)
+
+class0_cm = sklearn.metrics.confusion_matrix(class0_truth, class0_pred, labels=[0,1])
+class1_cm = sklearn.metrics.confusion_matrix(class1_truth, class1_pred, labels=[0,1])
 tn, fp, fn, tp = class0_cm.ravel()
 class0_fpr = fp / (fp + tn)
 class0_fnr = fn / (fn + tp)
+class0_pos = (tp + fp) / len(class0_index)        # proportion that got positive outcome
 del tn, fp, fn, tp
 tn, fp, fn, tp = class1_cm.ravel()
 class1_fpr = fp / (fp + tn)
 class1_fnr = fn / (fn + tp)
+class1_pos = (tp + fp) / len(class1_index)        # proportion that got positive outcome
 
-with open(f"results_{dataset}_method1.csv".format(scheme), "a") as f:
-    print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class1_fpr},{class1_fnr},{percentage},{train_pts_removed[0]},{num},{num/size}", file=f)
+if debiased_test:
+    with open(f"results_{dataset}_method1.csv".format(scheme), "a") as f:
+        print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{percentage},{train_pts_removed[0]},{num},{num/size}", file=f)
+else:
+    with open(f"results_{dataset}_method1_fulltest.csv".format(scheme), "a") as f:
+        print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{percentage},{train_pts_removed[0]},{num},{num/size}", file=f)
+
+# with open(f"results_{dataset}_method1.csv".format(scheme), "a") as f:
+#     print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class1_fpr},{class1_fnr},{percentage},{train_pts_removed[0]},{num},{num/size}", file=f)
