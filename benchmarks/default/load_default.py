@@ -62,7 +62,7 @@ def exclude_some_examples(exclude, validation_size=0, remove_biased_test=True):
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
-def load_default_nosensitive(perm=-1, validation_size=0):
+def load_default_nosensitive(perm=-1, debiased_test=True, validation_size=0):
 	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../default-dataset/normalized_default_features.csv")
 	total_dataset = total_dataset.drop(columns=['sex']).to_numpy()		# drop the sensitive attribute. 
 	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../default-dataset/default_labels.csv").to_numpy()
@@ -80,18 +80,21 @@ def load_default_nosensitive(perm=-1, validation_size=0):
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
 	
-	test_points = np.array(ordering[train_examples + validation_size:])
-	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/default_biased_points.npy")
-	# intersection = np.intersect1d(test_points, biased_test_points)
-	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
-	mask_new = ~mask			# invert it		# this is a boolean vector
-	X_test = X_test[mask_new]
-	Y_test = Y_test[mask_new]
-	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
-	assert(len(Y_test) == len(test_points)-sum(mask))
+	if debiased_test:
+		test_points = np.array(ordering[train_examples + validation_size:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/default_biased_points.npy")
+		# intersection = np.intersect1d(test_points, biased_test_points)
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+	else:
+		assert(len(Y_test) == 6000)
+	
 	print(len(Y_test), len(Y_train), "see the length of test and train")
 
-	# assert(len(Y_test) == 6000)
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -99,7 +102,7 @@ def load_default_nosensitive(perm=-1, validation_size=0):
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
-def load_default(perm=-1, modify_test=False, validation_size=0):
+def load_default(perm=-1, debiased_test=False, validation_size=0):
 	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../default-dataset/normalized_default_features.csv").to_numpy()
 	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../default-dataset/default_labels.csv").to_numpy()
 	total_labels = total_labels.flatten()
@@ -116,9 +119,7 @@ def load_default(perm=-1, modify_test=False, validation_size=0):
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
 	
-	if not modify_test:	
-		assert(len(Y_test) == 6000)
-	else:
+	if debiased_test:
 		test_points = np.array(ordering[train_examples + validation_size:])
 		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/default_biased_points.npy")
 		# intersection = np.intersect1d(test_points, biased_test_points)
@@ -128,8 +129,11 @@ def load_default(perm=-1, modify_test=False, validation_size=0):
 		Y_test = Y_test[mask_new]
 		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
 		assert(len(Y_test) == len(test_points)-sum(mask))
+	else:	
+		assert(len(Y_test) == 6000)
 	
 	print(len(Y_test), len(Y_train), "see the length of test and train")
+	
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -137,7 +141,7 @@ def load_default(perm=-1, modify_test=False, validation_size=0):
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
-def load_default_partial_method1(perm, model_count, train_pts_removed, name, validation_size=0):
+def load_default_partial_method1(perm, model_count, train_pts_removed, name, debiased_test=True, validation_size=0):
 	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../default-dataset/normalized_default_features.csv").to_numpy()
 	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../default-dataset/default_labels.csv").to_numpy()
 	total_labels = total_labels.flatten()
@@ -162,15 +166,20 @@ def load_default_partial_method1(perm, model_count, train_pts_removed, name, val
 
 	X_test  = total_dataset[train_examples + validation_size:]
 	Y_test  = total_labels[train_examples + validation_size:]
-	test_points = np.array(ordering[train_examples + validation_size:])
-	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/default_biased_points.npy")
-	# intersection = np.intersect1d(test_points, biased_test_points)
-	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
-	mask_new = ~mask			# invert it		# this is a boolean vector
-	X_test = X_test[mask_new]
-	Y_test = Y_test[mask_new]
-	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
-	assert(len(Y_test) == len(test_points)-sum(mask))
+	
+	if debiased_test:
+		test_points = np.array(ordering[train_examples + validation_size:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/default_biased_points.npy")
+		# intersection = np.intersect1d(test_points, biased_test_points)
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+	else:
+		assert len(Y_test) == 6000
+
 	print(len(Y_test), len(Y_train), "see the length of test and train")
 
 	train = DataSet(X_train, Y_train)
