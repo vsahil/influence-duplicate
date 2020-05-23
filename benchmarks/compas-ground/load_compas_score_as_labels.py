@@ -187,7 +187,7 @@ def load_compas_partial_method1(perm, model_count, train_pts_removed, name, debi
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
-def load_fair_representations(perm, training_dataset, training_labels, validation_size=0):
+def load_fair_representations(perm, training_dataset, training_labels, debiased_test=True, validation_size=0):
 	total_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/normalized_scores_as_labels_features.csv").to_numpy()
 	total_labels = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/target_groundtruth_as_label.csv").to_numpy()
 	total_labels = total_labels.flatten()
@@ -205,17 +205,19 @@ def load_fair_representations(perm, training_dataset, training_labels, validatio
 	X_test  = total_dataset[train_examples + validation_size:]
 	Y_test  = total_labels[train_examples + validation_size:]
 	
-	test_points = np.array(ordering[train_examples + validation_size:])
-	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/compas-ground_biased_points.npy")
-	# intersection = np.intersect1d(test_points, biased_test_points)
-	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
-	mask_new = ~mask			# invert it		# this is a boolean vector
-	X_test = X_test[mask_new]
-	Y_test = Y_test[mask_new]
-	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
-	assert(len(Y_test) == len(test_points)-sum(mask))
-
-	# assert(len(Y_test) == 1150)
+	if debiased_test:
+		test_points = np.array(ordering[train_examples + validation_size:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/compas-ground_biased_points.npy")
+		# intersection = np.intersect1d(test_points, biased_test_points)
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+	else:
+		assert(len(Y_test) == 1150)
+	
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -223,7 +225,7 @@ def load_fair_representations(perm, training_dataset, training_labels, validatio
 	return base.Datasets(train=train, validation=validation, test=test)
 
 
-def disparate_removed_load_compas(perm, validation_size=0):
+def disparate_removed_load_compas(perm, debiased_test=True, validation_size=0):
 	sys.path.insert(1, "../")
 	sys.path.append("../../../")
 	sys.path.append("../../../competitors/AIF360/")
@@ -271,15 +273,19 @@ def disparate_removed_load_compas(perm, validation_size=0):
 
 	X_test  = total_dataset[train_examples + validation_size:]
 	Y_test  = total_labels[train_examples + validation_size:]
-	test_points = np.array(ordering[train_examples + validation_size:])
-	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/compas-ground_biased_points.npy")
-	# intersection = np.intersect1d(test_points, biased_test_points)
-	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
-	mask_new = ~mask			# invert it		# this is a boolean vector
-	X_test = X_test[mask_new]
-	Y_test = Y_test[mask_new]
-	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
-	assert(len(Y_test) == len(test_points)-sum(mask))
+	
+	if debiased_test:
+		test_points = np.array(ordering[train_examples + validation_size:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/compas-ground_biased_points.npy")
+		# intersection = np.intersect1d(test_points, biased_test_points)
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+	else:
+		assert(len(Y_test) == 1150)
 
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
@@ -349,7 +355,7 @@ def before_preferential_sampling(perm, validation_size=0):
 	return base.Datasets(train=train, validation=validation, test=test), x_both
 
 
-def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_candidates, fav_pos_candidates, validation_size=0):
+def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_candidates, fav_pos_candidates, debiased_test=True, validation_size=0):
 	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/groundtruth_as_label.csv")
 	original_dataset['sex'] = original_dataset['sex'].replace({"Male":1, "Female":0})
 	original_dataset['race'] = original_dataset['race'].replace({"Caucasian":1, "African-American":0})
@@ -419,17 +425,19 @@ def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_cand
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
 	
-	test_points = np.array(ordering[train_examples + validation_size:])
-	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/compas-ground_biased_points.npy")
-	# intersection = np.intersect1d(test_points, biased_test_points)
-	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
-	mask_new = ~mask			# invert it		# this is a boolean vector
-	X_test = X_test[mask_new]
-	Y_test = Y_test[mask_new]
-	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
-	assert(len(Y_test) == len(test_points)-sum(mask))
+	if debiased_test:
+		test_points = np.array(ordering[train_examples + validation_size:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/compas-ground_biased_points.npy")
+		# intersection = np.intersect1d(test_points, biased_test_points)
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+	else:
+		assert(len(Y_test) == 1150)
 
-	# assert(len(Y_test) == 1150)
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
@@ -491,7 +499,7 @@ def before_massaging_dataset(perm, validation_size=0):
 	return base.Datasets(train=train, validation=validation, test=test), male_good_credit, male_bad_credit, female_good_credit, female_bad_credit, pairs_to_flip
 	
 
-def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation_size=0):
+def massaged_dataset(perm, promotion_candidates, demotion_candidates, debiased_test=True, validation_size=0):
 	original_dataset = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/groundtruth_as_label.csv")
 	original_dataset['sex'] = original_dataset['sex'].replace({"Male":1, "Female":0})
 	original_dataset['race'] = original_dataset['race'].replace({"Caucasian":1, "African-American":0})
@@ -528,17 +536,19 @@ def massaged_dataset(perm, promotion_candidates, demotion_candidates, validation
 	Y_validation = total_labels[train_examples:train_examples + validation_size]
 	Y_test  = total_labels[train_examples + validation_size:]
 	
-	test_points = np.array(ordering[train_examples + validation_size:])
-	biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/compas-ground_biased_points.npy")
-	# intersection = np.intersect1d(test_points, biased_test_points)
-	mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
-	mask_new = ~mask			# invert it		# this is a boolean vector
-	X_test = X_test[mask_new]
-	Y_test = Y_test[mask_new]
-	assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
-	assert(len(Y_test) == len(test_points)-sum(mask))
+	if debiased_test:
+		test_points = np.array(ordering[train_examples + validation_size:])
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/compas-ground_biased_points.npy")
+		# intersection = np.intersect1d(test_points, biased_test_points)
+		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
+		mask_new = ~mask			# invert it		# this is a boolean vector
+		X_test = X_test[mask_new]
+		Y_test = Y_test[mask_new]
+		assert(X_test.shape == (len(test_points)-sum(mask), X_train.shape[1]))
+		assert(len(Y_test) == len(test_points)-sum(mask))
+	else:
+		assert(len(Y_test) == 1150)
 
-	# assert(len(Y_test) == 1150)
 	train = DataSet(X_train, Y_train)
 	validation = DataSet(X_validation, Y_validation)
 	test = DataSet(X_test, Y_test)
