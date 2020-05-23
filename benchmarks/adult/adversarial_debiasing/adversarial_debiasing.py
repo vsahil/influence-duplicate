@@ -29,6 +29,10 @@ dataset_orig = MyAdultDataset(
     permute = perm   
 )
 
+train_examples = 36000
+dataset_orig_train, dataset_orig_test = dataset_orig.split([train_examples], shuffle=False)
+assert(len(dataset_orig_train.convert_to_dataframe()[0]) == train_examples)
+
 if debiased_test:
     test_points = np.array(ordering[train_examples:])
     mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
@@ -38,10 +42,6 @@ if debiased_test:
     assert(len(dataset_orig_test.convert_to_dataframe()[0]) < 45222 - train_examples)
 else:
     assert(len(dataset_orig_test.convert_to_dataframe()[0]) == 45222 - train_examples)
-
-train_examples = 36000
-dataset_orig_train, dataset_orig_test = dataset_orig.split([train_examples], shuffle=False)
-assert(len(dataset_orig_train.convert_to_dataframe()[0]) == train_examples)
 
 privileged_groups = [{'sex': 1}]
 unprivileged_groups = [{'sex': 0}]
