@@ -117,5 +117,3 @@ if debiased_test:
 else:
     with open(f"results_disparate_removed_{dataset}_fulltest.csv", "a") as f:
         print(f"{model_count},{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{num_dicsm},{num_dicsm/size}", file=f)
-
-
