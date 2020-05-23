@@ -54,7 +54,7 @@ hidden2_units = h2units
 hidden3_units = 0
 batch_size = batch
 damping = 8e-2
-debiased_test = True
+debiased_test = False
 
 data_sets = load_student_nosensitive(perm, debiased_test=debiased_test)
 

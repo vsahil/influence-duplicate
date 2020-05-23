@@ -57,10 +57,6 @@ male_bad_credit_indices = x_both[(1, 0)]
 female_good_credit_indices = x_both[(0, 1)]
 female_bad_credit_indices = x_both[(0, 0)]
 
-hidden1_units = h1units
-hidden2_units = h2units
-hidden3_units = 0
-batch_size = batch
 print("Start: ", model_count, " Setting: ", perm, hidden1_units, hidden2_units, batch_size)
 
 model = Fully_Connected(

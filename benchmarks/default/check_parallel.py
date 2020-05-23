@@ -5,7 +5,7 @@ from itertools import product
 def experiment_command(setting, removal_percent):
     os.system(f"python -W ignore train_all_permutations.py {setting} {removal_percent}")
 
-# pool = multiprocessing.Pool(120)
+# pool = multiprocessing.Pool(60)
 # l = [i for i in range(200)]         # upto 20% in step of 0.1%
 # # mr = pool.map_async(run_command, l)
 # settings = [i for i in range(240)]       # for first 120 settings in total
@@ -25,7 +25,7 @@ def run_command(setting):
 # def run_nosensitive(setting):
 #     os.system(f"python train_all_permutations_nosensitive.py {setting}")
 
-pool = multiprocessing.Pool(120)
+pool = multiprocessing.Pool(80)
 l = [i for i in range(240)]
 mr = pool.map_async(run_command, l)
 # mr = pool.map_async(run_nosensitive, l)
