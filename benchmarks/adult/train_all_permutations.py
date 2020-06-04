@@ -17,14 +17,28 @@ from influence.fully_connected import Fully_Connected
 
 from load_adult_income import load_adult_income, load_adult_income_partial
 from find_discm_points import entire_test_suite
+import argparse
 
-train = False
-full_test = True
-debiased_test = True
+parser = argparse.ArgumentParser()
+parser.add_argument("--train", type=int, default=1,
+                    help="Train the 240 models?")
+parser.add_argument("--debiased_test", type=int, default=1,
+                    help="Use debiased test for test accuracy")
+parser.add_argument("--full_baseline", type=int, default=0,
+                    help="Full baseline run")
+parser.add_argument("--model_number", type=int, default=0,
+                    help="Which model number to run (out of 240)")
+parser.add_argument("--percentage_removal", type=int, default=0,
+                    help="What percentage of biased data to be removed")
+args = parser.parse_args()
 
-if not train:       
-    x = len(os.listdir('ranking_points_ordered_method1'))
-    assert x == 240     # This is for checking that none of the model have failed to converge
+train = bool(args.train)
+full_test = bool(args.full_baseline)
+debiased_test = bool(args.debiased_test)
+
+# if not train:       
+#     x = len(os.listdir('ranking_points_ordered_method1'))
+#     assert x == 240     # This is for checking that none of the model have failed to converge
 
 input_dim = 12
 weight_decay = 0.001
@@ -38,7 +52,7 @@ num_steps = 20000
 scheme = 8
 assert(scheme == 8)     # now always
 
-setting_now = int(sys.argv[1])
+setting_now = args.model_number
 
 def variation(setting_now):
     model_count = 0
@@ -158,18 +172,15 @@ else:
             with open(f"results_{dataset}_noremoval_fulltest.csv", "a") as f:
                 print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{initial_num},{initial_num/size}", file=f)
 
-        # with open("results_adult_noremoval.csv".format(scheme), "a") as f:
-        #         f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{initial_num},{initial_num/size}\n")
         exit(0)
    sorted_training_points = list(np.load(ranked_influential_training_points))
 
 if train:
     exit(0)
 
-# exit(0)
-# for percentage in range(5, 4, 0.5):
-# for percentage in np.arange(0, 5.0, 0.2):
-removal = int(sys.argv[2])
+
+# removal = int(sys.argv[2])
+removal = args.percentage_removal
 percentage = removal/5.0
 
 train_size = 36000
