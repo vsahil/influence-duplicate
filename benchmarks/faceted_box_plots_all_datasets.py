@@ -52,12 +52,9 @@ def process_dfs(name, batches, df):
 
 
 def boxplots_datasets(dataset, plot):
-    # import ipdb; ipdb.set_trace()
-    # df1 = pd.read_csv(f"{dataset}/results_{dataset}_final.csv")
     df1 = pd.read_csv(f"{dataset}/results_{dataset}_method1.csv")
     batches = sorted(list(df1.Batch.unique()))      # sorting is important
     assert(len(batches) == 2)
-    # import ipdb; ipdb.set_trace()
     df_our = find_min_discm_each_hyperparam(df1)
     df_our = df_our[['Model-count','Discm_percent', 'Test_acc', 'Class0_Pos', 'Class1_Pos']]
     df_our['diff'] = abs(df_our['Class0_Pos'] - df_our['Class1_Pos'])*100
@@ -96,17 +93,13 @@ def boxplots_datasets(dataset, plot):
     # No technique used
     df_noremoval = process_dfs("FULL", batches, pd.read_csv(f"{dataset}/results_{dataset}_noremoval.csv"))
     
-    # Not appending sensitive removed here
-    # df_main = pd.concat([df_noremoval, df_massaging, df_ps, df_lfr, df_DIR, df_adver, df_our])
-    # assert(len(df_main) == 6*240 + 20)
     df_main = pd.concat([df_noremoval, df_nosensitive, df_massaging, df_ps, df_lfr, df_DIR, df_adver, df_our])
     try:
         assert(len(df_main) == 7*240 + 20)
     except:
         import ipdb; ipdb.set_trace()
     
-    # df_main = pd.concat([df_our, df_massaging, df_ps, df_lfr, df_DIR, df_adver, df_nosensitive])
-    # assert(len(df_main) == 6*240 + 20)
+
     if dataset == "compas-score":
         dataset = "Recidivism-score"
     elif dataset == "compas-ground":
@@ -146,17 +139,15 @@ def boxplots_datasets(dataset, plot):
     if plot == 0:
         min_discm = True
         test_accuracy_for_min_discm = True
-        
+
         max_accuracy = True
         discm_for_max_accuracy = True
-        
+
         median_discm = False
         mean_accuracy = False
         median_accuracy = False
-        # import ipdb; ipdb.set_trace()
+
         if min_discm:
-            # x = ' & '.join([f"{dataset.capitalize()}", str(float(f"{df_DIR['Discm_percent'].min():.{precision}e}")), str(float(f"{df_ps['Discm_percent'].min():.{precision}e}")), str(float(f"{df_massaging['Discm_percent'].min():.{precision}e}")), str(float(f"{df_lfr['Discm_percent'].min():.{precision}e}")), str(float(f"{df_adver['Discm_percent'].min():.{precision}e}")), str(float(f"{df_nosensitive['Discm_percent'].min():.{precision}e}")), str(float(f"{df_noremoval['Discm_percent'].min():.{precision}e}")), "\\textbf{%s}"%(str(float(f"{df_our['Discm_percent'].min():.{precision}e}")))])
-            # x = ' & '.join([f"{df_noremoval['Discm_percent'].min():.{precision}e}", f"{df_nosensitive['Discm_percent'].min():.{precision}e}", f"{dataset.capitalize()}", f"{df_DIR['Discm_percent'].min():.{precision}e}", f"{df_ps['Discm_percent'].min():.{precision}e}", f"{df_massaging['Discm_percent'].min():.{precision}e}", f"{df_lfr['Discm_percent'].min():.{precision}e}", f"{df_adver['Discm_percent'].min():.{precision}e}", "\\textbf{%s}"%(f"{df_our['Discm_percent'].min():.{precision}e}")])
             x = ' & '.join([f"{id_}", f"{df_noremoval['Discm_percent'].min():.{precision}e}", '0.0' ,f"{df_DIR['Discm_percent'].min():.{precision}e}", f"{df_ps['Discm_percent'].min():.{precision}e}", f"{df_massaging['Discm_percent'].min():.{precision}e}", f"{df_lfr['Discm_percent'].min():.{precision}e}", f"{df_adver['Discm_percent'].min():.{precision}e}", f"{df_our['Discm_percent'].min():.{precision}e}"])
             print_to_tex(x, 'min-discm.tex', dataset)
 
@@ -211,7 +202,8 @@ def print_to_tex(string, file, dataset, mode=None):
             mode = "w"
         else:
             mode = "a"
-    with open(f"../../neurips_fairness_paper/tables/{file}", mode) as f:
+    # with open(f"../../neurips_fairness_paper/tables/{file}", mode) as f:
+    with open(f"tables/{file}", mode) as f:    
         if dataset == "salary":
             string += "  \\\  \midrule"
         else:
@@ -230,7 +222,7 @@ def print_to_tex(string, file, dataset, mode=None):
 def main(plot):
     df_main = None
     benchmarks = ["adult", "adult_race", "german", "student", "compas-ground", "compas-score", "default", "salary"]
-    # benchmarks = ["german"] #,"german", "student", "compas-ground", "compas-score", "default"]
+
     for dataset in benchmarks:
         df_onedataset = boxplots_datasets(dataset, plot)
         if not df_main is None:
@@ -242,16 +234,11 @@ def main(plot):
     if plot == 0:
         return 
 
-    # labels = ['FU', 'SR', 'DIR', 'PS', 'MA', 'LFR', 'AD', 'Our']
-    # labels = ['FU', 'DIR', 'PS', 'MA', 'LFR', 'AD', 'Our']
     labels = ['FU', 'SR', 'DIR', 'PS', 'MA', 'LFR', 'AD', 'Our']
-    # indexNames = df_main[df_main['Baseline'] == 'FU' ].index
-    # df_main.drop(indexNames , inplace=True)
 
     tech_cat = pd.Categorical(df_main['Baseline'], categories=labels)    
     df_main = df_main.assign(Technique_x = tech_cat)
     
-    # dataset_order = ["Adult", "German", "Student", "Recidivism-ground", "Recidivism-score", "Default"]
     dataset_order = ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"]
     data_cat = pd.Categorical(df_main['Dataset'], categories=dataset_order)    
     df_main = df_main.assign(Dataset_x = data_cat)
@@ -280,7 +267,7 @@ def main(plot):
             theme_seaborn()
             )
     x = x.draw()
-    # import ipdb; ipdb.set_trace()
+
     x.set_figwidth(20)
     x.set_figheight(12)
     for ax in range(len(benchmarks)):
@@ -292,10 +279,9 @@ def main(plot):
             low_limit = -0.3
         x.axes[ax].set_ylim(low_limit, top_limit)
     # x.tight_layout()      # This didn't work
-    x.savefig("boxplot_discm_freeaxis_matplotlib.eps", format='eps', bbox_inches='tight')
-    x.savefig("boxplot_discm_freeaxis_matplotlib.png", bbox_inches='tight')
+    x.savefig("boxplots/boxplot_discm_freeaxis_matplotlib.eps", format='eps', bbox_inches='tight')
+    x.savefig("boxplots/boxplot_discm_freeaxis_matplotlib.png", bbox_inches='tight')
     
-    # exit(0)
     # x.save(f"boxplot_discm_freeaxis_matplotlib.png", height=8, width=18)
     # x.save(f"boxplot_discm_freeaxis_withoutfull.png", height=12, width=15)
     # x.save(f"boxplot_discm_fixedaxis.png", height=5, width=12)
@@ -318,13 +304,10 @@ def main(plot):
     for ax in range(len(benchmarks)):
         bot_limit = df_main[df_main['Dataset'] == f'D{ax+1}']['Test_acc'].min()
         top_limit = df_main[df_main['Dataset'] == f'D{ax+1}']['Test_acc'].max()
-        # if df_main[df_main['Dataset'] == f'D{ax+1}']['Test_acc'].min() > 20:
-        #     bot_limit = 20
         y.axes[ax].set_ylim(bot_limit - 1, top_limit + 2)
-        # y.axes[ax].set_ylim(-0.5, 102)
     # y.tight_layout()
-    y.savefig("boxplot_accuracy_freeaxis_matplotlib.eps", format='eps', bbox_inches='tight')
-    y.savefig("boxplot_accuracy_freeaxis_matplotlib.png", bbox_inches='tight')
+    y.savefig("boxplots/boxplot_accuracy_freeaxis_matplotlib.eps", format='eps', bbox_inches='tight')
+    y.savefig("boxplots/boxplot_accuracy_freeaxis_matplotlib.png", bbox_inches='tight')
 
 
 def real_accuracy_tables(debiased):
@@ -728,7 +711,7 @@ def parity_process_dfs(name, batches, df):
 
 def statistical_parity():
 
-    def parity_print(dataset, id_, kind):
+    def parity_print(dataset, id_, kind, plot=False):
         if kind:
             df1 = pd.read_csv(f"{dataset}/results_{dataset}_method1_fulltest.csv")
             df2 = pd.read_csv(f"{dataset}/results_{dataset}_method1.csv")
@@ -810,26 +793,17 @@ def statistical_parity():
         else:
             df_noremoval = parity_process_dfs("FULL", batches, pd.read_csv(f"{dataset}/results_{dataset}_noremoval.csv"))
 
-        # if kind:
-        #     df_noremoval = pd.read_csv(f"{dataset}/results_{dataset}_noremoval_fulltest.csv")
-        # else:
-        #     df_noremoval = pd.read_csv(f"{dataset}/results_{dataset}_noremoval.csv")
-        # assert len(df_noremoval['Model-count'].unique()) == 240 and df_noremoval['Model-count'].max() == 239 and df_noremoval['Model-count'].min() == 0
-        # df_noremoval = df_noremoval[['Model-count', 'Discm_percent', 'Test_acc', 'Class0_Pos', 'Class1_Pos']]
-        # df_noremoval['diff'] = abs(df_noremoval['Class0_Pos'] - df_noremoval['Class1_Pos'])
-        # df_noremoval['Techniques'] = "FULL"
-        # df_noremoval['Baseline'] = "FU"
-
         df_main = pd.concat([df_noremoval, df_nosensitive, df_massaging, df_ps, df_lfr, df_DIR, df_adver, df_our])
         try:
             assert(len(df_main) == 7*240 + 20)
         except:
             import ipdb; ipdb.set_trace()
         
-        return df_main
+        if plot:
+            return df_main
         min_difference = True
-        difference_for_max_accuracy = True
-        difference_for_min_discm = True
+        parity_difference_for_max_accuracy = True
+        parity_difference_for_min_discm = True
         discm_for_min_parity = True
         accuracy_for_min_parity = True
         precision = 1
@@ -851,7 +825,7 @@ def statistical_parity():
                 print_to_tex(a, 'min-parity-diff_debiasedtest.tex', dataset)
 
             
-        if difference_for_min_discm:
+        if parity_difference_for_min_discm:
             x = ' & '.join([f"{id_}",
             str(float(f"{df_noremoval.loc[df_noremoval['Discm_percent'] == df_noremoval['Discm_percent'].min()]['diff'].min():.{precision}e}")),
             str(float(f"{df_nosensitive.loc[df_nosensitive['Test_acc'] == df_nosensitive['Test_acc'].max()]['diff'].min():.{precision}e}")),
@@ -869,7 +843,7 @@ def statistical_parity():
                 print_to_tex(x, 'parity-diff-min-discm_debiasedtest.tex', dataset)
 
         
-        if difference_for_max_accuracy:
+        if parity_difference_for_max_accuracy:
             x = ' & '.join([f"{id_}",
             str(float(f"{df_noremoval.loc[df_noremoval['Test_acc'] == df_noremoval['Test_acc'].max()]['diff'].min():.{precision}e}")),
             str(float(f"{df_nosensitive.loc[df_nosensitive['Test_acc'] == df_nosensitive['Test_acc'].max()]['diff'].min():.{precision}e}")), 
@@ -916,12 +890,11 @@ def statistical_parity():
 
 
     benchmarks = ["adult", "adult_race", "german", "student", "compas-ground", "compas-score", "default", "salary"]
-    # benchmarks = ["adult", "adult_race", "student", "compas-ground", "compas-score", "salary"]
-    # benchmarks = ["german"]     #,"german", "student", "compas-ground", "compas-score", "default"]
-    kind = "full"   # or "debiased"
+
+    kind = "full"
     # kind = "debiased"
     df_main = None
-    plot = True
+    plot = False
     for dataset in benchmarks:
         if dataset == "adult":
             id_ = "D1"
@@ -942,14 +915,15 @@ def statistical_parity():
         else:
             raise NotImplementedError   
         if kind == "full":
-            df_onedataset = parity_print(dataset, id_, kind=True)
-            df_onedataset['Dataset'] = id_
-            if not df_main is None:
-                df_main = pd.concat([df_main, df_onedataset])
-            else:
-                df_main = copy.deepcopy(df_onedataset)
+            df_onedataset = parity_print(dataset, id_, kind=True, plot=plot)
+            if plot:
+                df_onedataset['Dataset'] = id_
+                if not df_main is None:
+                    df_main = pd.concat([df_main, df_onedataset])
+                else:
+                    df_main = copy.deepcopy(df_onedataset)
         elif kind == "debiased":
-            parity_print(dataset, id_, kind=False)
+            parity_print(dataset, id_, kind=False, plot=plot)
         print(f"Done {dataset}")
         
     if plot:
@@ -970,26 +944,27 @@ def statistical_parity():
         theme_seaborn()
         )
         x = x.draw()
-        # import ipdb; ipdb.set_trace()
         x.set_figwidth(20)
         x.set_figheight(12)
-        # for ax in range(len(benchmarks)):
-        #     low_limit = -0.05
-        #     top_limit = df_main[df_main['Dataset'] == f'D{ax+1}']['Discm_percent'].max()
-        #     if df_main[df_main['Dataset'] == f'D{ax+1}']['Discm_percent'].max() > 20:
-        #         top_limit = 20
-        #     if top_limit > 13:      # These hacks are for aligning the 0 at the bottom of the plots. 
-        #         low_limit = -0.3
-        #     x.axes[ax].set_ylim(low_limit, top_limit)
-        # x.tight_layout()      # This didn't work
-        x.savefig(f"boxplot_parity_freeaxis_matplotlib.png", bbox_inches='tight')
+        x.savefig(f"boxplots/boxplot_parity_freeaxis_matplotlib.png", bbox_inches='tight')
 
 
 
 if __name__ == "__main__":
-    main(int(sys.argv[1]))
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--discm_and_accuracy_plot", type=int, default=1,
+                        help="Want to plot or generate tables for accuracy and discrimination")
+    parser.add_argument("--parity", type=int, default=0,
+                        help="Want generate tables for statistical parity")
+    args = parser.parse_args()
+    
+    if args.discm_and_accuracy_plot == 0 or args.discm_and_accuracy_plot == 1:
+        main(args.discm_and_accuracy_plot)
+    if bool(args.parity):
+        statistical_parity()
+
     # real_accuracy_tables(True)
     # real_accuracy_tables(False)
     # fpr_fnr_rates()
-    # statistical_parity()
 
