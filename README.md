@@ -21,8 +21,8 @@ cd benchmarks
 python faceted_box_plots_all_datasets.py --plot=1
 ```
 
-
-## Generating pairs of similar individuals for a dataset (for example adult)
+## Replicating Experiments
+### Generating pairs of similar individuals for a dataset (for example adult)
 For generating pairs of similar individuals:
 ```bash
 cd random_fairness_test_generator
@@ -30,7 +30,7 @@ python adult_main.py
 ```
 For a new dataset, one can uncomment first function in adult_main.py to generate settings file for the dataset.
 
-## Running the approach for a dataset (for example adult)
+### Running the approach for a dataset (for example adult)
 If you want to train the model with model sequene "model_number", you should:
 
 ```bash
@@ -54,35 +54,35 @@ Next, run the following command to get the datapoints removed for minimum discri
 
 `python methodology1.py`
 
-## For other baselines
-### Full
+### For other baselines
+#### Full
 Flip the "full_test" flag to True and run. 
 ### Sensitive Removal
 Run
 
 `python train_all_permutations_nosensitive.py model_number` 
-### Disparate Impact Removed
+#### Disparate Impact Removed
 ```bash
 cd disparate_impact_removed
 python run_hyperparams_disparate_impact_remover.py model_number
 ```
-### Preferential sampling
+#### Preferential sampling
 ```bash
 cd preferential_sampling
 python train_preferential_sampling.py model_number
 ```
-### Massaging
+#### Massaging
 ```bash
 cd massaging
 python train_massage.py model_number
 ```
 Results will be accumulated in the same directory
-### Learning Fair Representations
+#### Learning Fair Representations
 ```bash
 cd learning_fair_representations
 python learning_fr.py model_number
 ```
-### Adversarial Debiasing
+#### Adversarial Debiasing
 ```bash
 cd adversarial_debiasing
 python adversarial_debiasing.py model_number
