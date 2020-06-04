@@ -2,11 +2,25 @@
 
 Dependencies:
 - Numpy/Scipy/Scikit-learn/Pandas
-- Tensorflow (tested on v1.1.0)
+- Tensorflow (tested on v1.13.1)
 - Keras (tested on v2.0.4)
-- Spacy (tested on v1.8.2)
-- h5py (tested on v2.7.0)
 - Matplotlib/Seaborn (for visualizations)
+- Plotnine (tested on v0.6.0)
+
+## Replication of tables and plots in the paper
+### Tables
+```bash
+cd benchmarks
+python faceted_box_plots_all_datasets.py --plot=0 --parity=1
+cd tables
+bash post-process.sh
+```
+### Plots
+```bash
+cd benchmarks
+python faceted_box_plots_all_datasets.py --plot=1
+```
+
 
 ## Generating pairs of similar individuals for a dataset (for example adult)
 For generating pairs of similar individuals:
