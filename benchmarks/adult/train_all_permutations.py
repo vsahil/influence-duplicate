@@ -36,9 +36,9 @@ train = bool(args.train)
 full_test = bool(args.full_baseline)
 debiased_test = bool(args.debiased_test)
 
-# if not train:       
-#     x = len(os.listdir('ranking_points_ordered_method1'))
-#     assert x == 240     # This is for checking that none of the model have failed to converge
+if not train:       
+    x = len(os.listdir('ranking_points_ordered_method1'))
+    assert x == 240     # This is for checking that none of the model have failed to converge
 
 input_dim = 12
 weight_decay = 0.001
