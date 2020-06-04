@@ -16,11 +16,21 @@ from sklearn.preprocessing import StandardScaler, MaxAbsScaler
 from sklearn.metrics import accuracy_score
 import tensorflow as tf
 import load_adult_income as load_file
+import argparse
 
-perm = int(sys.argv[1])
+parser = argparse.ArgumentParser()
+parser.add_argument("--debiased_test", type=int, default=1,
+                    help="Use debiased test for test accuracy")
+parser.add_argument("--permutation", type=int, default=0,
+                    help="Which model number to run (out of 240)")
+args = parser.parse_args()
+
+# perm = int(sys.argv[1])
+perm = args.permutation
 ordering = load_file.permutations(perm)
 biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult/adult_biased_points.npy")
-debiased_test = bool(int(sys.argv[2]))
+# debiased_test = bool(int(sys.argv[2]))
+debiased_test = bool(args.debiased_test)
 
 dataset_orig = MyAdultDataset(
     protected_attribute_names=['sex'],                   

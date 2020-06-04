@@ -17,6 +17,14 @@ from influence.fully_connected import Fully_Connected
 
 from load_adult_income import load_adult_income_nosensitive, load_adult_partial_method1
 from find_discm_points import entire_test_suite
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--debiased_test", type=int, default=1,
+                    help="Use debiased test for test accuracy")
+parser.add_argument("--model_number", type=int, default=0,
+                    help="Which model number to run (out of 240)")
+args = parser.parse_args()
 
 input_dim = 12 - 1
 weight_decay = 0.001
@@ -30,7 +38,8 @@ num_steps = 20000
 scheme = 8
 assert(scheme == 8)     # now always
 
-setting_now = int(sys.argv[1])
+# setting_now = int(sys.argv[1])
+setting_now = args.model_number
 
 def variation(setting_now):
     model_count = 0
@@ -53,7 +62,7 @@ hidden2_units = h2units
 hidden3_units = 0
 batch_size = batch
 damping = 3e-2
-debiased_test = True
+debiased_test = bool(args.debiased_test)
 
 data_sets = load_adult_income_nosensitive(perm, debiased_test=debiased_test)
 
