@@ -31,7 +31,8 @@ python faceted_box_plots_all_datasets.py --plot=1
 - random_fairness_test_generator directory contains the code for generation of pairs of similar individuals. We have not added that in the code because the files were huge.
 - For each dataset (six) we used, the raw input data along with pre-processing scripts are present in their respective dataset directories, e.g. : `adult-dataset`, `default-dataset` etc.
 - The code for using our approach in any experiment is inside the `benchmarks` directory. In the `benchmarks` directory, there are separate directories for each experiment, for eg. `adult`, `default` etc.
-- Each of the baselines are present as separate sub-directories inside respective experimental directories. For example, `adult/disparate_impact_removed`, `adult/preferential_sampling`, `adult/massaging`, `adult/learning_fair_representations`, and `adult/adversarial_debiasing`. Sensitive removal and full don't have a separate sub-directory. 
+- Each of the baselines are present as separate sub-directories inside respective experimental directories. For example, `adult/disparate_impact_removed`, `adult/preferential_sampling`, `adult/massaging`, `adult/learning_fair_representations`, and `adult/adversarial_debiasing`. Sensitive removal (SR) and Full don't have a separate sub-directory.
+- The results for our approach, SR and Full are generated in the experimental directory itself. The results for all other baselines are generated in their respective sub-directories.
 
 ## Replicating Experiments
 
@@ -88,8 +89,6 @@ python train_all_permutations.py --train=1 --full_baseline=1 --model_number=mode
 ```
 
 #### Sensitive Removal
-
-Run
 
 ```bash
 cd benchmarks/adult
