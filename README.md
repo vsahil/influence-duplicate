@@ -45,7 +45,7 @@ cd random_fairness_test_generator
 python adult_main.py
 ```
 
-For a new dataset, one can uncomment first function in adult_main.py to generate settings file for the dataset.
+For a new dataset, one can uncomment the first function in adult_main.py to generate settings file for the dataset.
 
 ### Running the approach for a dataset (for example adult)
 
