@@ -36,15 +36,18 @@ python3 faceted_box_plots_all_datasets.py --plot=1
 
 ## Replicating Experiments
 
-### Installing AIF360
+### Installing AIF360 for baselines
 
-Please clone AIF360 in the `competitors` directory.
+Please clone AIF360 in the `competitors` directory, and git reset to a particular commit. After that, replace the `dataset` sub-directory with `aif360datasets` directory. This will copy the changes we made to AIF360 to support all the datasets we used.
 
 ```bash
 mkdir competitors
+cd competitors
 git clone https://github.com/IBM/AIF360
 cd AIF360
+git reset --hard 10026100884ddb8620d88112c36619d6f65a4666
 pip3 install -r requirements.txt
+cp -r ../../../aif360datasets datasets
 ```
 
 ### Generating pairs of similar individuals for a dataset (for example adult)
