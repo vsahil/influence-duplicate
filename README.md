@@ -4,8 +4,10 @@ This is a modified clone of [Understanding Black-box Predictions via Influence F
 
 ## Dependencies
 
-Installation of dependencies: pip3 install -r requirement.txt
-
+Installation of dependencies:
+```bash
+pip3 install -r requirement.txt
+```
 
 ## Replication of tables and plots in the paper
 
