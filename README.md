@@ -86,12 +86,20 @@ cd benchmarks/adult
 bash check_parallel.py
 ```
 
-Next, run the following command to get the datapoints removed for minimum discrimination for each of the 240 settings.
+The "unfair" points in the dataset which is generated using `common_biased_points.py` which generates `dataset_biased_point.npy` file using the points removed for minimum discrimination. This is used to remove "unfair" points from the test set of a model, when measuring test accuracy.
+
+```bash
+cd benchmarks/adult
+python3 common_biased_points.py
+```
+
+Next, run the following command to get the datapoints removed for minimum discrimination for each of the 240 settings and the test accuracy of the model with "unfair" points removed.
 
 ```bash
 cd benchmarks/adult
 python3 methodology1.py
 ```
+
 
 ### For other baselines
 
