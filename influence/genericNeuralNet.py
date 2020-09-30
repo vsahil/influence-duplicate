@@ -435,7 +435,6 @@ class GenericNeuralNet(object):
 
 
     def find_discm_examples(self, class0_data, class1_data, print_file, scheme):
-        # import ipdb; ipdb.set_trace()
         length = class0_data.shape[0]
         assert length == class1_data.shape[0]
 
