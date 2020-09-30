@@ -13,21 +13,10 @@ import itertools
 import subprocess
 import random
 import math
-import causal
-import group
 import pandas as pd
 
 
 class soft:
-    causalDiscrimination = causal.causalDiscrimination
-    groupDiscrimination  = group.groupDiscrimination
-    ProcessCacheCausal   = causal.ProcessCacheCausal
-    ProcessCache         = group.ProcessCache
-    conf_zValue          = {80:1.28,  90:1.645,  95:1.96,  98:2.33,  99:2.58}
-
-    MaxSamples        = 1000
-    SamplingThreshold = MaxSamples * 10        # to remove the computation which you don't want, just remove this knob out of the picture of tunable parameters, set to a very high value 
-    cache             = {}
 
     def __init__(self, names, values, num, command, type_discm):
         self.attr_names = names
@@ -35,88 +24,6 @@ class soft:
         self.num = num
         self.type = type_discm
         self.command = command
-        self.causal_tests = []      # These tests are for a feature we are testing and are pairwise inputs (tests)
-    
-    
-    def getValues(self):
-        return self.values
-
-    
-    def getComand(self):
-        return self.command
-    
-    
-    def getAttributeNames(self):
-        return self.attr_names
-    
-    
-    # Get the number of values that a particular attribute can take
-    def getRange(self, attr_name):
-        for index,att_name in self.attr_names.iteritems():
-            if(att_name == attr_name):
-                return self.num[index]
-
-    
-	# Gets the different values a particular attribute can take
-    def getValues(self, attr_name):
-        for index,att_name in self.attr_names.iteritems():
-            if(att_name == attr_name):
-                return self.values[index]
-
-    
-    def printSoftwareDetails(self):
-        print("Number of attributes are ", len(self.attr_names),"\n")
-        i = 0
-        while i<len(self.attr_names):
-            print("Attribute name is ", self.attr_names[i])
-            print("Number of values taken by this attribute =", self.getRange(self.attr_names[i]))
-            print("The different values taken are ", self.getValues(self.attr_names[i]), "\n")
-            i += 1
-
-    
-    # Basically for each attribute generate a random value within its range
-    def randomInput(self, I, X, attr):
-        i = 0
-        inp = []
-        while i < len(I):
-            if i in X:
-                inp.append(attr[X.index(i)])
-            else:
-                inp.append(random.randint(0, I[i]-1))	# choose randomly
-            i += 1
-        return inp
-
-    
-    
-    
-    # def SoftwareTest(self, inp,num, values):
-    #     i=0
-    #     actual_inp = []
-    #     running_command = self.command
-        
-    #     while i < len(inp):
-    #         actual_inp.append(values[i][inp[i]])
-    #         running_command += " "
-    #         running_command += str(values[i][inp[i]])
-    #         i += 1
-        
-    #     rc = running_command.split()        # split into a list and send it
-    #     result = subprocess.check_output(rc)
-    #     result = result.decode("utf-8").rstrip()
-    #     # print(type(result), result, result == "0", result == "1")
-    #     return result == "1"
-        # return commands.getstatusoutput(running_command)[1] == "1"
-
-
-    def decodeValues(self, index, num, X):
-        attr=[]
-        copy = index
-        for x in X:
-            a = num[x]
-            attr.append(copy%a)
-            copy -= (copy%a)
-            copy = copy/a
-        return attr
 
 
     def SoftwareTest(self, inp, num, values):
@@ -142,7 +49,7 @@ class soft:
         return result, result[-1] == "1"
 
 
-    def randomInput_gender0(self, discm_feature):
+    def randomInput_class0(self, discm_feature):
         inp = []
         for i in range(len(self.attr_names)):
             if not i == discm_feature:
@@ -163,7 +70,7 @@ class soft:
             f.write("age,workclass,fnlwgt,education,marital-status,occupation,race,sex,capitalgain,capitalloss,hoursperweek,native-country\n")
         
         while True:
-            new = self.randomInput_gender0(feature)
+            new = self.randomInput_class0(feature)
             # if not new in discm_tests_gender0:      # its fine for 2 or more tests to be identical, we generate it randomly
             discm_tests_gender0.append(new)
             total += 1
@@ -214,7 +121,7 @@ class soft:
             f.write("age,workclass,fnlwgt,education,marital-status,occupation,race,sex,capitalgain,capitalloss,hoursperweek,native-country\n")
         
         while True:
-            new = self.randomInput_gender0(feature)
+            new = self.randomInput_class0(feature)
             # if not new in discm_tests_gender0:      # its fine for 2 or more tests to be identical, we generate it randomly
             discm_tests_gender0.append(new)
             total += 1
@@ -246,7 +153,6 @@ class soft:
         df['race'] = 1
         df.to_csv("race1_adult.csv", index=False)
 
-
     def single_feature_discm_salary(self, feature, theta, confidence, epsilon, type_discm):
         assert(isinstance(feature, int))
         assert(feature <= len(self.attr_names))
@@ -256,7 +162,7 @@ class soft:
             f.write("sex,rank,year,degree,Experience\n")
         
         while True:
-            new = self.randomInput_gender0(feature)
+            new = self.randomInput_class0(feature)
             discm_tests_gender0.append(new)
             total += 1
             # x = len(discm_tests_gender0)    
@@ -290,7 +196,7 @@ class soft:
             f.write("Checking-ccount,Months,Credit-history,Purpose,Credit-mount,Svings-ccount,Present-employment-since,Instllment-rte,Gender,Other-debtors,Present-residence-since,Property,ge,Other-instllment-plns,Housing,Number-of-existing-credits,Job,Number-of-people-being-lible,Telephone,Foreign-worker\n")
         
         while True:
-            new = self.randomInput_gender0(feature)
+            new = self.randomInput_class0(feature)
             # if not new in discm_tests_gender0:      # its fine for 2 or more tests to be identical, we generate it randomly
             discm_tests_gender0.append(new)
             total += 1
@@ -341,7 +247,7 @@ class soft:
             f.write("Income,Neighbor-income,Race\n")
         
         while True:
-            new = self.randomInput_gender0(feature)
+            new = self.randomInput_class0(feature)
             discm_tests_gender0.append(new)
             total += 1
 
@@ -372,7 +278,7 @@ class soft:
             f.write("sex,age,race,juv_fel_count,juv_misd_count,juv_other_count,priors_count,days_b_screening_arrest,c_days_from_compas,c_charge_degree\n")
         
         while True:
-            new = self.randomInput_gender0(feature)
+            new = self.randomInput_class0(feature)
             # if not new in discm_tests_gender0:      # its fine for 2 or more tests to be identical, we generate it randomly
             discm_tests_gender0.append(new)
             total += 1
@@ -412,7 +318,7 @@ class soft:
             # f.write("sex,age,race,juv_fel_count,decile_score,juv_misd_count,juv_other_count,priors_count,days_b_screening_arrest,c_days_from_compas,c_charge_degree,is_recid,is_violent_recid,decile_score.1,v_decile_score,priors_count.1,start,end,event\n")
         
         while True:
-            new = self.randomInput_gender0(feature)
+            new = self.randomInput_class0(feature)
             discm_tests_gender0.append(new)
             total += 1
             x = len(discm_tests_gender0) 
@@ -448,7 +354,7 @@ class soft:
             f.write("school,sex,age,address,famsize,Pstatus,Medu,Fedu,Mjob,Fjob,reason,guardian,traveltime,studytime,failures,schoolsup,famsup,paid,activities,nursery,higher,internet,romantic,famrel,freetime,goout,Dalc,Walc,health,absences,G1,G2\n")
         
         while True:
-            new = self.randomInput_gender0(feature)
+            new = self.randomInput_class0(feature)
             discm_tests_gender0.append(new)
             total += 1
             x = len(discm_tests_gender0) 
@@ -480,7 +386,7 @@ class soft:
             f.write("LIMIT_BAL,sex,EDUCATION,MARRIAGE,AGE,PAY_0,PAY_2,PAY_3,PAY_4,PAY_5,PAY_6,BILL_AMT1,BILL_AMT2,BILL_AMT3,BILL_AMT4,BILL_AMT5,BILL_AMT6,PAY_AMT1,PAY_AMT2,PAY_AMT3,PAY_AMT4,PAY_AMT5,PAY_AMT6\n")
         
         while True:
-            new = self.randomInput_gender0(feature)
+            new = self.randomInput_class0(feature)
             discm_tests_gender0.append(new)
             total += 1
             x = len(discm_tests_gender0) 
@@ -507,78 +413,3 @@ class soft:
             df['sex'] = 1
             df.to_csv("sex1_default.csv", index=False)
         
-
-    # theta is discrimination threshold
-    # epsilon is the error margin, with some confidence value. I want to keep max confidence and lowest error to generate a lot of tests.
-        
-    def discriminationSearch(self, theta, confidence, epsilon, type_discm):
-        Scausal=[]
-        if "causal" in type_discm and "group" in type_discm:
-            Scausal = self.discriminationSearch(theta, confidence, epsilon, "causal")
-		
-		# lst = []
-        # i = 0
-		# while i < len(self.attr_names):
-		#     lst.append(i)
-		#     i += 1
-		
-        lst = [i for i in range(len(self.attr_names))]
-		
-        i = 1
-        D = []
-		# iteratively generates subsets of 1, 2, 3 ... length upto the total number of attributes
-		# import ipdb; ipdb.set_trace()
-		
-        while i <= len(self.attr_names):
-            subsets = list(itertools.combinations(tuple(lst), i))
-            for X in subsets:
-                found = False
-                for d in D:         # this is using theorems 4.1 and 4.2 from the paper, if the subset is already there don't evaluate the superset
-                    if set(d) < set(list(X)):
-                        found = True
-                        break
-                if found:       # this found is for sound pruning
-                    continue
-                if "group" in type_discm:
-                    score = self.groupDiscrimination(list(X), confidence, epsilon)
-                elif "causal" in type_discm:
-                    score = self.causalDiscrimination(list(X), confidence, epsilon)
-                if score > theta:
-                    D.append(list(X))       # for each of group and causal if the score is greater then theta then append that list to D, this list can be later will be used for comparsion as well
-
-            i += 1
-		
-		# this just substitutes number in the dictionary for their attribute names
-        S = []
-        for d in D:
-            s = []
-            for att in d:
-                s.append(self.attr_names[att])
-            S.append(s)
-		# this is just for printing for the user on screen, which type of discrimination and how much
-	
-        if "group" in type_discm and "causal" in type_discm:
-            dict={"group":S, "causal":Scausal["causal"]}
-
-        elif "group" in type_discm:
-            dict={"group":S}
-
-        else:
-            dict={"causal":S}
-
-        return dict
-
-
-
-    def getTestSuite(self):
-        inp_lst = []
-        # print(self.values)
-        for inp, out in self.cache.iteritems():
-            curr = []
-            i = 0
-            while i < len(inp):
-                curr.append(self.values[i][inp[i]])
-                i += 1
-            inp_lst.append(curr)
-
-        return len(inp_lst)
