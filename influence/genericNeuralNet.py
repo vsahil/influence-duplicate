@@ -411,7 +411,7 @@ class GenericNeuralNet(object):
                 if step % 1000 == 0:
                     # Print status to stdout.
                     print('Step %d: loss = %.8f (%.3f sec)' % (step, loss_val, duration))
-                    print("Accuracies: ", self.print_model_eval())
+                    print("Accuracies: ", self.print_model_eval()[:2])
             else:
                 if step % 10000 == 0:
                     print(step)
@@ -456,7 +456,7 @@ class GenericNeuralNet(object):
         assert (predictions_class1_ == predictions_class1).all()    #"""This should hold"""
         
         # for german credit dataset
-        if "german" in self.model_name or "student" in self.model_name or "paper_example" in self.model_name:
+        if "german" in self.model_name or "student" in self.model_name or "paper_example" in self.model_name or "salary" in self.model_name:
             loss_class0_label_0 = loss_class0_label_0
             loss_class0_label_1 = loss_class0_label_1
             loss_class1_label_1 = loss_class1_label_1
@@ -661,7 +661,7 @@ class GenericNeuralNet(object):
     def loss_per_instance(self):
         ops = self.indiv_loss_no_reg
         loss_each_training_points = self.sess.run(ops, feed_dict=self.all_train_feed_dict)
-        if "german" in self.model_name or "student" in self.model_name or "paper_example" in self.model_name:
+        if "german" in self.model_name or "student" in self.model_name or "paper_example" in self.model_name or "salary" in self.model_name:
             return loss_each_training_points
 
         # for adult income
@@ -706,7 +706,7 @@ class GenericNeuralNet(object):
             loss_no_reg = tf.reduce_mean(xent, name='xentropy_mean')
         
         # for german credit dataset
-        elif "german" in self.model_name or "student" in self.model_name or "paper_example" in self.model_name:
+        elif "german" in self.model_name or "student" in self.model_name or "paper_example" in self.model_name or "salary" in self.model_name:
             indiv_loss_no_reg = cross_entropy
             loss_no_reg = tf.reduce_mean(cross_entropy, name='xentropy_mean')
 
