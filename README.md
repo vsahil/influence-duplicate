@@ -5,7 +5,7 @@ This code replicates the experiments from the following paper:
 > Pang Wei Koh and Percy Liang
 >
 > [Understanding Black-box Predictions via Influence Functions](https://arxiv.org/abs/1703.04730)
->
+
 > International Conference on Machine Learning (ICML), 2017.
 
 We have a reproducible, executable, and Dockerized version of these scripts on [Codalab](https://worksheets.codalab.org/worksheets/0x2b314dc3536b482dbba02783a24719fd/).
