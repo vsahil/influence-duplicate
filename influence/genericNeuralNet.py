@@ -141,8 +141,9 @@ class GenericNeuralNet(object):
     
         self.accuracy_op = self.get_accuracy_op(self.logits, self.labels_placeholder)
         self.confusion_matrix_op = self.get_confusion_matrix(self.logits, self.labels_placeholder)
-        self.preds = self.predictions(self.logits)
-
+        self.preds = self.predictions(self.logits)     # from the file fully_connected.py
+        self.probability = tf.nn.softmax(self.logits)
+        
         # summary
         tf.summary.scalar('loss_val', self.total_loss)
         tf.summary.scalar('train_acc', self.accuracy_op)
@@ -446,17 +447,37 @@ class GenericNeuralNet(object):
         feed_dict_class1_label0 = self.fill_feed_dict_manual(class1_data, l_zero)
         feed_dict_class1_label1 = self.fill_feed_dict_manual(class1_data, l_one)
         
-        ops = [self.preds, self.indiv_loss_no_reg]
+        ops = [self.logits, self.probability, self.preds, self.indiv_loss_no_reg]
         
-        predictions_class0_, loss_class0_label_0 = self.sess.run(ops, feed_dict=feed_dict_class0_label0)
-        predictions_class0, loss_class0_label_1 = self.sess.run(ops, feed_dict=feed_dict_class0_label1)
+        logits_class0_, prob0, predictions_class0_, loss_class0_label_0 = self.sess.run(ops, feed_dict=feed_dict_class0_label0)
+        logits_class0, prob1, predictions_class0, loss_class0_label_1 = self.sess.run(ops, feed_dict=feed_dict_class0_label1)
         assert (predictions_class0_ == predictions_class0).all()    #"""This should hold"""
-        predictions_class1_, loss_class1_label_0 = self.sess.run(ops, feed_dict=feed_dict_class1_label0)
-        predictions_class1, loss_class1_label_1 = self.sess.run(ops, feed_dict=feed_dict_class1_label1)
+        logits_class1_, prob2, predictions_class1_, loss_class1_label_0 = self.sess.run(ops, feed_dict=feed_dict_class1_label0)
+        logits_class0, prob3, predictions_class1, loss_class1_label_1 = self.sess.run(ops, feed_dict=feed_dict_class1_label1)
         assert (predictions_class1_ == predictions_class1).all()    #"""This should hold"""
+        assert (prob0 == prob1).all()
+        assert (prob2 == prob3).all()
+        
+        prob_outcome0 = np.amax(prob0, axis=1)      # probability of the outcome class
+        y = np.argmax(prob0, axis=1)
+        assert (prob0[np.arange(len(prob0)), y] == prob_outcome0).all()
+        prob_outcome1 = np.amax(prob2, axis=1)
+        y = np.argmax(prob2, axis=1)
+        assert (prob2[np.arange(len(prob2)), y] == prob_outcome1).all()
+
+        prob_class0_label0 = prob0[:, 0]
+        prob_class0_label1 = prob0[:, 1]
+        prob_class1_label0 = prob2[:, 0]
+        prob_class1_label1 = prob2[:, 1]
+        avg_label0 = prob_class0_label0 + prob_class1_label0
+        avg_label1 = prob_class0_label1 + prob_class1_label1
+        assert prob_class0_label0.shape == prob_class0_label1.shape == prob_class1_label0.shape == prob_class1_label1.shape == avg_label0.shape == avg_label1.shape
+        assert (np.rint(avg_label0 + avg_label1) == 2).all()
+        # labels calculated using avg probability
+        labels_prob = list(map(lambda x: 0 if x[0] > x[1] else 1, zip(avg_label0, avg_label1)))
         
         # for german credit dataset
-        if "german" in self.model_name or "student" in self.model_name or "paper_example" in self.model_name:
+        if "german" in self.model_name or "student" in self.model_name or "salary" in self.model_name or "paper_example" in self.model_name:
             loss_class0_label_0 = loss_class0_label_0
             loss_class0_label_1 = loss_class0_label_1
             loss_class1_label_1 = loss_class1_label_1
@@ -485,6 +506,12 @@ class GenericNeuralNet(object):
         idx = np.where(predictions_class0 != predictions_class1)[0]
         discm_class0 = class0_data[idx]     # so discm_class0, discm_class1 are the vectors that only
         discm_class1 = class1_data[idx]     # differ in sensitive attribute
+        labels_prob = np.array(labels_prob)
+        labels_prob = labels_prob[idx].tolist()
+        prob_outcome0 = prob_outcome0[idx]
+        prob_outcome1 = prob_outcome1[idx]
+        higher_prob = list(map(lambda x: 0 if x[0] > x[1] else 1, zip(prob_outcome0, prob_outcome1)))
+
         write = False
         if write:
             with open("discriminating_tests_german.csv", "w") as f:
@@ -506,6 +533,9 @@ class GenericNeuralNet(object):
         lower_loss = list(map(lambda x: x[1] if x[0] > x[1] else x[0], zip(zero_labels_loss, ones_labels_loss)))
         
         desired_labels = list(map(lambda x: 1 if x[0] > x[1] else 0, zip(zero_labels_loss, ones_labels_loss)))  # label the pair with the one that produces lower loss
+        # labels calculated using avg probability is the same as ones calculated using lower loss. 
+        # And this is also same as the point which has higher probability margin from the threshold. 
+        assert desired_labels == labels_prob == higher_prob
         actual_predictions = list(map(lambda x: 0 if x == 1 else 1, desired_labels))      # """Just the inverse of desired_labels. This is by definition of causal/individual discrimination"""
 
         # assert(scheme == 8)
@@ -706,7 +736,7 @@ class GenericNeuralNet(object):
             loss_no_reg = tf.reduce_mean(xent, name='xentropy_mean')
         
         # for german credit dataset
-        elif "german" in self.model_name or "student" in self.model_name or "paper_example" in self.model_name:
+        elif "german" in self.model_name or "student" in self.model_name or "salary" in self.model_name or "paper_example" in self.model_name:
             indiv_loss_no_reg = cross_entropy
             loss_no_reg = tf.reduce_mean(cross_entropy, name='xentropy_mean')
 
