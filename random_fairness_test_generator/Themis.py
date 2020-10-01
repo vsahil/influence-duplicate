@@ -150,16 +150,9 @@ class soft:
             discm_tests_gender0.append(new)
             total += 1
             x = len(discm_tests_gender0) 
-            # if x == 1000000:
-            # # if x == self.MaxSamples:
-            #     print(total, "hello")
-            #     with open("gender0_adult.csv", "a") as f:
-            #         for i in discm_tests_gender0:
-            #             f.write(str(i)[1:-1].replace(" ", "") + "\n")
-            #     discm_tests_gender0 = []
             
             if total == 45222 * 100:
-                for i in discm_tests_gender0:
+                for cnt, i in enumerate(discm_tests_gender0):
                     for prt in range(10):     # each datapoint get printed 10 times
                         similar_inp = self.find_val_within_range(i, feature, 1)
                         with open(file1, "a") as f2:
@@ -167,6 +160,8 @@ class soft:
                     for prt in range(10):     # each datapoint get printed 10 times
                         with open(file0, "a") as f1:
                             f1.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                    if cnt % 100 == 0:
+                        print(cnt, "done")
                 break
             
             if total % 100 == 0:
@@ -244,7 +239,7 @@ class soft:
             x = len(discm_tests_gender0) 
             
             if total == 43131 * 100:
-                for i in discm_tests_gender0:
+                for cnt, i in enumerate(discm_tests_gender0):
                     for prt in range(10):     # each datapoint get printed 10 times
                         similar_inp = self.find_val_within_range(i, feature, 1)
                         with open(file1, "a") as f2:
@@ -252,6 +247,8 @@ class soft:
                     for prt in range(10):     # each datapoint get printed 10 times
                         with open(file0, "a") as f1:
                             f1.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                    if cnt % 100 == 0:
+                        print(cnt, "done")
                 break
             
             if total % 100 == 0:
@@ -396,12 +393,6 @@ class soft:
             discm_tests_gender0.append(new)
             total += 1
             x = len(discm_tests_gender0) 
-            # if x == 10000:
-            #     print(total, "hello")
-            #     with open("gender0_german.csv", "a") as f:
-            #         for i in discm_tests_gender0:
-            #             f.write(str(i)[1:-1].replace(" ", "") + "\n")
-            #     discm_tests_gender0 = []
             
             if total == 100000:
                 for cnt, i in enumerate(discm_tests_gender0):
@@ -694,12 +685,6 @@ class soft:
             discm_tests_gender0.append(new)
             total += 1
             x = len(discm_tests_gender0) 
-            # if x == 1000000:
-            #     print(total, "hello")
-            #     with open("sex0_default.csv", "a") as f:
-            #         for i in discm_tests_gender0:
-            #             f.write(str(i)[1:-1].replace(" ", "") + "\n")
-            #     discm_tests_gender0 = []
             
             if total == 3000000:
                 for cnt, i in enumerate(discm_tests_gender0):
