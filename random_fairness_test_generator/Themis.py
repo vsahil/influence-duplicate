@@ -13,110 +13,18 @@ import itertools
 import subprocess
 import random
 import math
-import causal
-import group
 import pandas as pd
 
 
 class soft:
-    causalDiscrimination = causal.causalDiscrimination
-    groupDiscrimination  = group.groupDiscrimination
-    ProcessCacheCausal   = causal.ProcessCacheCausal
-    ProcessCache         = group.ProcessCache
-    conf_zValue          = {80:1.28,  90:1.645,  95:1.96,  98:2.33,  99:2.58}
 
-    MaxSamples        = 1000
-    SamplingThreshold = MaxSamples * 10        # to remove the computation which you don't want, just remove this knob out of the picture of tunable parameters, set to a very high value 
-    cache             = {}
-
-    def __init__(self, names, values, num, command, type_discm):
+    def __init__(self, names, values, num, command, type_discm, magnt_similar_range):
         self.attr_names = names
         self.values = values
         self.num = num
         self.type = type_discm
         self.command = command
-        self.causal_tests = []      # These tests are for a feature we are testing and are pairwise inputs (tests)
-    
-    
-    def getValues(self):
-        return self.values
-
-    
-    def getComand(self):
-        return self.command
-    
-    
-    def getAttributeNames(self):
-        return self.attr_names
-    
-    
-    # Get the number of values that a particular attribute can take
-    def getRange(self, attr_name):
-        for index,att_name in self.attr_names.iteritems():
-            if(att_name == attr_name):
-                return self.num[index]
-
-    
-	# Gets the different values a particular attribute can take
-    def getValues(self, attr_name):
-        for index,att_name in self.attr_names.iteritems():
-            if(att_name == attr_name):
-                return self.values[index]
-
-    
-    def printSoftwareDetails(self):
-        print("Number of attributes are ", len(self.attr_names),"\n")
-        i = 0
-        while i<len(self.attr_names):
-            print("Attribute name is ", self.attr_names[i])
-            print("Number of values taken by this attribute =", self.getRange(self.attr_names[i]))
-            print("The different values taken are ", self.getValues(self.attr_names[i]), "\n")
-            i += 1
-
-    
-    # Basically for each attribute generate a random value within its range
-    def randomInput(self, I, X, attr):
-        i = 0
-        inp = []
-        while i < len(I):
-            if i in X:
-                inp.append(attr[X.index(i)])
-            else:
-                inp.append(random.randint(0, I[i]-1))	# choose randomly
-            i += 1
-        return inp
-
-    
-    
-    
-    # def SoftwareTest(self, inp,num, values):
-    #     i=0
-    #     actual_inp = []
-    #     running_command = self.command
-        
-    #     while i < len(inp):
-    #         actual_inp.append(values[i][inp[i]])
-    #         running_command += " "
-    #         running_command += str(values[i][inp[i]])
-    #         i += 1
-        
-    #     rc = running_command.split()        # split into a list and send it
-    #     result = subprocess.check_output(rc)
-    #     result = result.decode("utf-8").rstrip()
-    #     # print(type(result), result, result == "0", result == "1")
-    #     return result == "1"
-        # return commands.getstatusoutput(running_command)[1] == "1"
-
-
-    def decodeValues(self, index, num, X):
-        attr=[]
-        copy = index
-        for x in X:
-            a = num[x]
-            attr.append(copy%a)
-            copy -= (copy%a)
-            copy = copy/a
-        return attr
+        self.magnt_similar_range = magnt_similar_range
 
 
     def SoftwareTest(self, inp, num, values):
@@ -142,7 +50,7 @@ class soft:
         return result, result[-1] == "1"
 
 
-    def randomInput_gender0(self, discm_feature):
+    def randomInput_class0(self, discm_feature):
         inp = []
         for i in range(len(self.attr_names)):
             if not i == discm_feature:
@@ -152,6 +60,36 @@ class soft:
         return inp
 
 
+    def find_val_within_range(self, inp1, discm_feature, discm_feature_value, times):
+        inputs = []
+        # import ipdb; ipdb.set_trace()
+        min_xs = []
+        max_xs = []
+        for sim in range(times):
+            inp2 = []
+            for i in range(len(self.attr_names)):
+                if not i == discm_feature:
+                    lower_vl = inp1[i] - self.magnt_similar_range[i]
+                    if sim == 0:
+                        x = [int(some) for some in self.values[i]]
+                        min_xs.append(min(x))
+                        max_xs.append(max(x))
+                    if lower_vl < min_xs[i]:
+                        lower_vl = min_xs[i]
+                    upper_vl = inp1[i] + self.magnt_similar_range[i]
+                    if upper_vl > max_xs[i]:
+                        upper_vl = max_xs[i]
+                    inp2.append(round(random.uniform(lower_vl, upper_vl)))
+                else:
+                    if sim == 0:
+                        x = [int(some) for some in self.values[i]]
+                        min_xs.append(min(x))
+                        max_xs.append(max(x))
+                    inp2.append(discm_feature_value)       # this is for gender == 0
+            inputs.append(inp2)
+        return inputs
+
+    
     def single_feature_discm_adult(self, feature, theta, confidence, epsilon, type_discm):
         assert(isinstance(feature, int))
         assert(feature <= len(self.attr_names))
@@ -163,7 +101,7 @@ class soft:
             f.write("age,workclass,fnlwgt,education,marital-status,occupation,race,sex,capitalgain,capitalloss,hoursperweek,native-country\n")
         
         while True:
-            new = self.randomInput_gender0(feature)
+            new = self.randomInput_class0(feature)
             # if not new in discm_tests_gender0:      # its fine for 2 or more tests to be identical, we generate it randomly
             discm_tests_gender0.append(new)
             total += 1
@@ -203,6 +141,201 @@ class soft:
             # print("Discriminates against: ", self.attr_names[feature])
 
 
+    def single_feature_discm_adult_dist(self, feature, theta, confidence, epsilon, type_discm):
+        assert(isinstance(feature, int))
+        assert(feature <= len(self.attr_names))
+        # score = self.causalDiscrimination([feature], confidence, epsilon)
+        # print("No. of discriminating tests: ", len(self.causal_tests), "Score: ", score)
+        discm_tests_gender0 = []
+        total = 0
+        file0 = "gender0_adult_dist10.csv"
+        file1 = "gender1_adult_dist10.csv"
+        with open(file0, "w") as f:
+            f.write("age,workclass,fnlwgt,education,marital-status,occupation,race,sex,capitalgain,capitalloss,hoursperweek,native-country\n")
+        with open(file1, "w") as f:
+            f.write("age,workclass,fnlwgt,education,marital-status,occupation,race,sex,capitalgain,capitalloss,hoursperweek,native-country\n")            
+        
+        while True:
+            new = self.randomInput_class0(feature)
+            # if not new in discm_tests_gender0:      # its fine for 2 or more tests to be identical, we generate it randomly
+            discm_tests_gender0.append(new)
+            total += 1
+            x = len(discm_tests_gender0) 
+            
+            if total == 45222 * 100:
+                for cnt, i in enumerate(discm_tests_gender0):
+                    for prt in range(10):     # each datapoint get printed 10 times
+                        similar_inp = self.find_val_within_range(i, feature, 1)
+                        with open(file1, "a") as f2:
+                            f2.write(str(similar_inp)[1:-1].replace(" ", "") + "\n")       # remove space
+                    for prt in range(10):     # each datapoint get printed 10 times
+                        with open(file0, "a") as f1:
+                            f1.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                    if cnt % 100 == 0:
+                        print(cnt, "done")
+                break
+            
+            if total % 100 == 0:
+                print(total, "done")
+
+        df = pd.read_csv(file0)
+        assert df['sex'].unique() == 0
+        df = pd.read_csv(file1)
+        assert df['sex'].unique() == 1
+
+
+    def single_feature_discm_adult_race(self, feature, theta, confidence, epsilon, type_discm):
+        assert(isinstance(feature, int))
+        assert(feature <= len(self.attr_names))
+        # score = self.causalDiscrimination([feature], confidence, epsilon)
+        # print("No. of discriminating tests: ", len(self.causal_tests), "Score: ", score)
+        discm_tests_gender0 = []
+        total = 0
+        with open("race0_adult.csv", "a") as f:
+            f.write("age,workclass,fnlwgt,education,marital-status,occupation,race,sex,capitalgain,capitalloss,hoursperweek,native-country\n")
+        
+        while True:
+            new = self.randomInput_class0(feature)
+            # if not new in discm_tests_gender0:      # its fine for 2 or more tests to be identical, we generate it randomly
+            discm_tests_gender0.append(new)
+            total += 1
+            x = len(discm_tests_gender0) 
+            if x == 100000:
+            # if x == self.MaxSamples:
+                print(total, "hello")
+                with open("race0_adult.csv", "a") as f:
+                    for i in discm_tests_gender0:
+                        f.write(str(i)[1:-1].replace(" ", "") + "\n")
+                discm_tests_gender0 = []
+            
+            if total == 43131*100:
+            # if total == self.MaxSamples:                
+                with open("race0_adult.csv", "a") as f:
+                    for i in discm_tests_gender0:
+                        f.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                break
+
+        # check if any tests are duplicated:
+        df = pd.read_csv("race0_adult.csv")
+        x = df.duplicated()
+        print(x.any(), "see duplication")     # if this is False, we are all good.
+        # np.where(x) # if this is an empty list we are good, For adult we are good.
+        
+        # This generates same examples for the other gender
+        
+        # df = pd.read_csv("gender0_adult.csv")
+        df['race'] = 1
+        df.to_csv("race1_adult.csv", index=False)
+
+    
+    def single_feature_discm_adult_race_dist(self, feature, theta, confidence, epsilon, type_discm):
+        assert(isinstance(feature, int))
+        assert(feature <= len(self.attr_names))
+        # score = self.causalDiscrimination([feature], confidence, epsilon)
+        # print("No. of discriminating tests: ", len(self.causal_tests), "Score: ", score)
+        discm_tests_gender0 = []
+        total = 0
+        file0 = "race0_adult_dist10.csv"
+        file1 = "race1_adult_dist10.csv"
+        with open(file0, "w") as f:
+            f.write("age,workclass,fnlwgt,education,marital-status,occupation,race,sex,capitalgain,capitalloss,hoursperweek,native-country\n")
+        with open(file1, "w") as f:
+            f.write("age,workclass,fnlwgt,education,marital-status,occupation,race,sex,capitalgain,capitalloss,hoursperweek,native-country\n")            
+        
+        while True:
+            new = self.randomInput_class0(feature)
+            # if not new in discm_tests_gender0:      # its fine for 2 or more tests to be identical, we generate it randomly
+            discm_tests_gender0.append(new)
+            total += 1
+            x = len(discm_tests_gender0) 
+            
+            if total == 43131 * 100:
+                for cnt, i in enumerate(discm_tests_gender0):
+                    for prt in range(10):     # each datapoint get printed 10 times
+                        similar_inp = self.find_val_within_range(i, feature, 1)
+                        with open(file1, "a") as f2:
+                            f2.write(str(similar_inp)[1:-1].replace(" ", "") + "\n")       # remove space
+                    for prt in range(10):     # each datapoint get printed 10 times
+                        with open(file0, "a") as f1:
+                            f1.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                    if cnt % 100 == 0:
+                        print(cnt, "done")
+                break
+            
+            if total % 100 == 0:
+                print(total, "done")
+
+        df = pd.read_csv(file0)
+        assert df['race'].unique() == 0
+        df = pd.read_csv(file1)
+        assert df['race'].unique() == 1
+
+
+    def single_feature_discm_salary(self, feature, theta, confidence, epsilon, type_discm):
+        assert(isinstance(feature, int))
+        assert(feature <= len(self.attr_names))
+        discm_tests_gender0 = []
+        total = 0
+        with open("sex0_salary.csv", "a") as f:
+            f.write("sex,rank,year,degree,Experience\n")
+        
+        while True:
+            new = self.randomInput_class0(feature)
+            discm_tests_gender0.append(new)
+            total += 1
+            # x = len(discm_tests_gender0)    
+            if total == 52*100:             
+                with open("sex0_salary.csv", "a") as f:
+                    for i in discm_tests_gender0:
+                        f.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                break
+
+        # check if any tests are duplicated:
+        df = pd.read_csv("sex0_salary.csv")
+        x = df.duplicated()
+        print(x.any(), "see duplication")     # if this is False, we are all good.
+        # np.where(x) # if this is an empty list we are good, For adult we are good.
+
+        # This generates same examples for the other class
+
+        # df = pd.read_csv("gender0_adult.csv")
+        df['sex'] = 1
+        df.to_csv("sex1_salary.csv", index=False)    
+
+
+    def single_feature_discm_salary_dist(self, feature, theta, confidence, epsilon, type_discm):
+        assert(isinstance(feature, int))
+        assert(feature <= len(self.attr_names))
+        discm_tests_gender0 = []
+        total = 0
+        file0 = "sex0_salary_dist10.csv"
+        file1 = "sex1_salary_dist10.csv"
+        with open(file0, "w") as f:
+            f.write("sex,rank,year,degree,Experience\n")
+        with open(file1, "w") as f:
+            f.write("sex,rank,year,degree,Experience\n")
+
+        while True:
+            new = self.randomInput_class0(feature)     # random sample one datapoint
+            discm_tests_gender0.append(new)
+            total += 1
+            if total == 52 * 100:
+                for i in discm_tests_gender0:
+                    for prt in range(10):     # each datapoint get printed 10 times
+                        similar_inp = self.find_val_within_range(i, feature, 1)
+                        with open(file1, "a") as f2:
+                            f2.write(str(similar_inp)[1:-1].replace(" ", "") + "\n")       # remove space
+                    for prt in range(10):     # each datapoint get printed 10 times
+                        with open(file0, "a") as f1:
+                            f1.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                break
+
+        df = pd.read_csv(file0)
+        assert df['sex'].unique() == 0
+        df = pd.read_csv(file1)
+        assert df['sex'].unique() == 1
+
+
     def single_feature_discm_german(self, feature, theta, confidence, epsilon, type_discm):
         assert(isinstance(feature, int))
         assert(feature <= len(self.attr_names))     # feature is the sensitive feature
@@ -214,7 +347,7 @@ class soft:
             f.write("Checking-ccount,Months,Credit-history,Purpose,Credit-mount,Svings-ccount,Present-employment-since,Instllment-rte,Gender,Other-debtors,Present-residence-since,Property,ge,Other-instllment-plns,Housing,Number-of-existing-credits,Job,Number-of-people-being-lible,Telephone,Foreign-worker\n")
         
         while True:
-            new = self.randomInput_gender0(feature)
+            new = self.randomInput_class0(feature)
             # if not new in discm_tests_gender0:      # its fine for 2 or more tests to be identical, we generate it randomly
             discm_tests_gender0.append(new)
             total += 1
@@ -254,6 +387,53 @@ class soft:
             # print("Discriminates against: ", self.attr_names[feature])
 
 
+    def single_feature_discm_german_dist(self, feature, theta, confidence, epsilon, type_discm):
+        assert(isinstance(feature, int))
+        assert(feature <= len(self.attr_names))     # feature is the sensitive feature
+        discm_tests_gender0 = []
+        total = 0
+        file0 = "gender0_german_dist10.csv"
+        file1 = "gender1_german_dist10.csv"
+        with open(file0, "w") as f:
+            f.write("Checking-ccount,Months,Credit-history,Purpose,Credit-mount,Svings-ccount,Present-employment-since,Instllment-rte,Gender,Other-debtors,Present-residence-since,Property,ge,Other-instllment-plns,Housing,Number-of-existing-credits,Job,Number-of-people-being-lible,Telephone,Foreign-worker\n")
+        with open(file1, "w") as f:
+            f.write("Checking-ccount,Months,Credit-history,Purpose,Credit-mount,Svings-ccount,Present-employment-since,Instllment-rte,Gender,Other-debtors,Present-residence-since,Property,ge,Other-instllment-plns,Housing,Number-of-existing-credits,Job,Number-of-people-being-lible,Telephone,Foreign-worker\n")
+            
+        while True:
+            new = self.randomInput_class0(feature)
+            discm_tests_gender0.append(new)
+            total += 1
+            x = len(discm_tests_gender0) 
+            
+            if total == 100000:
+                # import ipdb; ipdb.set_trace()
+                similars = []
+                for cnt, i in enumerate(discm_tests_gender0):
+                    # for _ in range(10):     # each datapoint get printed 10 times
+                    similar_inputs = self.find_val_within_range(i, feature, 1, 10)
+                    for sims in similar_inputs:    
+                        similars.append(sims)
+                    if cnt % 100 == 0:
+                        print(cnt, "done")
+                
+                assert len(similars) == 10 * len(discm_tests_gender0)
+                with open(file1, "a") as f2:
+                    for prt in similars:
+                        f2.write(str(prt)[1:-1].replace(" ", "") + "\n")       # remove space
+                
+                with open(file0, "a") as f1:
+                    for cnt, i in enumerate(discm_tests_gender0):
+                        for _ in range(10):     # each datapoint get printed 10 times
+                            f1.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+
+                break
+
+        df = pd.read_csv(file0)
+        assert df['Gender'].unique() == 0
+        df = pd.read_csv(file1)
+        assert df['Gender'].unique() == 1
+
+
     def single_feature_discm_small_dataset(self, feature, theta, confidence, epsilon, type_discm):
         assert(isinstance(feature, int))
         assert(feature <= len(self.attr_names))
@@ -265,11 +445,11 @@ class soft:
             f.write("Income,Neighbor-income,Race\n")
         
         while True:
-            new = self.randomInput_gender0(feature)
+            new = self.randomInput_class0(feature)
             discm_tests_gender0.append(new)
             total += 1
 
-            if total == 1000:              
+            if total == 700:              
                 with open("race0_biased_smalldataset.csv", "a") as f:
                     for i in discm_tests_gender0:
                         f.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
@@ -296,7 +476,7 @@ class soft:
             f.write("sex,age,race,juv_fel_count,juv_misd_count,juv_other_count,priors_count,days_b_screening_arrest,c_days_from_compas,c_charge_degree\n")
         
         while True:
-            new = self.randomInput_gender0(feature)
+            new = self.randomInput_class0(feature)
             # if not new in discm_tests_gender0:      # its fine for 2 or more tests to be identical, we generate it randomly
             discm_tests_gender0.append(new)
             total += 1
@@ -336,21 +516,22 @@ class soft:
             # f.write("sex,age,race,juv_fel_count,decile_score,juv_misd_count,juv_other_count,priors_count,days_b_screening_arrest,c_days_from_compas,c_charge_degree,is_recid,is_violent_recid,decile_score.1,v_decile_score,priors_count.1,start,end,event\n")
         
         while True:
-            new = self.randomInput_gender0(feature)
+            new = self.randomInput_class0(feature)
             discm_tests_gender0.append(new)
             total += 1
             x = len(discm_tests_gender0) 
             
-            if x % 10000 == 0:            
+            if total == 615000:
                 with open("race0_compas_two_year.csv", "a") as f:
                     for i in discm_tests_gender0:
                         f.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
-                discm_tests_gender0 = []
+                # discm_tests_gender0 = []
                 print(total, "done")
-            
-            if total == 1000000:
-                assert(x % 10000 == 0)
                 break
+            
+            # if total == 615000:
+            #     assert(x % 10000 == 0)
+            #     break
 
         # check if any tests are duplicated:
         df = pd.read_csv("race0_compas_two_year.csv")
@@ -362,6 +543,43 @@ class soft:
         df.to_csv("race1_compas_two_year.csv", index=False)
         
     
+    def single_feature_discm_compas_two_year_dist(self, feature, theta, confidence, epsilon, type_discm):
+        assert(isinstance(feature, int))
+        assert(feature <= len(self.attr_names))
+        discm_tests_gender0 = []
+        total = 0
+        file0 = "race0_compas_two_year_dist10.csv"
+        file1 = "race1_compas_two_year_dist10.csv"
+        with open(file0, "w") as f:
+            f.write("age,sex,race,diff_custody,diff_jail,priors_count,juv_fel_count,juv_misd_count,juv_other_count,c_charge_degree\n")
+        with open(file1, "w") as f:
+            f.write("age,sex,race,diff_custody,diff_jail,priors_count,juv_fel_count,juv_misd_count,juv_other_count,c_charge_degree\n")
+        
+        while True:
+            new = self.randomInput_class0(feature)
+            discm_tests_gender0.append(new)
+            total += 1
+            x = len(discm_tests_gender0) 
+            
+            if total == 615000:
+                for cnt, i in enumerate(discm_tests_gender0):
+                    for prt in range(10):     # each datapoint get printed 10 times
+                        similar_inp = self.find_val_within_range(i, feature, 1)
+                        with open(file1, "a") as f2:
+                            f2.write(str(similar_inp)[1:-1].replace(" ", "") + "\n")       # remove space
+                    for prt in range(10):     # each datapoint get printed 10 times
+                        with open(file0, "a") as f1:
+                            f1.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                    if cnt % 100 == 0:
+                        print(cnt, "done")
+                break
+
+        df = pd.read_csv(file0)
+        assert df['race'].unique() == 0
+        df = pd.read_csv(file1)
+        assert df['race'].unique() == 1
+
+
     def single_feature_discm_student(self, feature, theta, confidence, epsilon, type_discm):
         assert(isinstance(feature, int))
         assert(feature <= len(self.attr_names))
@@ -371,12 +589,12 @@ class soft:
             f.write("school,sex,age,address,famsize,Pstatus,Medu,Fedu,Mjob,Fjob,reason,guardian,traveltime,studytime,failures,schoolsup,famsup,paid,activities,nursery,higher,internet,romantic,famrel,freetime,goout,Dalc,Walc,health,absences,G1,G2\n")
         
         while True:
-            new = self.randomInput_gender0(feature)
+            new = self.randomInput_class0(feature)
             discm_tests_gender0.append(new)
             total += 1
             x = len(discm_tests_gender0) 
             
-            if total == 100000:            
+            if total == 64900: 
                 with open("sex0_student.csv", "a") as f:
                     for i in discm_tests_gender0:
                         f.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
@@ -392,6 +610,44 @@ class soft:
             df.to_csv("sex1_student.csv", index=False)
         
 
+    def single_feature_discm_student_dist(self, feature, theta, confidence, epsilon, type_discm):
+        assert(isinstance(feature, int))
+        assert(feature <= len(self.attr_names))
+        discm_tests_gender0 = []
+        total = 0
+        file0 = "sex0_student_dist10.csv"
+        file1 = "sex1_student_dist10.csv"
+        with open(file0, "w") as f:
+            f.write("school,sex,age,address,famsize,Pstatus,Medu,Fedu,Mjob,Fjob,reason,guardian,traveltime,studytime,failures,schoolsup,famsup,paid,activities,nursery,higher,internet,romantic,famrel,freetime,goout,Dalc,Walc,health,absences,G1,G2\n")
+        with open(file1, "w") as f:
+            f.write("school,sex,age,address,famsize,Pstatus,Medu,Fedu,Mjob,Fjob,reason,guardian,traveltime,studytime,failures,schoolsup,famsup,paid,activities,nursery,higher,internet,romantic,famrel,freetime,goout,Dalc,Walc,health,absences,G1,G2\n")
+
+        while True:
+            new = self.randomInput_class0(feature)
+            discm_tests_gender0.append(new)
+            total += 1
+            x = len(discm_tests_gender0) 
+            
+            if total == 64900: 
+                for i in discm_tests_gender0:
+                    for prt in range(10):     # each datapoint get printed 10 times
+                        similar_inp = self.find_val_within_range(i, feature, 1)
+                        with open(file1, "a") as f2:
+                            f2.write(str(similar_inp)[1:-1].replace(" ", "") + "\n")       # remove space
+                    for prt in range(10):     # each datapoint get printed 10 times
+                        with open(file0, "a") as f1:
+                            f1.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                break
+            
+            if total % 100 == 0:
+                print(total, "done")
+
+        df = pd.read_csv(file0)
+        assert df['sex'].unique() == 0
+        df = pd.read_csv(file1)
+        assert df['sex'].unique() == 1
+
+
     def single_feature_discm_default(self, feature, theta, confidence, epsilon, type_discm):
         assert(isinstance(feature, int))
         assert(feature <= len(self.attr_names))
@@ -403,7 +659,7 @@ class soft:
             f.write("LIMIT_BAL,sex,EDUCATION,MARRIAGE,AGE,PAY_0,PAY_2,PAY_3,PAY_4,PAY_5,PAY_6,BILL_AMT1,BILL_AMT2,BILL_AMT3,BILL_AMT4,BILL_AMT5,BILL_AMT6,PAY_AMT1,PAY_AMT2,PAY_AMT3,PAY_AMT4,PAY_AMT5,PAY_AMT6\n")
         
         while True:
-            new = self.randomInput_gender0(feature)
+            new = self.randomInput_class0(feature)
             discm_tests_gender0.append(new)
             total += 1
             x = len(discm_tests_gender0) 
@@ -431,77 +687,40 @@ class soft:
             df.to_csv("sex1_default.csv", index=False)
         
 
-    # theta is discrimination threshold
-    # epsilon is the error margin, with some confidence value. I want to keep max confidence and lowest error to generate a lot of tests.
+    def single_feature_discm_default_dist(self, feature, theta, confidence, epsilon, type_discm):
+        assert(isinstance(feature, int))
+        assert(feature <= len(self.attr_names))
+        # score = self.causalDiscrimination([feature], confidence, epsilon)
+        # print("No. of discriminating tests: ", len(self.causal_tests), "Score: ", score)
+        discm_tests_gender0 = []
+        total = 0
+        file0 = "sex0_default_dist10.csv"
+        file1 = "sex1_default_dist10.csv"
+        with open(file0, "w") as f:
+            f.write("LIMIT_BAL,sex,EDUCATION,MARRIAGE,AGE,PAY_0,PAY_2,PAY_3,PAY_4,PAY_5,PAY_6,BILL_AMT1,BILL_AMT2,BILL_AMT3,BILL_AMT4,BILL_AMT5,BILL_AMT6,PAY_AMT1,PAY_AMT2,PAY_AMT3,PAY_AMT4,PAY_AMT5,PAY_AMT6\n")
+        with open(file1, "w") as f:
+            f.write("LIMIT_BAL,sex,EDUCATION,MARRIAGE,AGE,PAY_0,PAY_2,PAY_3,PAY_4,PAY_5,PAY_6,BILL_AMT1,BILL_AMT2,BILL_AMT3,BILL_AMT4,BILL_AMT5,BILL_AMT6,PAY_AMT1,PAY_AMT2,PAY_AMT3,PAY_AMT4,PAY_AMT5,PAY_AMT6\n")
         
-    def discriminationSearch(self, theta, confidence, epsilon, type_discm):
-        Scausal=[]
-        if "causal" in type_discm and "group" in type_discm:
-            Scausal = self.discriminationSearch(theta, confidence, epsilon, "causal")
-		
-		# lst = []
-        # i = 0
-		# while i < len(self.attr_names):
-		#     lst.append(i)
-		#     i += 1
-		
-        lst = [i for i in range(len(self.attr_names))]
-		
-        i = 1
-        D = []
-		# iteratively generates subsets of 1, 2, 3 ... length upto the total number of attributes
-		# import ipdb; ipdb.set_trace()
-		
-        while i <= len(self.attr_names):
-            subsets = list(itertools.combinations(tuple(lst), i))
-            for X in subsets:
-                found = False
-                for d in D:         # this is using theorems 4.1 and 4.2 from the paper, if the subset is already there don't evaluate the superset
-                    if set(d) < set(list(X)):
-                        found = True
-                        break
-                if found:       # this found is for sound pruning
-                    continue
-                if "group" in type_discm:
-                    score = self.groupDiscrimination(list(X), confidence, epsilon)
-                elif "causal" in type_discm:
-                    score = self.causalDiscrimination(list(X), confidence, epsilon)
-                if score > theta:
-                    D.append(list(X))       # for each of group and causal if the score is greater then theta then append that list to D, this list can be later will be used for comparsion as well
+        while True:
+            new = self.randomInput_class0(feature)
+            discm_tests_gender0.append(new)
+            total += 1
+            x = len(discm_tests_gender0) 
+            
+            if total == 3000000:
+                for cnt, i in enumerate(discm_tests_gender0):
+                    for prt in range(10):     # each datapoint get printed 10 times
+                        similar_inp = self.find_val_within_range(i, feature, 1)
+                        with open(file1, "a") as f2:
+                            f2.write(str(similar_inp)[1:-1].replace(" ", "") + "\n")       # remove space
+                    for prt in range(10):     # each datapoint get printed 10 times
+                        with open(file0, "a") as f1:
+                            f1.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                    if cnt % 100 == 0:
+                        print(cnt, "done")
+                break
 
-            i += 1
-		
-		# this just substitutes number in the dictionary for their attribute names
-        S = []
-        for d in D:
-            s = []
-            for att in d:
-                s.append(self.attr_names[att])
-            S.append(s)
-		# this is just for printing for the user on screen, which type of discrimination and how much
-	
-        if "group" in type_discm and "causal" in type_discm:
-            dict={"group":S, "causal":Scausal["causal"]}
-
-        elif "group" in type_discm:
-            dict={"group":S}
-
-        else:
-            dict={"causal":S}
-
-        return dict
-
-
-
-    def getTestSuite(self):
-        inp_lst = []
-        # print(self.values)
-        for inp, out in self.cache.iteritems():
-            curr = []
-            i = 0
-            while i < len(inp):
-                curr.append(self.values[i][inp[i]])
-                i += 1
-            inp_lst.append(curr)
-
-        return len(inp_lst)
+        df = pd.read_csv(file0)
+        assert df['sex'].unique() == 0
+        df = pd.read_csv(file1)
+        assert df['sex'].unique() == 1

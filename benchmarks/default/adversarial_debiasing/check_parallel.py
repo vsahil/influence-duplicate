@@ -1,12 +1,15 @@
 import sys, os
 import multiprocessing
+from itertools import product
 
-def run_command(setting):
-    os.system(f"python adversarial_debiasing.py {setting}")
+def run_command(setting, debiased):
+    os.system(f"python adversarial_debiasing.py {setting} {debiased}")
 
-pool = multiprocessing.Pool(4)
+pool = multiprocessing.Pool(20)
 l = [i for i in range(20)]
-mr = pool.map_async(run_command, l)
+debiased = [0, 1]
+mr = pool.starmap_async(run_command, product(l, debiased))
+# mr = pool.map_async(run_command, l)
 while not mr.ready():
     sys.stdout.flush()
     mr.wait(0.1)

@@ -8,8 +8,8 @@ number of input characteristics: 23
 7 PAY_2 categorical -2,-1,0,1,2,3,4,5,6,7,8
 8 PAY_3 categorical -2,-1,0,1,2,3,4,5,6,7,8
 9 PAY_4 categorical -2,-1,0,1,2,3,4,5,6,7,8
-10 PAY_5 continuousInt -2,8
-11 PAY_6 continuousInt -2,8
+10 PAY_5 categorical -2,-1,0,1,2,3,4,5,6,7,8
+11 PAY_6 categorical -2,-1,0,1,2,3,4,5,6,7,8
 12 BILL_AMT1 continuousInt -165580,964511
 13 BILL_AMT2 continuousInt -69777,983931
 14 BILL_AMT3 continuousInt -157264,1664089

@@ -10,14 +10,39 @@ num_attributes = -1
 names = {}
 type_discm = {}
 values = {}
+magnt_similar_range = {}      # magnitude of the value of the similar values for each feature
+percentage_similardist = 10
 num_values = {}
 count = 0
 nums = -1
 
+# def create_setting():
+#     import pandas as pd
+#     df = pd.read_csv("../adult-dataset/raw_default.csv")
+#     target = df['target']
+#     df = df.drop(columns=['target'])
+#     cols = df.columns.tolist()
+#     print(f"number of input characteristics: {len(cols)}")
+#     for k, i in enumerate(cols):
+#         mn = df[i].min()
+#         mx = df[i].max()
+#         uni = df[i].unique()
+#         if not len(uni) == mx - mn + 1:
+#             tp = "continuousInt"
+#             l = [mn, mx]
+#             print(k + 1, i, tp, str(l)[1:-1].replace(" ", ""))
+#         else:
+#             tp = "categorical"
+#             print(k + 1, i, tp, str(sorted(list(uni)))[1:-1].replace(" ", ""))
+#     print("command: python .py")
+#     exit(0)
+# create_setting()
+
+
 # read the settings file
 # import ipdb; ipdb.set_trace()
 for line in f:
-    count = count + 1	
+    count = count + 1
     line = line.strip()
     if count == 1:
         line = line.split(':')      # finds the number of features for this dataset
@@ -41,6 +66,7 @@ for line in f:
         if line[2] == "categorical":
             values[attr_no] = line[3].split(",")
             num_values[attr_no] = len(values[attr_no])
+            magnt_similar_range[attr_no] = 0        # no change allowed for categorical features
         
         elif line[2] == "continuousInt":
             start = int(line[3].split(",")[0])
@@ -49,9 +75,12 @@ for line in f:
             value_lst = []
             value_lst = [i for i in range(start, end+1)]
             values[attr_no] = value_lst
+            magnt_similar_range[attr_no] = (end - start) * percentage_similardist / 100
+            assert magnt_similar_range[attr_no] > 0
 
-# print(names, values, num_values, command, type_discm)
+# print(names, values, num_values, command, type_discm, magnt_similar_range)
 # exit(0)
 # print(names)
-soft = Themis.soft(names, values, num_values, command, type_discm)
-soft.single_feature_discm_adult(7, 0.3, 0.99, 0.01, "causal")     # 9th feature is gender
+soft = Themis.soft(names, values, num_values, command, type_discm, magnt_similar_range)
+# soft.single_feature_discm_adult(7, 0.3, 0.99, 0.01, "causal")     # 9th feature is sex
+soft.single_feature_discm_adult_dist(7, 0.3, 0.99, 0.01, "causal")     # 9th feature is sex
