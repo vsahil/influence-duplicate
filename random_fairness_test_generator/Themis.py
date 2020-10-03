@@ -562,17 +562,27 @@ class soft:
             x = len(discm_tests_gender0) 
             
             if total == 615000:
+                similars = []
                 for cnt, i in enumerate(discm_tests_gender0):
-                    for prt in range(10):     # each datapoint get printed 10 times
-                        similar_inp = self.find_val_within_range(i, feature, 1)
-                        with open(file1, "a") as f2:
-                            f2.write(str(similar_inp)[1:-1].replace(" ", "") + "\n")       # remove space
-                    for prt in range(10):     # each datapoint get printed 10 times
-                        with open(file0, "a") as f1:
-                            f1.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                    # for _ in range(10):     # each datapoint get printed 10 times
+                    similar_inputs = self.find_val_within_range(i, feature, 1, 10)
+                    for sims in similar_inputs:    
+                        similars.append(sims)
                     if cnt % 100 == 0:
                         print(cnt, "done")
+                
+                assert len(similars) == 10 * len(discm_tests_gender0)
+                with open(file1, "a") as f2:
+                    for prt in similars:
+                        f2.write(str(prt)[1:-1].replace(" ", "") + "\n")       # remove space
+                
+                with open(file0, "a") as f1:
+                    for cnt, i in enumerate(discm_tests_gender0):
+                        for _ in range(10):     # each datapoint get printed 10 times
+                            f1.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+
                 break
+
 
         df = pd.read_csv(file0)
         assert df['race'].unique() == 0
