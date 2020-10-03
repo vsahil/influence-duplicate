@@ -23,9 +23,11 @@ def rescale_input_numpy_disparateremoved_german(inp, mins_and_ranges):
     return out
 
 
-def entire_test_suite(mini=True, disparateremoved=False, mins_and_ranges=None):
-    gender0 = "gender0_redone_german"
-    gender1 = "gender1_redone_german"
+def entire_test_suite(mini=True, disparateremoved=False, mins_and_ranges=None, sensitive_removed=False):
+    # gender0 = "gender0_redone_german"
+    # gender1 = "gender1_redone_german"
+    gender0 = "gender0_german_dist10"
+    gender1 = "gender1_german_dist10"
     if mini:
         assert False
         gender0 += "_mini"
@@ -33,9 +35,14 @@ def entire_test_suite(mini=True, disparateremoved=False, mins_and_ranges=None):
     df0 = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-dataset/{gender0}.csv")
     df1 = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../german-dataset/{gender1}.csv")
 
-    assert(df0.shape == df1.shape == (100000, 20))
+    if "dist10" in gender0:
+        assert(df0.shape == df1.shape == (1000000, 20))
+    else:
+        assert(df0.shape == df1.shape == (100000, 20))
+
     assert(not df0.equals(df1))
-    assert(df0.drop('Gender', axis=1).equals(df1.drop('Gender', axis=1)))     # after dropping sex they should be equal dataframe
+    if not "dist10" in gender0:
+        assert(df0.drop('Gender', axis=1).equals(df1.drop('Gender', axis=1)))     # after dropping sex they should be equal dataframe
 
     class0_ = df0.to_numpy(dtype=np.float64)
     class1_ = df1.to_numpy(dtype=np.float64)
@@ -47,5 +54,10 @@ def entire_test_suite(mini=True, disparateremoved=False, mins_and_ranges=None):
         assert mins_and_ranges == None
         class0 = rescale_input_numpy(class0_)
         class1 = rescale_input_numpy(class1_)
+        if sensitive_removed:
+            assert df0.columns.get_loc("Gender") == df1.columns.get_loc("Gender")
+            sensitive_col = df0.columns.get_loc("Gender")
+            class0 = np.delete(class0, sensitive_col, axis=1)
+            class1 = np.delete(class1, sensitive_col, axis=1)
 
     return class0, class1
