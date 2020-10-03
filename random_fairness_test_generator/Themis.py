@@ -7,7 +7,7 @@
 # Target 4: integrate this with the trained model for german credit dataset.
 
 
-import sys
+import sys, copy
 import itertools
 # import commands
 import subprocess
@@ -25,6 +25,7 @@ class soft:
         self.type = type_discm
         self.command = command
         self.magnt_similar_range = magnt_similar_range
+        self.dist_similarity_test_times = 2
 
 
     def SoftwareTest(self, inp, num, values):
@@ -69,27 +70,72 @@ class soft:
             inp2 = []
             for i in range(len(self.attr_names)):
                 if not i == discm_feature:
-                    lower_vl = inp1[i] - self.magnt_similar_range[i]
-                    if sim == 0:
-                        x = [int(some) for some in self.values[i]]
-                        min_xs.append(min(x))
-                        max_xs.append(max(x))
-                    if lower_vl < min_xs[i]:
-                        lower_vl = min_xs[i]
-                    upper_vl = inp1[i] + self.magnt_similar_range[i]
-                    if upper_vl > max_xs[i]:
-                        upper_vl = max_xs[i]
-                    inp2.append(round(random.uniform(lower_vl, upper_vl)))
+                    if self.magnt_similar_range[i] > 0:
+                        lower_vl = inp1[i] - self.magnt_similar_range[i]
+                        if sim == 0:
+                            # x = [int(some) for some in self.values[i]]
+                            min_xs.append(self.values[i][0])       # for continous features they are always sorted
+                            max_xs.append(self.values[i][-1])
+                        if lower_vl < min_xs[i]:
+                            lower_vl = min_xs[i]
+                        upper_vl = inp1[i] + self.magnt_similar_range[i]
+                        if upper_vl > max_xs[i]:
+                            upper_vl = max_xs[i]
+                        inp2.append(round(random.uniform(lower_vl, upper_vl)))
+                    else:
+                        if sim == 0:
+                            min_xs.append(0)       
+                            max_xs.append(1)        # values don't matter here
+                        inp2.append(inp1[i])
                 else:
                     if sim == 0:
-                        x = [int(some) for some in self.values[i]]
-                        min_xs.append(min(x))
-                        max_xs.append(max(x))
+                        # x = [int(some) for some in self.values[i]]
+                        min_xs.append(0)
+                        max_xs.append(1)
                     inp2.append(discm_feature_value)       # this is for gender == 0
             inputs.append(inp2)
         return inputs
 
-    
+
+    def find_val_within_range_adult(self, inp1, discm_feature, discm_feature_value, times):
+        inputs = []
+        # import ipdb; ipdb.set_trace()
+        numerical = 2
+        lower_vl = inp1[numerical] - self.magnt_similar_range[numerical]
+        if lower_vl < int(self.values[numerical][0]):
+            lower_vl = int(self.values[numerical][0])
+        upper_vl = inp1[numerical] + self.magnt_similar_range[numerical]
+        if upper_vl > int(self.values[numerical][-1]):
+            upper_vl = int(self.values[numerical][-1])
+
+        for sim in range(times):
+            inp2 = copy.deepcopy(inp1)
+            inp2[discm_feature] = discm_feature_value
+            inp2[numerical] = round(random.uniform(lower_vl, upper_vl))
+
+            # for i in range(len(self.attr_names)):
+            #     if not i == discm_feature:
+            #         lower_vl = inp1[i] - self.magnt_similar_range[i]
+            #         if sim == 0:
+            #             x = [int(some) for some in self.values[i]]
+            #             min_xs.append(min(x))
+            #             max_xs.append(max(x))
+            #         if lower_vl < min_xs[i]:
+            #             lower_vl = min_xs[i]
+            #         upper_vl = inp1[i] + self.magnt_similar_range[i]
+            #         if upper_vl > max_xs[i]:
+            #             upper_vl = max_xs[i]
+            #         inp2.append(round(random.uniform(lower_vl, upper_vl)))
+            #     else:
+            #         if sim == 0:
+            #             x = [int(some) for some in self.values[i]]
+            #             min_xs.append(min(x))
+            #             max_xs.append(max(x))
+            #         inp2.append(discm_feature_value)       # this is for gender == 0
+            inputs.append(inp2)
+        return inputs
+
+
     def single_feature_discm_adult(self, feature, theta, confidence, epsilon, type_discm):
         assert(isinstance(feature, int))
         assert(feature <= len(self.attr_names))
@@ -163,17 +209,27 @@ class soft:
             x = len(discm_tests_gender0) 
             
             if total == 45222 * 100:
+                similars = []
                 for cnt, i in enumerate(discm_tests_gender0):
-                    for prt in range(10):     # each datapoint get printed 10 times
-                        similar_inp = self.find_val_within_range(i, feature, 1)
-                        with open(file1, "a") as f2:
-                            f2.write(str(similar_inp)[1:-1].replace(" ", "") + "\n")       # remove space
-                    for prt in range(10):     # each datapoint get printed 10 times
-                        with open(file0, "a") as f1:
-                            f1.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                    # for _ in range(10):     # each datapoint get printed 10 times
+                    similar_inputs = self.find_val_within_range_adult(i, feature, 1, self.dist_similarity_test_times)
+                    for sims in similar_inputs:    
+                        similars.append(sims)
                     if cnt % 100 == 0:
                         print(cnt, "done")
+                
+                assert len(similars) == self.dist_similarity_test_times * len(discm_tests_gender0)
+                with open(file1, "a") as f2:
+                    for prt in similars:
+                        f2.write(str(prt)[1:-1].replace(" ", "") + "\n")       # remove space
+                
+                with open(file0, "a") as f1:
+                    for cnt, i in enumerate(discm_tests_gender0):
+                        for _ in range(self.dist_similarity_test_times):     # each datapoint get printed 10 times
+                            f1.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+
                 break
+
             
             if total % 100 == 0:
                 print(total, "done")
@@ -250,20 +306,28 @@ class soft:
             x = len(discm_tests_gender0) 
             
             if total == 43131 * 100:
+                similars = []
                 for cnt, i in enumerate(discm_tests_gender0):
-                    for prt in range(10):     # each datapoint get printed 10 times
-                        similar_inp = self.find_val_within_range(i, feature, 1)
-                        with open(file1, "a") as f2:
-                            f2.write(str(similar_inp)[1:-1].replace(" ", "") + "\n")       # remove space
-                    for prt in range(10):     # each datapoint get printed 10 times
-                        with open(file0, "a") as f1:
-                            f1.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                    similar_inputs = self.find_val_within_range_adult(i, feature, 1, self.dist_similarity_test_times)
+                    for sims in similar_inputs:    
+                        similars.append(sims)
                     if cnt % 100 == 0:
                         print(cnt, "done")
+                
+                assert len(similars) == self.dist_similarity_test_times * len(discm_tests_gender0)
+                with open(file1, "a") as f2:
+                    for prt in similars:
+                        f2.write(str(prt)[1:-1].replace(" ", "") + "\n")       # remove space
+                
+                with open(file0, "a") as f1:
+                    for cnt, i in enumerate(discm_tests_gender0):
+                        for _ in range(10):     # each datapoint get printed 10 times
+                            f1.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+
                 break
             
             if total % 100 == 0:
-                print(total, "done")
+                print(total, "doing")
 
         df = pd.read_csv(file0)
         assert df['race'].unique() == 0
@@ -406,7 +470,6 @@ class soft:
             x = len(discm_tests_gender0) 
             
             if total == 100000:
-                # import ipdb; ipdb.set_trace()
                 similars = []
                 for cnt, i in enumerate(discm_tests_gender0):
                     # for _ in range(10):     # each datapoint get printed 10 times
@@ -562,17 +625,27 @@ class soft:
             x = len(discm_tests_gender0) 
             
             if total == 615000:
+                similars = []
                 for cnt, i in enumerate(discm_tests_gender0):
-                    for prt in range(10):     # each datapoint get printed 10 times
-                        similar_inp = self.find_val_within_range(i, feature, 1)
-                        with open(file1, "a") as f2:
-                            f2.write(str(similar_inp)[1:-1].replace(" ", "") + "\n")       # remove space
-                    for prt in range(10):     # each datapoint get printed 10 times
-                        with open(file0, "a") as f1:
-                            f1.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                    # for _ in range(10):     # each datapoint get printed 10 times
+                    similar_inputs = self.find_val_within_range(i, feature, 1, 10)
+                    for sims in similar_inputs:    
+                        similars.append(sims)
                     if cnt % 100 == 0:
                         print(cnt, "done")
+                
+                assert len(similars) == 10 * len(discm_tests_gender0)
+                with open(file1, "a") as f2:
+                    for prt in similars:
+                        f2.write(str(prt)[1:-1].replace(" ", "") + "\n")       # remove space
+                
+                with open(file0, "a") as f1:
+                    for cnt, i in enumerate(discm_tests_gender0):
+                        for _ in range(10):     # each datapoint get printed 10 times
+                            f1.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+
                 break
+
 
         df = pd.read_csv(file0)
         assert df['race'].unique() == 0
@@ -708,17 +781,29 @@ class soft:
             x = len(discm_tests_gender0) 
             
             if total == 3000000:
+                similars = []
                 for cnt, i in enumerate(discm_tests_gender0):
-                    for prt in range(10):     # each datapoint get printed 10 times
-                        similar_inp = self.find_val_within_range(i, feature, 1)
-                        with open(file1, "a") as f2:
-                            f2.write(str(similar_inp)[1:-1].replace(" ", "") + "\n")       # remove space
-                    for prt in range(10):     # each datapoint get printed 10 times
-                        with open(file0, "a") as f1:
-                            f1.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                    # for _ in range(10):     # each datapoint get printed 10 times
+                    similar_inputs = self.find_val_within_range(i, feature, 1, 2)
+                    for sims in similar_inputs:    
+                        similars.append(sims)
                     if cnt % 100 == 0:
                         print(cnt, "done")
+                
+                assert len(similars) == 2 * len(discm_tests_gender0)
+                with open(file1, "a") as f2:
+                    for prt in similars:
+                        f2.write(str(prt)[1:-1].replace(" ", "") + "\n")       # remove space
+                
+                with open(file0, "a") as f1:
+                    for cnt, i in enumerate(discm_tests_gender0):
+                        for _ in range(self.dist_similarity_test_times):     # each datapoint get printed 10 times
+                            f1.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+
                 break
+            
+            if total % 1000 == 0:
+                print(total, "doing")
 
         df = pd.read_csv(file0)
         assert df['sex'].unique() == 0
