@@ -49,7 +49,7 @@ hidden2_units = h2units
 hidden3_units = 0
 batch_size = batch
 damping = 3e-2
-debiased_test = False
+debiased_test = bool(int(sys.argv[2]))
 
 dataset_orig = SalaryDataset(
     protected_attribute_names=['sex'],                   
@@ -72,7 +72,7 @@ new_df = dataset_transf_train.convert_to_dataframe()[0]
 train_labels = new_df['salary'].to_numpy()
 train_features = new_df.drop(columns=['salary']).to_numpy()
 
-from load_salary import load_fair_representations
+from load_salary import load_fair_representations, dist
 from find_discm_points import entire_test_suite
 
 data_sets = load_fair_representations(perm, train_features, train_labels, debiased_test=debiased_test)
@@ -162,8 +162,8 @@ print("Discrimination:", num_dicsm)
 size = class0_data.shape[0]/100
 dataset = "salary"
 if debiased_test:
-    with open(f"results_lfr_{dataset}.csv", "a") as f:
+    with open(f"results_lfr_{dataset}_dist{dist}.csv", "a") as f:
         print(f"{model_count},{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{num_dicsm},{num_dicsm/size}", file=f)
 else:
-    with open(f"results_lfr_{dataset}_fulltest.csv", "a") as f:
+    with open(f"results_lfr_{dataset}_fulltest_dist{dist}.csv", "a") as f:
         print(f"{model_count},{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{num_dicsm},{num_dicsm/size}", file=f)    
