@@ -10,7 +10,7 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 import influence.experiments as experiments
 from influence.fully_connected import Fully_Connected
 
-from load_compas_score_as_labels import disparate_removed_load_compas
+from load_compas_score_as_labels import disparate_removed_load_compas, dist
 from find_discm_points import entire_test_suite
 
 real_accuracy = True
@@ -115,23 +115,8 @@ size = class0_data.shape[0]/100
 dataset = "compas-score"
 
 if debiased_test:
-    with open(f"results_disparate_removed_{dataset}.csv", "a") as f:
+    with open(f"results_disparate_removed_{dataset}_dist{dist}.csv", "a") as f:
         print(f"{model_count},{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{num_dicsm},{num_dicsm/size}", file=f)
 else:
-    with open(f"results_disparate_removed_{dataset}_fulltest.csv", "a") as f:
+    with open(f"results_disparate_removed_{dataset}_fulltest_dist{dist}.csv", "a") as f:
         print(f"{model_count},{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{num_dicsm},{num_dicsm/size}", file=f)
-
-
-# print("Discrimination:", num_dicsm)
-# size = class0_data.shape[0]/100
-# if not real_accuracy:
-#     with open("results_disparate_removed_compas-score.csv", "a") as f:
-#         print(f'{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{num_dicsm},{num_dicsm/size}', file=f)
-# if real_accuracy:
-#     if debiased_real_accuracy:
-#         with open("results_disparate_removed_compas-score_real_accuracy_debiased.csv", "a") as f:
-#             print(f'{model_count},{h1units},{h2units},{batch},{perm},{test_acc}', file=f)
-#     else:
-#         with open("results_disparate_removed_compas-score_real_accuracy_full.csv", "a") as f:
-#             print(f'{model_count},{h1units},{h2units},{batch},{perm},{test_acc}', file=f)
-

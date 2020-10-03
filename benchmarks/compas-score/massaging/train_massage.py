@@ -10,7 +10,7 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 import influence.experiments as experiments
 from influence.fully_connected import Fully_Connected
 
-from load_compas_score_as_labels import before_massaging_dataset, massaged_dataset
+from load_compas_score_as_labels import before_massaging_dataset, massaged_dataset, dist
 from find_discm_points import entire_test_suite
 
 real_accuracy = False
@@ -150,23 +150,8 @@ print("Discrimination:", num_dicsm, "pairs_to_flip", pairs_to_flip)
 size = class0_data.shape[0]/100
 dataset = "compas-score"
 if debiased_test:
-    with open(f"results_massaged_{dataset}.csv", "a") as f:
+    with open(f"results_massaged_{dataset}_dist{dist}.csv", "a") as f:
         print(f"{model_count},{h1units},{h2units},{batch},{perm},{pairs_to_flip},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{num_dicsm},{num_dicsm/size}", file=f)
 else:
-    with open(f"results_massaged_{dataset}_fulltest.csv", "a") as f:
+    with open(f"results_massaged_{dataset}_fulltest_dist{dist}.csv", "a") as f:
         print(f"{model_count},{h1units},{h2units},{batch},{perm},{pairs_to_flip},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{num_dicsm},{num_dicsm/size}", file=f)    
-
-
-# print("Discrimination:", num_dicsm, "pairs_to_flip", pairs_to_flip)
-# size = class0_data.shape[0]/100
-# dataset = "compas-score"
-# if not real_accuracy:
-#     with open(f"results_massaged_{dataset}.csv", "a") as f:
-#         print(f'{h1units},{h2units},{batch},{perm},{pairs_to_flip},{train_acc},{test_acc},{fpr},{fnr},{num_dicsm},{num_dicsm/size}', file=f)
-# else:
-#     if debiased_real_accuracy:
-#         with open(f"results_massaged_{dataset}_real_accuracy_debiased.csv", "a") as f:
-#             print(f'{model_count},{h1units},{h2units},{batch},{perm},{test_acc}', file=f)
-#     else:
-#         with open(f"results_massaged_{dataset}_real_accuracy_full.csv", "a") as f:
-#             print(f'{model_count},{h1units},{h2units},{batch},{perm},{test_acc}', file=f)

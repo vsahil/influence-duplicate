@@ -10,7 +10,7 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 import influence.experiments as experiments
 from influence.fully_connected import Fully_Connected
 
-from load_student import disparate_removed_load_student
+from load_student import disparate_removed_load_student, dist
 from find_discm_points import entire_test_suite
 
 input_dim = 32
@@ -48,7 +48,7 @@ hidden2_units = h2units
 hidden3_units = 0
 batch_size = batch
 damping = 8e-2
-debiased_test = False
+debiased_test = bool(int(sys.argv[2]))
 
 data_sets, mins_and_ranges = disparate_removed_load_student(perm = perm, debiased_test=debiased_test)
 
@@ -112,14 +112,9 @@ size = class0_data.shape[0]/100
 dataset = "student"
 
 if debiased_test:
-    with open(f"results_disparate_removed_{dataset}.csv", "a") as f:
+    with open(f"results_disparate_removed_{dataset}_dist{dist}.csv", "a") as f:
         print(f"{model_count},{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{num_dicsm},{num_dicsm/size}", file=f)
 else:
-    with open(f"results_disparate_removed_{dataset}_fulltest.csv", "a") as f:
+    with open(f"results_disparate_removed_{dataset}_fulltest_dist{dist}.csv", "a") as f:
         print(f"{model_count},{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{num_dicsm},{num_dicsm/size}", file=f)
-
-# print("Discrimination:", num_dicsm)
-# size = class0_data.shape[0]/100
-# with open("results_disparate_removed_student.csv", "a") as f:
-#     print(f'{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{num_dicsm},{num_dicsm/size}', file=f)
 
