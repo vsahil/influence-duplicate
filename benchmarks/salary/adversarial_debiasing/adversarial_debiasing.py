@@ -20,7 +20,7 @@ dist = load_file.dist
 
 perm = int(sys.argv[1])
 ordering = load_file.permutations(perm)
-biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/../../salary/salary_biased_points.npy")
+biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/../../salary/salary_biased_points_dist{dist}.npy")
 debiased_test = bool(int(sys.argv[2]))
 
 dataset_orig = SalaryDataset(
