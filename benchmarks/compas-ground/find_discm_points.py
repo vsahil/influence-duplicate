@@ -1,6 +1,7 @@
 import numpy as np
 import copy, os
 import pandas as pd
+from load_compas_score_as_labels import dist
 
 
 def rescale_input_numpy(inp):
@@ -23,17 +24,21 @@ def rescale_input_numpy_disparateremoved_compas(inp, mins_and_ranges):
     return out
 
 
-def entire_test_suite(mini=False, disparateremoved=False, mins_and_ranges=None):
-    gender0 = "race0_compas_two_year"
-    gender1 = "race1_compas_two_year"
+def entire_test_suite(mini=False, disparateremoved=False, mins_and_ranges=None, sensitive_removed=False):
+    gender0 = f"race0_compas_two_year_dist{dist}"
+    gender1 = f"race1_compas_two_year_dist{dist}"
  
     df0 = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/{gender0}.csv")
     df1 = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../compas-dataset/{gender1}.csv")
     
-    assert(df0.shape == df1.shape == (615000, 10))
+    if "dist" in gender0:
+        assert(df0.shape == df1.shape == (6150000, 10))
+    else:
+        assert(df0.shape == df1.shape == (615000, 10))
 
     assert(not df0.equals(df1))
-    assert(df0.drop('race', axis=1).equals(df1.drop('race', axis=1)))     # after dropping sex they should be equal dataframe
+    if not "dist" in gender0:
+        assert(df0.drop('race', axis=1).equals(df1.drop('race', axis=1)))     # after dropping sex they should be equal dataframe
 
     class0_ = df0.to_numpy(dtype=np.float64)
     class1_ = df1.to_numpy(dtype=np.float64)
@@ -45,5 +50,10 @@ def entire_test_suite(mini=False, disparateremoved=False, mins_and_ranges=None):
         assert mins_and_ranges == None
         class0 = rescale_input_numpy(class0_)
         class1 = rescale_input_numpy(class1_)
+        if sensitive_removed:
+            assert df0.columns.get_loc("race") == df1.columns.get_loc("race")
+            sensitive_col = df0.columns.get_loc("race")
+            class0 = np.delete(class0, sensitive_col, axis=1)
+            class1 = np.delete(class1, sensitive_col, axis=1)
 
     return class0, class1
