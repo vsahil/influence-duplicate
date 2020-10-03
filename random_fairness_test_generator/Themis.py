@@ -96,7 +96,7 @@ class soft:
             inputs.append(inp2)
         return inputs
 
-    
+
     def find_val_within_range_adult(self, inp1, discm_feature, discm_feature_value, times):
         inputs = []
         # import ipdb; ipdb.set_trace()
@@ -209,17 +209,27 @@ class soft:
             x = len(discm_tests_gender0) 
             
             if total == 45222 * 100:
+                similars = []
                 for cnt, i in enumerate(discm_tests_gender0):
-                    for prt in range(10):     # each datapoint get printed 10 times
-                        similar_inp = self.find_val_within_range(i, feature, 1)
-                        with open(file1, "a") as f2:
-                            f2.write(str(similar_inp)[1:-1].replace(" ", "") + "\n")       # remove space
-                    for prt in range(10):     # each datapoint get printed 10 times
-                        with open(file0, "a") as f1:
-                            f1.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+                    # for _ in range(10):     # each datapoint get printed 10 times
+                    similar_inputs = self.find_val_within_range_adult(i, feature, 1, self.dist_similarity_test_times)
+                    for sims in similar_inputs:    
+                        similars.append(sims)
                     if cnt % 100 == 0:
                         print(cnt, "done")
+                
+                assert len(similars) == self.dist_similarity_test_times * len(discm_tests_gender0)
+                with open(file1, "a") as f2:
+                    for prt in similars:
+                        f2.write(str(prt)[1:-1].replace(" ", "") + "\n")       # remove space
+                
+                with open(file0, "a") as f1:
+                    for cnt, i in enumerate(discm_tests_gender0):
+                        for _ in range(self.dist_similarity_test_times):     # each datapoint get printed 10 times
+                            f1.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
+
                 break
+
             
             if total % 100 == 0:
                 print(total, "done")
@@ -460,7 +470,6 @@ class soft:
             x = len(discm_tests_gender0) 
             
             if total == 100000:
-                # import ipdb; ipdb.set_trace()
                 similars = []
                 for cnt, i in enumerate(discm_tests_gender0):
                     # for _ in range(10):     # each datapoint get printed 10 times

@@ -15,7 +15,7 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 import influence.experiments as experiments
 from influence.fully_connected import Fully_Connected
 
-from load_student import load_student_partial_method1 
+from load_student import load_student_partial_method1, dist
 from find_discm_points import entire_test_suite
 
 
@@ -57,11 +57,15 @@ damping = 8e-2
 
 import pandas as pd
 dataset = "student"
-debiased_test = True
+debiased_test = bool(int(sys.argv[2]))
+
 name = f"student_{model_count}"
-df = pd.read_csv(f"results_{dataset}_debiasedtrain_80percentof_total.csv")
-removal_df = df.sort_values(by=['Discm_percent', 'Points-removed']).groupby("Model-count", as_index=False).first()
+# df = pd.read_csv(f"results_{dataset}_debiasedtrain_80percentof_total_dist{dist}.csv")
+# removal_df = df.sort_values(by=['Discm_percent', 'Points-removed']).groupby("Model-count", as_index=False).first()
+removal_df = pd.read_csv(f"removal_df_{dataset}_dist{dist}.csv")
 assert len(removal_df) == 240
+# removal_df.to_csv(f"removal_df_{dataset}_dist{dist}.csv", index=False)
+# exit(0)
 train_pts_removed = removal_df.loc[removal_df['Model-count'] == model_count, 'Points-removed'].values
 assert len(train_pts_removed) == 1
 data_sets = load_student_partial_method1(perm=perm, model_count=model_count, train_pts_removed=train_pts_removed[0], name=name, debiased_test=debiased_test)
@@ -123,9 +127,9 @@ class1_fnr = fn / (fn + tp)
 class1_pos = (tp + fp) / len(class1_index)        # proportion that got positive outcome
 
 if debiased_test:
-    with open(f"results_{dataset}_method1.csv".format(scheme), "a") as f:
+    with open(f"results_{dataset}_method1_dist{dist}.csv", "a") as f:
         print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{percentage},{train_pts_removed[0]},{num},{num/size}", file=f)
 else:
-    with open(f"results_{dataset}_method1_fulltest.csv".format(scheme), "a") as f:
+    with open(f"results_{dataset}_method1_fulltest_dist{dist}.csv", "a") as f:
         print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{percentage},{train_pts_removed[0]},{num},{num/size}", file=f)
 
