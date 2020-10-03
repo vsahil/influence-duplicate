@@ -305,7 +305,7 @@ class soft:
                 
                 with open(file0, "a") as f1:
                     for cnt, i in enumerate(discm_tests_gender0):
-                        for _ in range(10):     # each datapoint get printed 10 times
+                        for _ in range(self.dist_similarity_test_times):     # each datapoint get printed 10 times
                             f1.write(str(i)[1:-1].replace(" ", "") + "\n")       # remove space
 
                 break
