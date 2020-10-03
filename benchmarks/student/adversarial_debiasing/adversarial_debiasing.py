@@ -17,10 +17,11 @@ from sklearn.metrics import accuracy_score
 import tensorflow as tf
 import load_student as load_file
 
+dist = load_file.dist
 perm = int(sys.argv[1])
 ordering = load_file.permutations(perm)
-biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/../../student/student_biased_points.npy")
-debiased_test = True
+biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/../../student/student_biased_points_dist{dist}.npy")
+debiased_test = bool(int(sys.argv[2]))
 
 dataset_orig = StudentDataset(
     protected_attribute_names=['sex'],                   
@@ -107,12 +108,8 @@ size = class0_data.shape[0]/100
 print("Discrimination:", num_dicsm)
 dataset = "student"
 if debiased_test:
-    with open(f"results_adversarial_debiased_{dataset}.csv", "a") as f:
+    with open(f"results_adversarial_debiased_{dataset}_dist{dist}.csv", "a") as f:
         f.write(f'{train_acc},{test_acc},{perm},{diff},{num_dicsm},{num_dicsm/size}\n')
 else:
-    with open(f"results_adversarial_debiased_{dataset}_fulltest.csv", "a") as f:
+    with open(f"results_adversarial_debiased_{dataset}_fulltest_dist{dist}.csv", "a") as f:
         f.write(f'{train_acc},{test_acc},{perm},{diff},{num_dicsm},{num_dicsm/size}\n')
-
-
-# with open("results_adversarial_debiased_student.csv", "a") as f:
-#     f.write(f'{train_acc},{test_acc},{perm},{num_dicsm},{num_dicsm/size}\n')
