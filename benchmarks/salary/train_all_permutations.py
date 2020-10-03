@@ -15,7 +15,7 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 import influence.experiments as experiments
 from influence.fully_connected import Fully_Connected
 
-from load_salary import load_salary, load_salary_partial
+from load_salary import load_salary, load_salary_partial, dist
 from find_discm_points import entire_test_suite
 
 train = False
@@ -23,13 +23,13 @@ full_test = True
 debiased_test = True
 
 if not train:       
-    x = len(os.listdir('ranking_points_ordered_method1'))
+    x = len(os.listdir(f'ranking_points_ordered_method1_dist{dist}'))
     assert x == 240     # This is for checking that none of the model have failed to converge
 
 input_dim = 5
 weight_decay = 0.001
 
-initial_learning_rate = 1e-4 
+initial_learning_rate = 1e-4
 decay_epochs = [30000, 40000]
 num_classes = 2
 keep_probs = [1.0, 1.0]
@@ -78,9 +78,9 @@ model = Fully_Connected(
     damping=damping,
     decay_epochs=decay_epochs,
     mini_batch=True,
-    train_dir=f'trained_models_method1/output_count{model_count}', 
+    train_dir=f'trained_models_method1_dist{dist}/output_count{model_count}', 
     log_dir=f'throw/log{model_count}',
-    hvp_files = f"inverse_HVP_salary_method1/inverse_HVP_schm{scheme}_count{model_count}",
+    hvp_files = f"inverse_HVP_salary_method1_dist{dist}/inverse_HVP_schm{scheme}_count{model_count}",
     model_name=name,
     scheme = f"{scheme}")
 
@@ -91,9 +91,9 @@ if train:
 # train_acc, test_acc, test_predictions = model.print_model_eval()
 # exit(0)
 
-ranked_influential_training_points = f"ranking_points_ordered_method1/{name}.npy"
-if not os.path.exists("ranking_points_ordered_method1"):
-    os.mkdir("ranking_points_ordered_method1")
+ranked_influential_training_points = f"ranking_points_ordered_method1_dist{dist}/{name}.npy"
+if not os.path.exists(f"ranking_points_ordered_method1_dist{dist}"):
+    os.mkdir(f"ranking_points_ordered_method1_dist{dist}")
 # if not train and ranking of influential training points is stored in numpy file, then True
 load_from_numpy = False if train else (True if os.path.exists(ranked_influential_training_points) else False)       
 # assert(load_from_numpy)
@@ -178,10 +178,10 @@ else:
 
         size = class0_data.shape[0]/100
         if debiased_test:
-            with open("results_salary_noremoval.csv".format(scheme), "a") as f:
+            with open(f"results_salary_noremoval_dist{dist}.csv".format(scheme), "a") as f:
                 print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{initial_num},{initial_num/size}", file=f)
         else:
-            with open("results_salary_noremoval_fulltest.csv".format(scheme), "a") as f:
+            with open(f"results_salary_noremoval_fulltest_dist{dist}.csv".format(scheme), "a") as f:
                 print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{initial_num},{initial_num/size}", file=f)
         exit(0)
    sorted_training_points = list(np.load(ranked_influential_training_points))
@@ -230,7 +230,7 @@ model_partial_data.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, 
 # train_acc, test_acc = model_partial_data.print_model_eval()
 # print("Percentage: ", percentage, " Points removed: ", p)
 num = model_partial_data.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
-with open(f"results_{dataset}_debiasedtrain_80percentof_total.csv", "a") as f:
+with open(f"results_{dataset}_debiasedtrain_80percentof_total_dist5.csv", "a") as f:
     f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{percentage},{p},{num},{num/size}\n")     # the last ones gives percentage of discrimination
 
 del model_partial_data          # to remove any chance of reusing variables and reduce memory
