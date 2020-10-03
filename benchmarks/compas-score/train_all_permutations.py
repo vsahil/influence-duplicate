@@ -15,15 +15,15 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 import influence.experiments as experiments
 from influence.fully_connected import Fully_Connected
 
-from load_compas_score_as_labels import load_compas_two_year, load_compas_two_year_partial
+from load_compas_score_as_labels import load_compas_two_year, load_compas_two_year_partial, dist
 from find_discm_points import entire_test_suite
 
 train = False
 full_test = True
-debiased_test = True
+debiased_test = False
 
 if not train:
-    x = len(os.listdir('ranking_points_ordered_method1'))
+    x = len(os.listdir(f'ranking_points_ordered_method1_dist{dist}'))
     assert x == 240
 
 input_dim = 10
@@ -79,9 +79,9 @@ model = Fully_Connected(
     damping=3e-2,
     decay_epochs=decay_epochs,
     mini_batch=True,
-    train_dir=f'trained_models_method1/output_count{model_count}', 
+    train_dir=f'trained_models_method1_dist{dist}/output_count{model_count}', 
     log_dir=f'throw/log{model_count}',
-    hvp_files = f"inverse_HVP_compas_method1/inverse_HVP_schm{scheme}_count{model_count}",
+    hvp_files = f"inverse_HVP_compas_method1_dist{dist}/inverse_HVP_schm{scheme}_count{model_count}",
     model_name=name,
     scheme = f"{scheme}")
 
@@ -93,11 +93,11 @@ if train:
     # print(train_acc, test_acc, "see accuracies", model_count)
     # exit(0)
 
-ranked_influential_training_points = f"ranking_points_ordered_method1/{name}.npy"
+ranked_influential_training_points = f"ranking_points_ordered_method1_dist{dist}/{name}.npy"
 # if not train and ranking of influential training points is stored in numpy file, then True
 load_from_numpy = False if train else (True if os.path.exists(ranked_influential_training_points) else False)       
-if not os.path.exists("ranking_points_ordered_method1"):
-    os.mkdir("ranking_points_ordered_method1")
+if not os.path.exists(f"ranking_points_ordered_method1_dist{dist}"):
+    os.mkdir(f"ranking_points_ordered_method1_dist{dist}")
 
 # assert load_from_numpy
 class0_data, class1_data = entire_test_suite(mini=False)     # False means loads entire data
@@ -159,13 +159,12 @@ else:
 
         size = class0_data.shape[0]/100
         if debiased_test:
-            with open(f"results_{dataset}_noremoval.csv", "a") as f:
+            with open(f"results_{dataset}_noremoval_dist{dist}.csv", "a") as f:
                 print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{initial_num},{initial_num/size}", file=f)
         else:
-            with open(f"results_{dataset}_noremoval_fulltest.csv", "a") as f:
+            with open(f"results_{dataset}_noremoval_fulltest_dist{dist}.csv", "a") as f:
                 print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{initial_num},{initial_num/size}", file=f)
-        # with open("results_compas-score_noremoval.csv".format(scheme), "a") as f:
-        #         f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{initial_num},{initial_num/size}\n")
+
         exit(0)
     sorted_training_points = list(np.load(ranked_influential_training_points))
 
@@ -173,49 +172,49 @@ if train:
     exit(0)
 
 removal = int(sys.argv[2])
+# percentage = removal/5.0
+percentage = removal
 training_size = 5000
 dataset = "compas-score"
 size = class0_data.shape[0]/100
-for percentage in np.linspace(removal-1, removal-0.2, 5):
-    tf.reset_default_graph()
-    p = int(training_size * percentage / 100)
-    remaining_indexes = np.array(sorted_training_points[p:])
-    data_sets_partial = load_compas_two_year_partial(perm=perm, index=remaining_indexes)
-    try:
-        assert(len(remaining_indexes) == training_size - p)
-        assert(data_sets_partial.train.num_examples == training_size - p)
-    except:
-        print(p, percentage, data_sets_partial.train.num_examples, "hello")
-        assert False
-    model_partial_data = Fully_Connected(
-        input_dim=input_dim, 
-        hidden1_units=hidden1_units, 
-        hidden2_units=hidden2_units,
-        hidden3_units=hidden3_units,
-        weight_decay=weight_decay,
-        num_classes=num_classes, 
-        batch_size=batch_size,
-        data_sets=data_sets_partial,
-        initial_learning_rate=initial_learning_rate,
-        damping=3e-2,
-        decay_epochs=decay_epochs,
-        mini_batch=True,
-        train_dir='output_partial', 
-        log_dir='log_partial',
-        hvp_files = "inverse_HVP_scheme1_",
-        model_name='compas_two_year_partial',
-        scheme = "scheme8_par")
-    print("Training")
-    print("Percentage: ", percentage, " Points removed: ", p) 
-    model_partial_data.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
-    # train_acc, test_acc = model_partial_data.print_model_eval()
-    print("Percentage: ", percentage, " Points removed: ", p)
-    num = model_partial_data.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
-    # with open("results_compas-score_final.csv".format(scheme), "a") as f:
-    #     f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{percentage},{p},{num},{num/size}\n")     # the last ones gives percentage of discrimination
-    with open(f"results_{dataset}_debiasedtrain_80percentof_total.csv".format(scheme), "a") as f:
-        f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{percentage},{p},{num},{num/size}\n")     # the last ones gives percentage of discrimination
+# for percentage in np.linspace(removal-1, removal-0.2, 5):
+tf.reset_default_graph()
+p = int(training_size * percentage / 100)
+remaining_indexes = np.array(sorted_training_points[p:])
+data_sets_partial = load_compas_two_year_partial(perm=perm, index=remaining_indexes)
+try:
+    assert(len(remaining_indexes) == training_size - p)
+    assert(data_sets_partial.train.num_examples == training_size - p)
+except:
+    print(p, percentage, data_sets_partial.train.num_examples, "hello")
+    assert False
+model_partial_data = Fully_Connected(
+    input_dim=input_dim, 
+    hidden1_units=hidden1_units, 
+    hidden2_units=hidden2_units,
+    hidden3_units=hidden3_units,
+    weight_decay=weight_decay,
+    num_classes=num_classes, 
+    batch_size=batch_size,
+    data_sets=data_sets_partial,
+    initial_learning_rate=initial_learning_rate,
+    damping=3e-2,
+    decay_epochs=decay_epochs,
+    mini_batch=True,
+    train_dir='output_partial', 
+    log_dir='log_partial',
+    hvp_files = "inverse_HVP_scheme1_",
+    model_name='compas_two_year_partial',
+    scheme = "scheme8_par")
+print("Training")
+print("Percentage: ", percentage, " Points removed: ", p) 
+model_partial_data.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
+# train_acc, test_acc = model_partial_data.print_model_eval()
+print("Percentage: ", percentage, " Points removed: ", p)
+num = model_partial_data.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
+# with open("results_compas-score_final.csv".format(scheme), "a") as f:
+#     f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{percentage},{p},{num},{num/size}\n")     # the last ones gives percentage of discrimination
+with open(f"results_{dataset}_debiasedtrain_80percentof_total_dist{dist}.csv".format(scheme), "a") as f:
+    f.write(f"{model_count},{perm},{h1units},{h2units},{batch},{percentage},{p},{num},{num/size}\n")     # the last ones gives percentage of discrimination
 
-    del model_partial_data          # to remove any chance of reusing variables and reduce memory
-
-
+del model_partial_data          # to remove any chance of reusing variables and reduce memory
