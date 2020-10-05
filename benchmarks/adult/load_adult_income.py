@@ -6,7 +6,7 @@ import sys, os
 sys.path.append(".")
 sys.path.append("../")
 sys.path.append("../../")
-
+dist = 10
 from influence.dataset import DataSet
 
 def exclude_some_examples(exclude, validation_size=0, remove_biased_test=True):
@@ -82,7 +82,7 @@ def load_adult_income_nosensitive(perm=-1, debiased_test=True, validation_size=0
 
 	if debiased_test:
 		test_points = np.array(ordering[train_examples + validation_size:])
-		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_biased_points.npy")
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_biased_points_dist{dist}.npy")
 		# intersection = np.intersect1d(test_points, biased_test_points)
 		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
 		mask_new = ~mask			# invert it		# this is a boolean vector
@@ -121,7 +121,7 @@ def load_adult_income(perm=-1, debiased_test=False, validation_size=0):
 	
 	if debiased_test:
 		test_points = np.array(ordering[train_examples + validation_size:])
-		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_biased_points.npy")
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_biased_points_dist{dist}.npy")
 		# intersection = np.intersect1d(test_points, biased_test_points)
 		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
 		mask_new = ~mask			# invert it		# this is a boolean vector
@@ -154,7 +154,7 @@ def load_adult_partial_method1(perm, model_count, train_pts_removed, name, debia
 	X_train = total_dataset[:train_examples]
 	Y_train = total_labels[:train_examples]
 
-	ranked_influential_training_points = f"ranking_points_ordered_method1/{name}.npy"
+	ranked_influential_training_points = f"ranking_points_ordered_method1_dist{dist}/{name}.npy"
 	sorted_training_points = list(np.load(ranked_influential_training_points))
 	remaining_train_indexes = np.array(sorted_training_points[train_pts_removed:])
 	assert len(remaining_train_indexes) <= len(X_train)
@@ -168,7 +168,7 @@ def load_adult_partial_method1(perm, model_count, train_pts_removed, name, debia
 	Y_test  = total_labels[train_examples + validation_size:]
 	if debiased_test:
 		test_points = np.array(ordering[train_examples + validation_size:])
-		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_biased_points.npy")
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_biased_points_dist{dist}.npy")
 		# intersection = np.intersect1d(test_points, biased_test_points)
 		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
 		mask_new = ~mask			# invert it		# this is a boolean vector
@@ -232,7 +232,7 @@ def load_fair_representations(perm, training_dataset, training_labels, debiased_
 
 	if debiased_test:
 		test_points = np.array(ordering[train_examples + validation_size:])
-		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_biased_points.npy")
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_biased_points_dist{dist}.npy")
 		# intersection = np.intersect1d(test_points, biased_test_points)
 		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
 		mask_new = ~mask			# invert it		# this is a boolean vector
@@ -303,7 +303,7 @@ def disparate_removed_load_adult_income(perm, debiased_test=True, validation_siz
 	
 	if debiased_test:
 		test_points = np.array(ordering[train_examples + validation_size:])
-		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_biased_points.npy")
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_biased_points_dist{dist}.npy")
 		# intersection = np.intersect1d(test_points, biased_test_points)
 		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
 		mask_new = ~mask			# invert it		# this is a boolean vector
@@ -444,7 +444,7 @@ def resampled_dataset(perm, dep_neg_candidates, dep_pos_candidates, fav_neg_cand
 	
 	if debiased_test:
 		test_points = np.array(ordering[train_examples + validation_size:])
-		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_biased_points.npy")
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_biased_points_dist{dist}.npy")
 		# intersection = np.intersect1d(test_points, biased_test_points)
 		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
 		mask_new = ~mask			# invert it		# this is a boolean vector
@@ -549,7 +549,7 @@ def massaged_dataset(perm, promotion_candidates, demotion_candidates, debiased_t
 	
 	if debiased_test:
 		test_points = np.array(ordering[train_examples + validation_size:])
-		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_biased_points.npy")
+		biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/adult_biased_points_dist{dist}.npy")
 		# intersection = np.intersect1d(test_points, biased_test_points)
 		mask = np.in1d(test_points, biased_test_points)		# True if the point is biased
 		mask_new = ~mask			# invert it		# this is a boolean vector

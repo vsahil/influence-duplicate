@@ -3,12 +3,14 @@ import pandas as pd
 import sys
 sys.path.append("./")
 import load_adult_income as load_file
+
+dist = load_file.dist
 dataset = "adult"
 
 ranked_training_points_in_original_permutation = {}
 for model_count in range(240):
     name = f"adult_income_count{model_count}"
-    ranked_training_points_in_original_permutation[model_count] = list(np.load(f"ranking_points_ordered_method1/{name}.npy"))
+    ranked_training_points_in_original_permutation[model_count] = list(np.load(f"ranking_points_ordered_method1_dist{dist}/{name}.npy"))
     print(model_count, "done")
 
 assert len(ranked_training_points_in_original_permutation[1]) == len(ranked_training_points_in_original_permutation[24])
@@ -28,9 +30,10 @@ def variation(setting_now):
 ranked_points_after_removing_permutation_effect = {}
 biasness_of_each_point = {}
 
-df = pd.read_csv(f"results_{dataset}_debiasedtrain_80percentof_total.csv")
+df = pd.read_csv(f"results_{dataset}_debiasedtrain_80percentof_total_dist{dist}.csv")
 removal_df = df.sort_values(by=['Discm_percent', 'Points-removed']).groupby("Model-count", as_index=False).first()
 assert len(removal_df) == 240
+removal_df.to_csv(f"removal_df_{dataset}_dist{dist}.csv", index=False)
 
 training_size = len(ranked_training_points_in_original_permutation[0])
 assert(training_size == 36000)
@@ -67,4 +70,4 @@ if write:
 print("printed")
 
 biased_points_global = np.array(list(sorted_biased_points.keys()))
-np.save(f"{dataset}_biased_points.npy", biased_points_global)
+np.save(f"{dataset}_biased_points_dist{dist}.npy", biased_points_global)
