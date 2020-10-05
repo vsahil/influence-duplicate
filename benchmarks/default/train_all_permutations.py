@@ -18,8 +18,8 @@ from influence.fully_connected import Fully_Connected
 from load_default import load_default, load_default_partial, dist
 from find_discm_points import entire_test_suite
 
-train = True
-full_test = False
+train = False
+full_test = True
 debiased_test = False
 
 if not train:
@@ -163,10 +163,10 @@ else:
 
         size = class0_data.shape[0]/100
         if debiased_test:
-            with open(f"results_{dataset}_noremoval.csv", "a") as f:
+            with open(f"results_{dataset}_noremoval_dist{dist}.csv", "a") as f:
                 print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{initial_num},{initial_num/size}", file=f)
         else:
-            with open(f"results_{dataset}_noremoval_fulltest.csv", "a") as f:
+            with open(f"results_{dataset}_noremoval_fulltest_dist{dist}.csv", "a") as f:
                 print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{initial_num},{initial_num/size}", file=f)
 
         exit(0)
@@ -176,7 +176,7 @@ if train:
     exit(0)
 
 percentage = int(sys.argv[2])
-percentage = percentage/10.0        # increments of 0.1%
+# percentage = percentage/10.0        # increments of 0.1%
 training_size = 24000
 dataset = "default"
 size = class0_data.shape[0]/100

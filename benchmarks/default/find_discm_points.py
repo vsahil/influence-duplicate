@@ -32,7 +32,7 @@ def entire_test_suite(mini=False, disparateremoved=False, mins_and_ranges=None, 
     df1 = pd.read_csv(f"{os.path.dirname(os.path.realpath(__file__))}/../../default-dataset/{gender1}.csv")
 
     if "dist" in gender0:
-        assert(df0.shape == df1.shape == (30000000, 23))
+        assert(df0.shape == df1.shape == (3000000*2, 23))
     else:
         assert(df0.shape == df1.shape == (3000000, 23))
 
