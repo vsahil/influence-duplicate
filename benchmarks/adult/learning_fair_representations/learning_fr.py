@@ -15,12 +15,12 @@ from aif360.datasets import MyAdultDataset
 from aif360.algorithms.preprocessing.lfr import LFR
 import argparse
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--debiased_test", type=int, default=1,
-                    help="Use debiased test for test accuracy")
-parser.add_argument("--model_number", type=int, default=0,
-                    help="Which model number to run (out of 240)")
-args = parser.parse_args()
+# parser = argparse.ArgumentParser()
+# parser.add_argument("--debiased_test", type=int, default=1,
+#                     help="Use debiased test for test accuracy")
+# parser.add_argument("--model_number", type=int, default=0,
+#                     help="Which model number to run (out of 240)")
+# args = parser.parse_args()
 
 input_dim = 12
 weight_decay = 0.001
@@ -34,8 +34,8 @@ num_steps = 20000
 scheme = 8
 assert(scheme == 8)     # now always
 
-# setting_now = int(sys.argv[1])
-setting_now = args.model_number
+setting_now = int(sys.argv[1])
+# setting_now = args.model_number
 
 def variation(setting_now):
     model_count = 0
@@ -58,8 +58,8 @@ hidden2_units = h2units
 hidden3_units = 0
 batch_size = batch
 damping = 3e-2
-# debiased_test = bool(int(sys.argv[2]))
-debiased_test = bool(args.debiased_test)
+debiased_test = bool(int(sys.argv[2]))
+# debiased_test = bool(args.debiased_test)
 
 dataset_orig = MyAdultDataset(
     protected_attribute_names=['sex'],                   
@@ -87,7 +87,7 @@ if write:
     with open("see.csv", "w") as f:
         new_df.to_csv(f, index=False)
 
-from load_adult_income import load_fair_representations
+from load_adult_income import load_fair_representations, dist
 from find_discm_points import entire_test_suite
 
 data_sets = load_fair_representations(perm, train_features, train_labels, debiased_test=debiased_test)
@@ -149,19 +149,8 @@ print("Discrimination:", num_dicsm)
 size = class0_data.shape[0]/100
 dataset = "adult"
 if debiased_test:
-    with open(f"results_lfr_{dataset}.csv", "a") as f:
+    with open(f"results_lfr_{dataset}_dist{dist}.csv", "a") as f:
         print(f"{model_count},{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{num_dicsm},{num_dicsm/size}", file=f)
 else:
-    with open(f"results_lfr_{dataset}_fulltest.csv", "a") as f:
+    with open(f"results_lfr_{dataset}_fulltest_dist{dist}.csv", "a") as f:
         print(f"{model_count},{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{num_dicsm},{num_dicsm/size}", file=f)    
-
-
-# train_acc, test_acc, confusion_matrix = model.print_model_eval()
-# fpr = confusion_matrix[0][1] / (confusion_matrix[0][1] + confusion_matrix[1][1])
-# fnr = confusion_matrix[1][0] / (confusion_matrix[1][0] + confusion_matrix[0][0])
-
-# print("Discrimination:", num_dicsm)
-# size = class0_data.shape[0]/100
-# dataset = "adult"
-# with open(f"results_lfr_{dataset}.csv", "a") as f:
-#     print(f'{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{fpr},{fnr},{num_dicsm},{num_dicsm/size}', file=f)
