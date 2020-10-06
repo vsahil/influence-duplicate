@@ -15,7 +15,7 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 import influence.experiments as experiments
 from influence.fully_connected import Fully_Connected
 
-from load_adult_race import load_adult_race_nosensitive, load_adult_race_partial_method1
+from load_adult_race import load_adult_race_nosensitive, load_adult_race_partial_method1, dist
 from find_discm_points import entire_test_suite
 
 input_dim = 12 - 1
@@ -53,7 +53,7 @@ hidden2_units = h2units
 hidden3_units = 0
 batch_size = batch
 damping = 3e-2
-debiased_test = False
+debiased_test = bool(int(sys.argv[2]))
 
 data_sets = load_adult_race_nosensitive(perm, debiased_test=debiased_test)
 
@@ -82,6 +82,8 @@ model = Fully_Connected(
 
 model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, 
     iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False, plot_loss=False)
+class0_data, class1_data = entire_test_suite(mini=False, disparateremoved=False, sensitive_removed=True)     # False means loads entire data
+num_dicsm = model.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
 
 sensitive_attr = 6
 import pandas as pd
@@ -89,7 +91,7 @@ dataset = "adult_race"
 
 # df = pd.read_csv(f"results_{dataset}_debiasedtrain_80percentof_total.csv")
 # removal_df = df.sort_values(by=['Discm_percent', 'Points-removed']).groupby("Model-count", as_index=False).first()
-removal_df = pd.read_csv(f"removal_df_{dataset}.csv")
+removal_df = pd.read_csv(f"removal_df_{dataset}_dist{dist}.csv")
 assert len(removal_df) == 240
 train_pts_removed = removal_df.loc[removal_df['Model-count'] == model_count, 'Points-removed'].values
 assert len(train_pts_removed) == 1
@@ -119,9 +121,10 @@ class1_fpr = fp / (fp + tn)
 class1_fnr = fn / (fn + tp)
 class1_pos = (tp + fp) / len(class1_index)
 
+size = class0_data.shape[0]/100
 if debiased_test:
-    with open(f"results_{dataset}_nosensitive.csv", "a") as f:
-        print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos}", file=f)
+    with open(f"results_{dataset}_nosensitive_dist{dist}.csv", "a") as f:
+        print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{num_dicsm},{num_dicsm/size}", file=f)
 else:
-    with open(f"results_{dataset}_nosensitive_fulltest.csv", "a") as f:
-        print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos}", file=f)
+    with open(f"results_{dataset}_nosensitive_fulltest_dist{dist}.csv", "a") as f:
+        print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{num_dicsm},{num_dicsm/size}", file=f)

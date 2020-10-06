@@ -10,7 +10,7 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 import influence.experiments as experiments
 from influence.fully_connected import Fully_Connected
 
-from load_default import before_preferential_sampling, resampled_dataset, load_default
+from load_default import before_preferential_sampling, resampled_dataset, load_default, dist
 from find_discm_points import entire_test_suite
 
 input_dim = 23
@@ -125,7 +125,7 @@ sensitive_attr = 1
 train_acc, test_acc, test_predictions = model_.print_model_eval()
 import sklearn, math
 assert len(np.unique(data_sets_final.test.x[:, sensitive_attr])) == 2
-    # import ipdb; ipdb.set_trace()
+
 class0_index = (data_sets_final.test.x[:, sensitive_attr] == 0).astype(int).nonzero()[0]
 class1_index = (data_sets_final.test.x[:, sensitive_attr] == 1).astype(int).nonzero()[0]
 test_predictions = np.argmax(test_predictions, axis=1)
@@ -152,19 +152,8 @@ print("Discrimination:", num_dicsm)
 size = class0_data.shape[0]/100
 dataset = "default"
 if debiased_test:
-    with open(f"results_resampling_{dataset}.csv", "a") as f:
+    with open(f"results_resampling_{dataset}_dist{dist}.csv", "a") as f:
         print(f"{model_count},{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{num_dicsm},{num_dicsm/size}", file=f)
 else:
-    with open(f"results_resampling_{dataset}_fulltest.csv", "a") as f:
+    with open(f"results_resampling_{dataset}_fulltest_dist{dist}.csv", "a") as f:
         print(f"{model_count},{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{num_dicsm},{num_dicsm/size}", file=f)    
-
-
-# train_acc, test_acc, confusion_matrix = model_.print_model_eval()
-# fpr = confusion_matrix[0][1] / (confusion_matrix[0][1] + confusion_matrix[1][1])
-# fnr = confusion_matrix[1][0] / (confusion_matrix[1][0] + confusion_matrix[0][0])
-
-# print("Discrimination:", num_dicsm)
-
-# size = class0_data.shape[0]/100
-# with open("results_resampling_default.csv", "a") as f:
-#     f.write(f'{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{fpr},{fnr},{num_dicsm},{num_dicsm/size}\n')

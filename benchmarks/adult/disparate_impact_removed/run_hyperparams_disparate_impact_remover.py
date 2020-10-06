@@ -10,16 +10,16 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 import influence.experiments as experiments
 from influence.fully_connected import Fully_Connected
 
-from load_adult_income import disparate_removed_load_adult_income
+from load_adult_income import disparate_removed_load_adult_income, dist
 from find_discm_points import entire_test_suite
 import argparse
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--debiased_test", type=int, default=1,
-                    help="Use debiased test for test accuracy")
-parser.add_argument("--model_number", type=int, default=0,
-                    help="Which model number to run (out of 240)")
-args = parser.parse_args()
+# parser = argparse.ArgumentParser()
+# parser.add_argument("--debiased_test", type=int, default=1,
+#                     help="Use debiased test for test accuracy")
+# parser.add_argument("--model_number", type=int, default=0,
+#                     help="Which model number to run (out of 240)")
+# args = parser.parse_args()
 
 input_dim = 12
 weight_decay = 0.001
@@ -33,8 +33,8 @@ num_steps = 20000
 scheme = 8
 assert(scheme == 8)     # now always
 
-# setting_now = int(sys.argv[1])
-setting_now = args.model_number
+setting_now = int(sys.argv[1])
+# setting_now = args.model_number
 
 def variation(setting_now):
     model_count = 0
@@ -57,8 +57,8 @@ hidden2_units = h2units
 hidden3_units = 0
 batch_size = batch
 damping = 3e-2
-# debiased_test = bool(int(sys.argv[2]))
-debiased_test = bool(args.debiased_test)
+debiased_test = bool(int(sys.argv[2]))
+# debiased_test = bool(args.debiased_test)
 
 data_sets, mins_and_ranges = disparate_removed_load_adult_income(perm = perm, debiased_test=debiased_test)
 
@@ -122,8 +122,8 @@ size = class0_data.shape[0]/100
 dataset = "adult"
 
 if debiased_test:
-    with open(f"results_disparate_removed_{dataset}.csv", "a") as f:
+    with open(f"results_disparate_removed_{dataset}_dist{dist}.csv", "a") as f:
         print(f"{model_count},{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{num_dicsm},{num_dicsm/size}", file=f)
 else:
-    with open(f"results_disparate_removed_{dataset}_fulltest.csv", "a") as f:
+    with open(f"results_disparate_removed_{dataset}_fulltest_dist{dist}.csv", "a") as f:
         print(f"{model_count},{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{num_dicsm},{num_dicsm/size}", file=f)

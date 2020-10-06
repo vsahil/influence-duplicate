@@ -15,7 +15,7 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 import influence.experiments as experiments
 from influence.fully_connected import Fully_Connected
 
-from load_adult_income import load_adult_income_nosensitive, load_adult_partial_method1
+from load_adult_income import load_adult_income_nosensitive, load_adult_partial_method1, dist
 from find_discm_points import entire_test_suite
 import argparse
 
@@ -91,6 +91,8 @@ model = Fully_Connected(
 
 model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, 
     iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False, plot_loss=False)
+class0_data, class1_data = entire_test_suite(mini=False, disparateremoved=False, sensitive_removed=True)     # False means loads entire data
+num_dicsm = model.find_discm_examples(class0_data, class1_data, print_file=False, scheme=scheme)
 
 sensitive_attr = 7
 import pandas as pd
@@ -126,10 +128,10 @@ class1_fpr = fp / (fp + tn)
 class1_fnr = fn / (fn + tp)
 class1_pos = (tp + fp) / len(class1_index)        # proportion that got positive outcome
 
+size = class0_data.shape[0]/100
 if debiased_test:
-    with open(f"results_{dataset}_nosensitive.csv", "a") as f:
-        print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos}", file=f)
+    with open(f"results_{dataset}_nosensitive_dist{dist}.csv", "a") as f:
+        print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{num_dicsm},{num_dicsm/size}", file=f)
 else:
-    with open(f"results_{dataset}_nosensitive_fulltest.csv", "a") as f:
-        print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos}", file=f)
-
+    with open(f"results_{dataset}_nosensitive_fulltest_dist{dist}.csv", "a") as f:
+        print(f"{model_count},{perm},{h1units},{h2units},{batch},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{num_dicsm},{num_dicsm/size}", file=f)

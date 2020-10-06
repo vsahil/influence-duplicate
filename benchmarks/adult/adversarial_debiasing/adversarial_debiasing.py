@@ -18,19 +18,20 @@ import tensorflow as tf
 import load_adult_income as load_file
 import argparse
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--debiased_test", type=int, default=1,
-                    help="Use debiased test for test accuracy")
-parser.add_argument("--permutation", type=int, default=0,
-                    help="Which model number to run (out of 240)")
-args = parser.parse_args()
+# parser = argparse.ArgumentParser()
+# parser.add_argument("--debiased_test", type=int, default=1,
+#                     help="Use debiased test for test accuracy")
+# parser.add_argument("--permutation", type=int, default=0,
+#                     help="Which model number to run (out of 240)")
+# args = parser.parse_args()
 
-# perm = int(sys.argv[1])
-perm = args.permutation
+dist = load_file.dist
+perm = int(sys.argv[1])
+# perm = args.permutation
 ordering = load_file.permutations(perm)
 biased_test_points = np.load(f"{os.path.dirname(os.path.realpath(__file__))}/../../adult/adult_biased_points.npy")
-# debiased_test = bool(int(sys.argv[2]))
-debiased_test = bool(args.debiased_test)
+debiased_test = bool(int(sys.argv[2]))
+# debiased_test = bool(args.debiased_test)
 
 dataset_orig = MyAdultDataset(
     protected_attribute_names=['sex'],                   
@@ -118,12 +119,9 @@ size = class0_data.shape[0]/100
 print("Discrimination:", num_dicsm)
 dataset = "adult"
 if debiased_test:
-    with open(f"results_adversarial_debiased_{dataset}.csv", "a") as f:
+    with open(f"results_adversarial_debiased_{dataset}_dist{dist}.csv", "a") as f:
         f.write(f'{train_acc},{test_acc},{perm},{diff},{num_dicsm},{num_dicsm/size}\n')
 else:
-    with open(f"results_adversarial_debiased_{dataset}_fulltest.csv", "a") as f:
+    with open(f"results_adversarial_debiased_{dataset}_fulltest_dist{dist}.csv", "a") as f:
         f.write(f'{train_acc},{test_acc},{perm},{diff},{num_dicsm},{num_dicsm/size}\n')
 
-
-# with open("results_adversarial_debiased_adult.csv", "a") as f:
-#     f.write(f'{train_acc},{test_acc},{perm},{num_dicsm},{num_dicsm/size}\n')

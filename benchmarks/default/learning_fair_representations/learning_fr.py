@@ -71,7 +71,7 @@ if write:
     with open("see.csv", "w") as f:
         new_df.to_csv(f, index=False)
 
-from load_default import load_fair_representations
+from load_default import load_fair_representations, dist
 from find_discm_points import entire_test_suite
 
 hidden1_units = h1units
@@ -141,18 +141,8 @@ print("Discrimination:", num_dicsm)
 size = class0_data.shape[0]/100
 dataset = "default"
 if debiased_test:
-    with open(f"results_lfr_{dataset}.csv", "a") as f:
+    with open(f"results_lfr_{dataset}_dist{dist}.csv", "a") as f:
         print(f"{model_count},{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{num_dicsm},{num_dicsm/size}", file=f)
 else:
-    with open(f"results_lfr_{dataset}_fulltest.csv", "a") as f:
+    with open(f"results_lfr_{dataset}_fulltest_dist{dist}.csv", "a") as f:
         print(f"{model_count},{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{class0_fpr},{class0_fnr},{class0_pos},{class1_fpr},{class1_fnr},{class1_pos},{num_dicsm},{num_dicsm/size}", file=f)    
-
-
-# train_acc, test_acc, confusion_matrix = model.print_model_eval()
-# fpr = confusion_matrix[0][1] / (confusion_matrix[0][1] + confusion_matrix[1][1])
-# fnr = confusion_matrix[1][0] / (confusion_matrix[1][0] + confusion_matrix[0][0])
-
-# print("Discrimination:", num_dicsm)
-# size = class0_data.shape[0]/100
-# with open("results_lfr_default.csv", "a") as f:
-#     f.write(f'{h1units},{h2units},{batch},{perm},{train_acc},{test_acc},{fpr},{fnr},{num_dicsm},{num_dicsm/size}\n')
