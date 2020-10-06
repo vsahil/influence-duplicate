@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from plotnine import *
 import copy, math
+dist = 10
 
 
 def find_min_discm_each_hyperparam(df):
@@ -28,7 +29,7 @@ def process_rows(row, batches):
 
 def process_dfs(name, batches, df):
     # import ipdb; ipdb.set_trace()
-    if 'Model-count'in df.columns:
+    if 'Model-count' in df.columns:
         df['Model-count2'] = df.apply(process_rows, axis=1, args=((batches,)))
         assert (df['Model-count'] == df['Model-count2']).all()
         df.drop(columns=['Model-count2'], inplace=True)
@@ -38,8 +39,8 @@ def process_dfs(name, batches, df):
     df = df.sort_values("Discm_percent").groupby("Model-count", as_index=False).first()     # must be sorted in order of model count for comparison across baselines
     # df = df[['Model-count','Discm_percent','Test_acc']]
     df = df[['Model-count','Discm_percent','Test_acc', 'Class0_Pos', 'Class1_Pos']]
-    df['diff'] = abs(df['Class0_Pos'] - df['Class1_Pos'])*100
-    df['Test_acc'] = df['Test_acc'].apply(lambda x: x*100)
+    df['diff'] = abs(df['Class0_Pos'] - df['Class1_Pos']) * 100
+    df['Test_acc'] = df['Test_acc'].apply(lambda x: x * 100)
     df['Techniques'] = name
     if len(name.split()) > 1:
         words = name.split()
@@ -196,6 +197,152 @@ def boxplots_datasets(dataset, plot):
     return df_main
 
 
+def boxplots_datasets_dist(dataset, plot):
+    df1 = pd.read_csv(f"{dataset}/results_{dataset}_method1_dist{dist}.csv")
+    batches = sorted(list(df1.Batch.unique()))      # sorting is important
+    assert(len(batches) == 2)
+    df_our = find_min_discm_each_hyperparam(df1)
+    df_our = df_our[['Model-count', 'Discm_percent', 'Test_acc', 'Class0_Pos', 'Class1_Pos']]
+    df_our['diff'] = abs(df_our['Class0_Pos'] - df_our['Class1_Pos']) * 100     # Statistical parity diff
+    df_our['Test_acc'] = df_our['Test_acc'].apply(lambda x: x * 100)
+    df_our['Techniques'] = "Our Technique"
+    df_our['Baseline'] = "Our"
+
+    # Massaging
+    df_massaging = process_dfs("MAssaging", batches, pd.read_csv(f"{dataset}/massaging/results_massaged_{dataset}_dist{dist}.csv"))
+    # Preferential Sampling
+    df_ps = process_dfs("Prefer. Sampling", batches, pd.read_csv(f"{dataset}/preferential_sampling/results_resampling_{dataset}_dist{dist}.csv"))
+    # Learning Fair representations
+    df_lfr = process_dfs("Learning Fair Repr.", batches, pd.read_csv(f"{dataset}/learning_fair_representations/results_lfr_{dataset}_dist{dist}.csv"))
+    # Disparate Impact Removed
+    df_DIR = process_dfs("Disp. Impact Rem", batches, pd.read_csv(f"{dataset}/disparate_impact_removed/results_disparate_removed_{dataset}_dist{dist}.csv"))
+    # Adversarial Sampling
+    df_adver = pd.read_csv(f"{dataset}/adversarial_debiasing/results_adversarial_debiased_{dataset}_dist{dist}.csv")
+    df_adver['Model-count'] = df_adver['Dataperm'] * 12
+    df_adver = df_adver.sort_values("Discm_percent").groupby("Model-count", as_index=False).first()     # must be sorted in order of model count for comparison across baselines
+    df_adver = df_adver[['Model-count','Discm_percent','Test_acc','diff']]
+    df_adver['diff'] = df_adver['diff'] * 100
+    df_adver['Test_acc'] = df_adver['Test_acc'].apply(lambda x: x*100)
+    df_adver['Techniques'] = "Adversa. debias"
+    df_adver['Baseline'] = "AD"
+
+    # # Sensitive Attribute removed, therefore no discrimination
+    # df_nosensitive = pd.read_csv(f"{dataset}/results_{dataset}_nosensitive.csv")
+    df_nosensitive = process_dfs("Sens. Removed", batches, pd.read_csv(f"{dataset}/results_{dataset}_nosensitive_dist{dist}.csv"))
+    # df_nosensitive = df_nosensitive[['Model-count','Test_acc', 'Class0_Pos', 'Class1_Pos']]
+    # df_nosensitive['diff'] = abs(df_nosensitive['Class0_Pos'] - df_nosensitive['Class1_Pos'])*100
+    # df_nosensitive['Discm_percent'] = 0.0
+    # df_nosensitive['Test_acc'] = df_nosensitive['Test_acc'].apply(lambda x: x*100)
+    # df_nosensitive['Techniques'] = "Sens. Removed"
+    # df_nosensitive['Baseline'] = "SR"
+
+    # No technique used
+    df_noremoval = process_dfs("FULL", batches, pd.read_csv(f"{dataset}/results_{dataset}_noremoval_dist{dist}.csv"))
+    
+    df_main = pd.concat([df_noremoval, df_nosensitive, df_massaging, df_ps, df_lfr, df_DIR, df_adver, df_our], sort=True)
+    try:
+        assert(len(df_main) == 7*240 + 20)
+    except:
+        import ipdb; ipdb.set_trace()
+
+    if dataset == "compas-score":
+        dataset = "Recidivism-score"
+    elif dataset == "compas-ground":
+        dataset = "Recidivism-ground"
+    # df_main['Dataset'] = dataset.capitalize()
+
+    if dataset == "adult":
+        sizeofPSI = 4522200
+        id_ = "D1"
+    elif dataset == "adult_race":
+        sizeofPSI = 4313100
+        id_ = "D2"
+    elif dataset == "german":
+        sizeofPSI = 100000
+        id_ = "D3"
+    elif dataset == "student":
+        sizeofPSI = 64900
+        id_ = "D4"
+    elif dataset == "Recidivism-ground":
+        sizeofPSI = 615000
+        id_ = "D5"
+    elif dataset == "Recidivism-score":
+        sizeofPSI = 615000
+        id_ = "D6"
+    elif dataset == "default":
+        sizeofPSI = 3000000
+        id_ = "D7"
+    elif dataset == "salary":
+        sizeofPSI = 5200
+        id_ = "D8"
+    else:
+        raise NotImplementedError
+    
+    df_main['Dataset'] = id_
+    precision = 1
+
+    if plot == 0:
+        min_discm = True
+        test_accuracy_for_min_discm = True
+
+        max_accuracy = True
+        discm_for_max_accuracy = True
+
+        median_discm = False
+        mean_accuracy = False
+        median_accuracy = False
+
+        if min_discm:
+            x = ' & '.join([f"{id_}", f"{df_noremoval['Discm_percent'].min():.{precision}e}", f"{df_nosensitive['Discm_percent'].min():.{precision}e}" ,f"{df_DIR['Discm_percent'].min():.{precision}e}", f"{df_ps['Discm_percent'].min():.{precision}e}", f"{df_massaging['Discm_percent'].min():.{precision}e}", f"{df_lfr['Discm_percent'].min():.{precision}e}", f"{df_adver['Discm_percent'].min():.{precision}e}", f"{df_our['Discm_percent'].min():.{precision}e}"])
+            print_to_tex(x, f'min-discm_dist{dist}.tex', dataset)
+
+        if max_accuracy:
+            y = ' & '.join([f"{id_}", f"{df_noremoval['Test_acc'].max():.{precision}e}", f"{df_nosensitive['Test_acc'].max():.{precision}e}", f"{df_DIR['Test_acc'].max():.{precision}e}", f"{df_ps['Test_acc'].max():.{precision}e}", f"{df_massaging['Test_acc'].max():.{precision}e}", f"{df_lfr['Test_acc'].max():.{precision}e}", f"{df_adver['Test_acc'].max():.{precision}e}", f"{df_our['Test_acc'].max():.{precision}e}"])
+            print_to_tex(y, f'max-test-accuracy_dist{dist}.tex', dataset)
+
+        if test_accuracy_for_min_discm:
+            z = ' & '.join([f"{id_}", f"{df_noremoval.loc[df_noremoval['Discm_percent'] == df_noremoval['Discm_percent'].min()]['Test_acc'].max():.{precision}e}", 
+                    f"{df_nosensitive.loc[df_nosensitive['Discm_percent'] == df_nosensitive['Discm_percent'].min()]['Test_acc'].max():.{precision}e}",
+                    f"{df_DIR.loc[df_DIR['Discm_percent'] == df_DIR['Discm_percent'].min()]['Test_acc'].max():.{precision}e}", 
+                    f"{df_ps.loc[df_ps['Discm_percent'] == df_ps['Discm_percent'].min()]['Test_acc'].max():.{precision}e}", 
+                    f"{df_massaging.loc[df_massaging['Discm_percent'] == df_massaging['Discm_percent'].min()]['Test_acc'].max():.{precision}e}", 
+                    f"{df_lfr.loc[df_lfr['Discm_percent'] == df_lfr['Discm_percent'].min()]['Test_acc'].max():.{precision}e}", 
+                    f"{df_adver.loc[df_adver['Discm_percent'] == df_adver['Discm_percent'].min()]['Test_acc'].max():.{precision}e}", 
+                    f"{df_our.loc[df_our['Discm_percent'] == df_our['Discm_percent'].min()]['Test_acc'].max():.{precision}e}"])
+            
+            print_to_tex(z, f'test_accuracy_for_min_discm_dist{dist}.tex', dataset)
+
+        if median_discm:
+            raise NotImplementedError
+            x = ' & '.join([f"{id_}", f"{df_noremoval['Discm_percent'].median():.{precision}e}", "\\textbf{%s}"%(0.0) ,f"{df_DIR['Discm_percent'].median():.{precision}e}", f"{df_ps['Discm_percent'].median():.{precision}e}", f"{df_massaging['Discm_percent'].median():.{precision}e}", f"{df_lfr['Discm_percent'].median():.{precision}e}", f"{df_adver['Discm_percent'].median():.{precision}e}", "\\textbf{%s}"%(f"{df_our['Discm_percent'].median():.{precision}e}")])
+            print_to_tex(x, 'median-discm.tex', dataset)
+
+        if mean_accuracy:
+            raise NotImplementedError
+            a = ' & '.join([f"{id_}", f"{df_noremoval['Test_acc'].mean():.{precision}e}", f"{df_nosensitive['Test_acc'].mean():.{precision}e}", f"{df_DIR['Test_acc'].mean():.{precision}e}", f"{df_ps['Test_acc'].mean():.{precision}e}", f"{df_massaging['Test_acc'].mean():.{precision}e}", f"{df_lfr['Test_acc'].mean():.{precision}e}", f"{df_adver['Test_acc'].mean():.{precision}e}", "\\textbf{%s}"%(f"{df_our['Test_acc'].mean():.{precision}e}")])
+            print_to_tex(a, 'mean-test-accuracy.tex', dataset)
+
+        if median_accuracy:
+            raise NotImplementedError
+            b = ' & '.join([f"{id_}", f"{df_noremoval['Test_acc'].median():.{precision}e}", f"{df_nosensitive['Test_acc'].median():.{precision}e}", f"{df_DIR['Test_acc'].median():.{precision}e}", f"{df_ps['Test_acc'].median():.{precision}e}", f"{df_massaging['Test_acc'].median():.{precision}e}", f"{df_lfr['Test_acc'].median():.{precision}e}", f"{df_adver['Test_acc'].median():.{precision}e}", "\\textbf{%s}"%(f"{df_our['Test_acc'].median():.{precision}e}")])
+            print_to_tex(b, 'median-test-accuracy.tex', dataset)
+
+        if discm_for_max_accuracy:
+            k = ' & '.join([f"{id_}", f"{df_noremoval.loc[df_noremoval['Test_acc'] == df_noremoval['Test_acc'].max()]['Discm_percent'].min():.{precision}e}", 
+                    f"{df_nosensitive.loc[df_nosensitive['Test_acc'] == df_nosensitive['Test_acc'].max()]['Discm_percent'].min():.{precision}e}", 
+                    f"{df_DIR.loc[df_DIR['Test_acc'] == df_DIR['Test_acc'].max()]['Discm_percent'].min():.{precision}e}", 
+                    f"{df_ps.loc[df_ps['Test_acc'] == df_ps['Test_acc'].max()]['Discm_percent'].min():.{precision}e}", 
+                    f"{df_massaging.loc[df_massaging['Test_acc'] == df_massaging['Test_acc'].max()]['Discm_percent'].min():.{precision}e}", 
+                    f"{df_lfr.loc[df_lfr['Test_acc'] == df_lfr['Test_acc'].max()]['Discm_percent'].min():.{precision}e}", 
+                    f"{df_adver.loc[df_adver['Test_acc'] == df_adver['Test_acc'].max()]['Discm_percent'].min():.{precision}e}", 
+                    f"{df_our.loc[df_our['Test_acc'] == df_our['Test_acc'].max()]['Discm_percent'].min():.{precision}e}"])
+            
+            print_to_tex(k, f'discm_for_max_accuracy_dist{dist}.tex', dataset)
+
+
+    return df_main
+
+
 def print_to_tex(string, file, dataset, mode=None):
     if mode == None:
         if dataset == "adult":
@@ -224,7 +371,8 @@ def main(plot):
     benchmarks = ["adult", "adult_race", "german", "student", "compas-ground", "compas-score", "default", "salary"]
 
     for dataset in benchmarks:
-        df_onedataset = boxplots_datasets(dataset, plot)
+        # df_onedataset = boxplots_datasets(dataset, plot)
+        df_onedataset = boxplots_datasets_dist(dataset, plot)
         if not df_main is None:
             df_main = pd.concat([df_main, df_onedataset])
         else:
@@ -279,8 +427,8 @@ def main(plot):
             low_limit = -0.3
         x.axes[ax].set_ylim(low_limit, top_limit)
     # x.tight_layout()      # This didn't work
-    x.savefig("boxplots/boxplot_discm_freeaxis_matplotlib.eps", format='eps', bbox_inches='tight')
-    x.savefig("boxplots/boxplot_discm_freeaxis_matplotlib.png", bbox_inches='tight')
+    x.savefig(f"boxplots/boxplot_discm_freeaxis_matplotlib_dist{dist}.eps", format='eps', bbox_inches='tight')
+    x.savefig(f"boxplots/boxplot_discm_freeaxis_matplotlib_dist{dist}.png", bbox_inches='tight')
     
     # x.save(f"boxplot_discm_freeaxis_matplotlib.png", height=8, width=18)
     # x.save(f"boxplot_discm_freeaxis_withoutfull.png", height=12, width=15)
@@ -306,8 +454,8 @@ def main(plot):
         top_limit = df_main[df_main['Dataset'] == f'D{ax+1}']['Test_acc'].max()
         y.axes[ax].set_ylim(bot_limit - 1, top_limit + 2)
     # y.tight_layout()
-    y.savefig("boxplots/boxplot_accuracy_freeaxis_matplotlib.eps", format='eps', bbox_inches='tight')
-    y.savefig("boxplots/boxplot_accuracy_freeaxis_matplotlib.png", bbox_inches='tight')
+    y.savefig(f"boxplots/boxplot_accuracy_freeaxis_matplotlib_dist{dist}.eps", format='eps', bbox_inches='tight')
+    y.savefig(f"boxplots/boxplot_accuracy_freeaxis_matplotlib_dist{dist}.png", bbox_inches='tight')
 
 
 def real_accuracy_tables(debiased):
@@ -709,91 +857,153 @@ def parity_process_dfs(name, batches, df):
     return df
 
 
-def statistical_parity():
+def statistical_parity(dist_metric):
 
     def parity_print(dataset, id_, kind, plot=False):
         if kind:
-            df1 = pd.read_csv(f"{dataset}/results_{dataset}_method1_fulltest.csv")
-            df2 = pd.read_csv(f"{dataset}/results_{dataset}_method1.csv")
+            if dist_metric:
+                df1 = pd.read_csv(f"{dataset}/results_{dataset}_method1_fulltest_dist{dist}.csv")
+                df2 = pd.read_csv(f"{dataset}/results_{dataset}_method1_dist{dist}.csv")
+            else:
+                df1 = pd.read_csv(f"{dataset}/results_{dataset}_method1_fulltest.csv")
+                df2 = pd.read_csv(f"{dataset}/results_{dataset}_method1.csv")
         else:
-            df1 = pd.read_csv(f"{dataset}/results_{dataset}_method1.csv")
+            if dist_metric:
+                df1 = pd.read_csv(f"{dataset}/results_{dataset}_method1_dist{dist}.csv")
+            else:
+                df1 = pd.read_csv(f"{dataset}/results_{dataset}_method1.csv")
         batches = sorted(list(df1.Batch.unique()))
         assert(len(batches) == 2)
 
         df_our = find_min_discm_each_hyperparam(df1)
         df_our = df_our[['Model-count','Discm_percent', 'Test_acc', 'Class0_Pos', 'Class1_Pos']]
-        df_our['diff'] = abs(df_our['Class0_Pos'] - df_our['Class1_Pos'])*100
+        df_our['diff'] = abs(df_our['Class0_Pos'] - df_our['Class1_Pos']) * 100
         if kind:
             df_our2 = find_min_discm_each_hyperparam(df2)       # since the sorting is on the basis of discm, it remains same
-            df_our2['Test_acc'] = df_our2['Test_acc'].apply(lambda x: x*100)
+            df_our2['Test_acc'] = df_our2['Test_acc'].apply(lambda x: x * 100)
         df_our['Techniques'] = "Our Technique"
         df_our['Baseline'] = "Our"
 
         # import ipdb; ipdb.set_trace()
         if kind:
-            df_massaging = parity_process_dfs("MAssaging", batches, pd.read_csv(f"{dataset}/massaging/results_massaged_{dataset}_fulltest.csv"))
-            df_massaging2 = parity_process_dfs("MAssaging", batches, pd.read_csv(f"{dataset}/massaging/results_massaged_{dataset}.csv"))
+            if dist_metric:
+                df_massaging = parity_process_dfs("MAssaging", batches, pd.read_csv(f"{dataset}/massaging/results_massaged_{dataset}_fulltest_dist{dist}.csv"))
+                df_massaging2 = parity_process_dfs("MAssaging", batches, pd.read_csv(f"{dataset}/massaging/results_massaged_{dataset}_dist{dist}.csv"))
+            else:
+                df_massaging = parity_process_dfs("MAssaging", batches, pd.read_csv(f"{dataset}/massaging/results_massaged_{dataset}_fulltest.csv"))
+                df_massaging2 = parity_process_dfs("MAssaging", batches, pd.read_csv(f"{dataset}/massaging/results_massaged_{dataset}.csv"))
         else:
-            df_massaging = parity_process_dfs("MAssaging", batches, pd.read_csv(f"{dataset}/massaging/results_massaged_{dataset}.csv"))
+            if dist_metric:
+                df_massaging = parity_process_dfs("MAssaging", batches, pd.read_csv(f"{dataset}/massaging/results_massaged_{dataset}_dist{dist}.csv"))
+            else:
+                df_massaging = parity_process_dfs("MAssaging", batches, pd.read_csv(f"{dataset}/massaging/results_massaged_{dataset}.csv"))
         
         # Preferential Sampling
         if kind:
-            df_ps = parity_process_dfs("Prefer. Sampling", batches, pd.read_csv(f"{dataset}/preferential_sampling/results_resampling_{dataset}_fulltest.csv"))
-            df_ps2 = parity_process_dfs("Prefer. Sampling", batches, pd.read_csv(f"{dataset}/preferential_sampling/results_resampling_{dataset}.csv"))
+            if dist_metric:
+                df_ps = parity_process_dfs("Prefer. Sampling", batches, pd.read_csv(f"{dataset}/preferential_sampling/results_resampling_{dataset}_fulltest_dist{dist}.csv"))
+                df_ps2 = parity_process_dfs("Prefer. Sampling", batches, pd.read_csv(f"{dataset}/preferential_sampling/results_resampling_{dataset}_dist{dist}.csv"))
+            else:
+                df_ps = parity_process_dfs("Prefer. Sampling", batches, pd.read_csv(f"{dataset}/preferential_sampling/results_resampling_{dataset}_fulltest.csv"))
+                df_ps2 = parity_process_dfs("Prefer. Sampling", batches, pd.read_csv(f"{dataset}/preferential_sampling/results_resampling_{dataset}.csv"))
         else:
-            df_ps = parity_process_dfs("Prefer. Sampling", batches, pd.read_csv(f"{dataset}/preferential_sampling/results_resampling_{dataset}.csv"))
+            if dist_metric:
+                df_ps = parity_process_dfs("Prefer. Sampling", batches, pd.read_csv(f"{dataset}/preferential_sampling/results_resampling_{dataset}_dist{dist}.csv"))
+            else:
+                df_ps = parity_process_dfs("Prefer. Sampling", batches, pd.read_csv(f"{dataset}/preferential_sampling/results_resampling_{dataset}.csv"))
         
         # Learning Fair representations
         if kind:
-            df_lfr = parity_process_dfs("Learning Fair Repr.", batches, pd.read_csv(f"{dataset}/learning_fair_representations/results_lfr_{dataset}_fulltest.csv"))
-            df_lfr2 = parity_process_dfs("Learning Fair Repr.", batches, pd.read_csv(f"{dataset}/learning_fair_representations/results_lfr_{dataset}.csv"))
+            if dist_metric:
+                df_lfr = parity_process_dfs("Learning Fair Repr.", batches, pd.read_csv(f"{dataset}/learning_fair_representations/results_lfr_{dataset}_fulltest_dist{dist}.csv"))
+                df_lfr2 = parity_process_dfs("Learning Fair Repr.", batches, pd.read_csv(f"{dataset}/learning_fair_representations/results_lfr_{dataset}_dist{dist}.csv"))
+            else:
+                df_lfr = parity_process_dfs("Learning Fair Repr.", batches, pd.read_csv(f"{dataset}/learning_fair_representations/results_lfr_{dataset}_fulltest.csv"))
+                df_lfr2 = parity_process_dfs("Learning Fair Repr.", batches, pd.read_csv(f"{dataset}/learning_fair_representations/results_lfr_{dataset}.csv"))
         else:
-            df_lfr = parity_process_dfs("Learning Fair Repr.", batches, pd.read_csv(f"{dataset}/learning_fair_representations/results_lfr_{dataset}.csv"))
+            if dist_metric:
+                df_lfr = parity_process_dfs("Learning Fair Repr.", batches, pd.read_csv(f"{dataset}/learning_fair_representations/results_lfr_{dataset}_dist{dist}.csv"))
+            else:
+                df_lfr = parity_process_dfs("Learning Fair Repr.", batches, pd.read_csv(f"{dataset}/learning_fair_representations/results_lfr_{dataset}.csv"))
         
         # Disparate Impact Removed
         if kind:
-            df_DIR = parity_process_dfs("Disp. Impact Rem", batches, pd.read_csv(f"{dataset}/disparate_impact_removed/results_disparate_removed_{dataset}_fulltest.csv"))
-            df_DIR2 = parity_process_dfs("Disp. Impact Rem", batches, pd.read_csv(f"{dataset}/disparate_impact_removed/results_disparate_removed_{dataset}.csv"))
+            if dist_metric:
+                df_DIR = parity_process_dfs("Disp. Impact Rem", batches, pd.read_csv(f"{dataset}/disparate_impact_removed/results_disparate_removed_{dataset}_fulltest_dist{dist}.csv"))
+                df_DIR2 = parity_process_dfs("Disp. Impact Rem", batches, pd.read_csv(f"{dataset}/disparate_impact_removed/results_disparate_removed_{dataset}_dist{dist}.csv"))
+            else:
+                df_DIR = parity_process_dfs("Disp. Impact Rem", batches, pd.read_csv(f"{dataset}/disparate_impact_removed/results_disparate_removed_{dataset}_fulltest.csv"))
+                df_DIR2 = parity_process_dfs("Disp. Impact Rem", batches, pd.read_csv(f"{dataset}/disparate_impact_removed/results_disparate_removed_{dataset}.csv"))
         else:
-            df_DIR = parity_process_dfs("Disp. Impact Rem", batches, pd.read_csv(f"{dataset}/disparate_impact_removed/results_disparate_removed_{dataset}.csv"))
+            if dist_metric:
+                df_DIR = parity_process_dfs("Disp. Impact Rem", batches, pd.read_csv(f"{dataset}/disparate_impact_removed/results_disparate_removed_{dataset}_dist{dist}.csv"))
+            else:
+                df_DIR = parity_process_dfs("Disp. Impact Rem", batches, pd.read_csv(f"{dataset}/disparate_impact_removed/results_disparate_removed_{dataset}.csv"))
         
         # Adversarial Sampling
         if kind:
-            df_adver = pd.read_csv(f"{dataset}/adversarial_debiasing/results_adversarial_debiased_{dataset}_fulltest.csv")
-            df_adver2 = pd.read_csv(f"{dataset}/adversarial_debiasing/results_adversarial_debiased_{dataset}.csv")
+            if dist_metric:
+                df_adver = pd.read_csv(f"{dataset}/adversarial_debiasing/results_adversarial_debiased_{dataset}_fulltest_dist{dist}.csv")
+                df_adver2 = pd.read_csv(f"{dataset}/adversarial_debiasing/results_adversarial_debiased_{dataset}_dist{dist}.csv")
+            else:
+                df_adver = pd.read_csv(f"{dataset}/adversarial_debiasing/results_adversarial_debiased_{dataset}_fulltest.csv")
+                df_adver2 = pd.read_csv(f"{dataset}/adversarial_debiasing/results_adversarial_debiased_{dataset}.csv")
         else:
-            df_adver = pd.read_csv(f"{dataset}/adversarial_debiasing/results_adversarial_debiased_{dataset}.csv")
-        df_adver['Model-count'] = df_adver['Dataperm']*12
+            if dist_metric:
+                df_adver = pd.read_csv(f"{dataset}/adversarial_debiasing/results_adversarial_debiased_{dataset}_dist{dist}.csv")
+            else:
+                df_adver = pd.read_csv(f"{dataset}/adversarial_debiasing/results_adversarial_debiased_{dataset}.csv")
+        
+        df_adver['Model-count'] = df_adver['Dataperm'] * 12
         df_adver = df_adver.sort_values("Discm_percent").groupby("Model-count", as_index=False).first()     # must be sorted in order of model count for comparison across baselines
-        df_adver['diff'] = df_adver['diff']*100
-        df_adver['Test_acc'] = df_adver['Test_acc'].apply(lambda x: x*100)
+        df_adver['diff'] = df_adver['diff'] * 100
+        df_adver['Test_acc'] = df_adver['Test_acc'].apply(lambda x: x * 100)
         if kind:
-            df_adver2['Model-count'] = df_adver2['Dataperm']*12
+            df_adver2['Model-count'] = df_adver2['Dataperm'] * 12
             df_adver2 = df_adver2.sort_values("Discm_percent").groupby("Model-count", as_index=False).first()
-            df_adver2['Test_acc'] = df_adver2['Test_acc'].apply(lambda x: x*100)
+            df_adver2['Test_acc'] = df_adver2['Test_acc'].apply(lambda x: x * 100)
         df_adver['Techniques'] = "Adversa. debias"
         df_adver['Baseline'] = "AD"
 
         
         if kind:
-            df_nosensitive = pd.read_csv(f"{dataset}/results_{dataset}_nosensitive_fulltest.csv")
-            df_nosensitive2 = pd.read_csv(f"{dataset}/results_{dataset}_nosensitive.csv")
+            if dist_metric:
+                df_nosensitive = pd.read_csv(f"{dataset}/results_{dataset}_nosensitive_fulltest_dist{dist}.csv")
+                df_nosensitive2 = pd.read_csv(f"{dataset}/results_{dataset}_nosensitive_dist{dist}.csv")
+            else:
+                df_nosensitive = pd.read_csv(f"{dataset}/results_{dataset}_nosensitive_fulltest.csv")
+                df_nosensitive2 = pd.read_csv(f"{dataset}/results_{dataset}_nosensitive.csv")
         else:
-            df_nosensitive = pd.read_csv(f"{dataset}/results_{dataset}_nosensitive.csv")
-        df_nosensitive = df_nosensitive[['Model-count', 'Test_acc', 'Class0_Pos', 'Class1_Pos']]
-        df_nosensitive['diff'] = abs(df_nosensitive['Class0_Pos'] - df_nosensitive['Class1_Pos'])*100
+            if dist_metric:
+                df_nosensitive = pd.read_csv(f"{dataset}/results_{dataset}_nosensitive_dist{dist}.csv")
+            else:
+                df_nosensitive = pd.read_csv(f"{dataset}/results_{dataset}_nosensitive.csv")
+        
+        # import ipdb; ipdb.set_trace()
+        if dist_metric:
+            df_nosensitive = df_nosensitive[['Model-count', 'Test_acc', 'Class0_Pos', 'Class1_Pos', 'Discm_percent']]
+        else:
+            df_nosensitive = df_nosensitive[['Model-count', 'Test_acc', 'Class0_Pos', 'Class1_Pos']]
+        df_nosensitive['diff'] = abs(df_nosensitive['Class0_Pos'] - df_nosensitive['Class1_Pos']) * 100
         if kind:
-            df_nosensitive2['Test_acc'] = df_nosensitive2['Test_acc'].apply(lambda x: x*100)
+            df_nosensitive2['Test_acc'] = df_nosensitive2['Test_acc'].apply(lambda x: x * 100)
         df_nosensitive['Techniques'] = "Sens. Removed"
         df_nosensitive['Baseline'] = "SR"
 
         if kind:
-            df_noremoval = parity_process_dfs("FULL", batches, pd.read_csv(f"{dataset}/results_{dataset}_noremoval_fulltest.csv"))
-            df_noremoval2 = parity_process_dfs("FULL", batches, pd.read_csv(f"{dataset}/results_{dataset}_noremoval.csv"))
+            if dist_metric:
+                df_noremoval = parity_process_dfs("FULL", batches, pd.read_csv(f"{dataset}/results_{dataset}_noremoval_fulltest_dist{dist}.csv"))
+                df_noremoval2 = parity_process_dfs("FULL", batches, pd.read_csv(f"{dataset}/results_{dataset}_noremoval_dist{dist}.csv"))
+            else:
+                df_noremoval = parity_process_dfs("FULL", batches, pd.read_csv(f"{dataset}/results_{dataset}_noremoval_fulltest.csv"))
+                df_noremoval2 = parity_process_dfs("FULL", batches, pd.read_csv(f"{dataset}/results_{dataset}_noremoval.csv"))
         else:
-            df_noremoval = parity_process_dfs("FULL", batches, pd.read_csv(f"{dataset}/results_{dataset}_noremoval.csv"))
+            if dist_metric:
+                df_noremoval = parity_process_dfs("FULL", batches, pd.read_csv(f"{dataset}/results_{dataset}_noremoval_dist{dist}.csv"))
+            else:
+                df_noremoval = parity_process_dfs("FULL", batches, pd.read_csv(f"{dataset}/results_{dataset}_noremoval.csv"))
 
-        df_main = pd.concat([df_noremoval, df_nosensitive, df_massaging, df_ps, df_lfr, df_DIR, df_adver, df_our])
+        df_main = pd.concat([df_noremoval, df_nosensitive, df_massaging, df_ps, df_lfr, df_DIR, df_adver, df_our], sort=True)
         try:
             assert(len(df_main) == 7*240 + 20)
         except:
@@ -820,27 +1030,51 @@ def statistical_parity():
                     str(float(f"{df_our['diff'].min():.{precision}e}"))])
 
             if kind:
-                print_to_tex(a, 'min-parity-diff_fulltest.tex', dataset)
+                if dist_metric:
+                    print_to_tex(a, f'min-parity-diff_fulltest_dist{dist}.tex', dataset)
+                else:
+                    print_to_tex(a, 'min-parity-diff_fulltest.tex', dataset)
             else:
-                print_to_tex(a, 'min-parity-diff_debiasedtest.tex', dataset)
+                if dist_metric:
+                    print_to_tex(a, f'min-parity-diff_debiasedtest_dist{dist}.tex', dataset)
+                else:
+                    print_to_tex(a, 'min-parity-diff_debiasedtest.tex', dataset)
 
             
         if parity_difference_for_min_discm:
-            x = ' & '.join([f"{id_}",
-            str(float(f"{df_noremoval.loc[df_noremoval['Discm_percent'] == df_noremoval['Discm_percent'].min()]['diff'].min():.{precision}e}")),
-            str(float(f"{df_nosensitive.loc[df_nosensitive['Test_acc'] == df_nosensitive['Test_acc'].max()]['diff'].min():.{precision}e}")),
-            str(float(f"{df_DIR.loc[df_DIR['Discm_percent'] == df_DIR['Discm_percent'].min()]['diff'].min():.{precision}e}")),
-            str(float(f"{df_ps.loc[df_ps['Discm_percent'] == df_ps['Discm_percent'].min()]['diff'].min():.{precision}e}")), 
-            str(float(f"{df_massaging.loc[df_massaging['Discm_percent'] == df_massaging['Discm_percent'].min()]['diff'].min():.{precision}e}")),
-            str(float(f"{df_lfr.loc[df_lfr['Discm_percent'] == df_lfr['Discm_percent'].min()]['diff'].min():.{precision}e}")),
-            str(float(f"{df_adver.loc[df_adver['Discm_percent'] == df_adver['Discm_percent'].min()]['diff'].min():.{precision}e}")),
-            str(float(f"{df_our.loc[df_our['Discm_percent'] == df_our['Discm_percent'].min()]['diff'].min():.{precision}e}"))]
-            )
+            if dist_metric:
+                x = ' & '.join([f"{id_}",
+                str(float(f"{df_noremoval.loc[df_noremoval['Discm_percent'] == df_noremoval['Discm_percent'].min()]['diff'].min():.{precision}e}")),
+                str(float(f"{df_nosensitive.loc[df_nosensitive['Discm_percent'] == df_nosensitive['Discm_percent'].min()]['diff'].min():.{precision}e}")),
+                str(float(f"{df_DIR.loc[df_DIR['Discm_percent'] == df_DIR['Discm_percent'].min()]['diff'].min():.{precision}e}")),
+                str(float(f"{df_ps.loc[df_ps['Discm_percent'] == df_ps['Discm_percent'].min()]['diff'].min():.{precision}e}")), 
+                str(float(f"{df_massaging.loc[df_massaging['Discm_percent'] == df_massaging['Discm_percent'].min()]['diff'].min():.{precision}e}")),
+                str(float(f"{df_lfr.loc[df_lfr['Discm_percent'] == df_lfr['Discm_percent'].min()]['diff'].min():.{precision}e}")),
+                str(float(f"{df_adver.loc[df_adver['Discm_percent'] == df_adver['Discm_percent'].min()]['diff'].min():.{precision}e}")),
+                str(float(f"{df_our.loc[df_our['Discm_percent'] == df_our['Discm_percent'].min()]['diff'].min():.{precision}e}"))]
+                )
+            else:
+                x = ' & '.join([f"{id_}",
+                str(float(f"{df_noremoval.loc[df_noremoval['Discm_percent'] == df_noremoval['Discm_percent'].min()]['diff'].min():.{precision}e}")),
+                str(float(f"{df_nosensitive.loc[df_nosensitive['Test_acc'] == df_nosensitive['Test_acc'].max()]['diff'].min():.{precision}e}")),
+                str(float(f"{df_DIR.loc[df_DIR['Discm_percent'] == df_DIR['Discm_percent'].min()]['diff'].min():.{precision}e}")),
+                str(float(f"{df_ps.loc[df_ps['Discm_percent'] == df_ps['Discm_percent'].min()]['diff'].min():.{precision}e}")), 
+                str(float(f"{df_massaging.loc[df_massaging['Discm_percent'] == df_massaging['Discm_percent'].min()]['diff'].min():.{precision}e}")),
+                str(float(f"{df_lfr.loc[df_lfr['Discm_percent'] == df_lfr['Discm_percent'].min()]['diff'].min():.{precision}e}")),
+                str(float(f"{df_adver.loc[df_adver['Discm_percent'] == df_adver['Discm_percent'].min()]['diff'].min():.{precision}e}")),
+                str(float(f"{df_our.loc[df_our['Discm_percent'] == df_our['Discm_percent'].min()]['diff'].min():.{precision}e}"))]
+                )
             
             if kind:
-                print_to_tex(x, 'parity-diff-min-discm_fulltest.tex', dataset)
+                if dist_metric:
+                    print_to_tex(x, f'parity-diff-min-discm_fulltest_dist{dist}.tex', dataset)
+                else:
+                    print_to_tex(x, 'parity-diff-min-discm_fulltest.tex', dataset)
             else:
-                print_to_tex(x, 'parity-diff-min-discm_debiasedtest.tex', dataset)
+                if dist_metric:
+                    print_to_tex(x, f'parity-diff-min-discm_debiasedtest_dist{dist}.tex', dataset)
+                else:
+                    print_to_tex(x, 'parity-diff-min-discm_debiasedtest.tex', dataset)
 
         
         if parity_difference_for_max_accuracy:
@@ -856,23 +1090,43 @@ def statistical_parity():
             )
             
             if kind:
-                print_to_tex(x, 'parity-diff-max-accuracy_fulltest.tex', dataset)
+                if dist_metric:
+                    print_to_tex(x, f'parity-diff-max-accuracy_fulltest_dist{dist}.tex', dataset)
+                else:
+                    print_to_tex(x, 'parity-diff-max-accuracy_fulltest.tex', dataset)
             else:
-                print_to_tex(x, 'parity-diff-max-accuracy_debiasedtest.tex', dataset)
+                if dist_metric:
+                    print_to_tex(x, 'parity-diff-max-accuracy_debiasedtest_dist{dist}.tex', dataset)
+                else:
+                    print_to_tex(x, 'parity-diff-max-accuracy_debiasedtest.tex', dataset)
     
 
-        if discm_for_min_parity:  # Discm will be same across full test and debiased test
-            k = ' & '.join([f"{id_}",
-            f"{df_noremoval.loc[df_noremoval['diff'] == df_noremoval['diff'].min()]['Discm_percent'].min():.{precision}e}",
-            "0.0",
-            f"{df_DIR.loc[df_DIR['diff'] == df_DIR['diff'].min()]['Discm_percent'].min():.{precision}e}",
-            f"{df_ps.loc[df_ps['diff'] == df_ps['diff'].min()]['Discm_percent'].min():.{precision}e}",
-            f"{df_massaging.loc[df_massaging['diff'] == df_massaging['diff'].min()]['Discm_percent'].min():.{precision}e}",
-            f"{df_lfr.loc[df_lfr['diff'] == df_lfr['diff'].min()]['Discm_percent'].min():.{precision}e}",
-            f"{df_adver.loc[df_adver['diff'] == df_adver['diff'].min()]['Discm_percent'].min():.{precision}e}",
-            f"{df_our.loc[df_our['diff'] == df_our['diff'].min()]['Discm_percent'].min():.{precision}e}"])
+        if discm_for_min_parity:    # Discm will be same across full test and debiased test
+            if dist_metric:
+                k = ' & '.join([f"{id_}",
+                f"{df_noremoval.loc[df_noremoval['diff'] == df_noremoval['diff'].min()]['Discm_percent'].min():.{precision}e}",
+                f"{df_nosensitive.loc[df_nosensitive['diff'] == df_nosensitive['diff'].min()]['Discm_percent'].min():.{precision}e}",
+                f"{df_DIR.loc[df_DIR['diff'] == df_DIR['diff'].min()]['Discm_percent'].min():.{precision}e}",
+                f"{df_ps.loc[df_ps['diff'] == df_ps['diff'].min()]['Discm_percent'].min():.{precision}e}",
+                f"{df_massaging.loc[df_massaging['diff'] == df_massaging['diff'].min()]['Discm_percent'].min():.{precision}e}",
+                f"{df_lfr.loc[df_lfr['diff'] == df_lfr['diff'].min()]['Discm_percent'].min():.{precision}e}",
+                f"{df_adver.loc[df_adver['diff'] == df_adver['diff'].min()]['Discm_percent'].min():.{precision}e}",
+                f"{df_our.loc[df_our['diff'] == df_our['diff'].min()]['Discm_percent'].min():.{precision}e}"])
+
+                print_to_tex(k, f'discm_for_min_parity_dist{dist}.tex', dataset)
             
-            print_to_tex(k, 'discm_for_min_parity.tex', dataset)
+            else:
+                k = ' & '.join([f"{id_}",
+                f"{df_noremoval.loc[df_noremoval['diff'] == df_noremoval['diff'].min()]['Discm_percent'].min():.{precision}e}",
+                "0.0",
+                f"{df_DIR.loc[df_DIR['diff'] == df_DIR['diff'].min()]['Discm_percent'].min():.{precision}e}",
+                f"{df_ps.loc[df_ps['diff'] == df_ps['diff'].min()]['Discm_percent'].min():.{precision}e}",
+                f"{df_massaging.loc[df_massaging['diff'] == df_massaging['diff'].min()]['Discm_percent'].min():.{precision}e}",
+                f"{df_lfr.loc[df_lfr['diff'] == df_lfr['diff'].min()]['Discm_percent'].min():.{precision}e}",
+                f"{df_adver.loc[df_adver['diff'] == df_adver['diff'].min()]['Discm_percent'].min():.{precision}e}",
+                f"{df_our.loc[df_our['diff'] == df_our['diff'].min()]['Discm_percent'].min():.{precision}e}"])
+                
+                print_to_tex(k, 'discm_for_min_parity.tex', dataset)
 
 
         if accuracy_for_min_parity:
@@ -886,7 +1140,10 @@ def statistical_parity():
             f"{df_adver2.loc[df_adver['diff'] == df_adver['diff'].min()]['Test_acc'].max():.{precision}e}", 
             f"{df_our2.loc[df_our['diff'] == df_our['diff'].min()]['Test_acc'].max():.{precision}e}"])
 
-            print_to_tex(z, 'test_accuracy_for_min_parity.tex', dataset)
+            if dist_metric:
+                print_to_tex(z, f'test_accuracy_for_min_parity_dist{dist}.tex', dataset)
+            else:
+                print_to_tex(z, 'test_accuracy_for_min_parity.tex', dataset)
 
 
     benchmarks = ["adult", "adult_race", "german", "student", "compas-ground", "compas-score", "default", "salary"]
@@ -957,12 +1214,16 @@ if __name__ == "__main__":
                         help="Want to plot or generate tables for accuracy and discrimination")
     parser.add_argument("--parity", type=int, default=0,
                         help="Want generate tables for statistical parity")
+    parser.add_argument("--dist", type=int, default=10,
+                        help="What dist metric to use - only 10 now")
     args = parser.parse_args()
     
     if args.discm_and_accuracy_plot == 0 or args.discm_and_accuracy_plot == 1:
         main(args.discm_and_accuracy_plot)
-    if bool(args.parity):
-        statistical_parity()
+    
+    # if bool(args.parity):
+    #     # statistical_parity()
+    #     statistical_parity(args.dist)
 
     # real_accuracy_tables(True)
     # real_accuracy_tables(False)

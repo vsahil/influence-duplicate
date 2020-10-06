@@ -546,7 +546,6 @@ def discm_for_min_parity(scientific_notation):
         print(print_avg, file=f)
     
 
-
 if __name__ == "__main__":
     test_accuracy_for_min_discm()
     test_accuracy_for_min_parity()
