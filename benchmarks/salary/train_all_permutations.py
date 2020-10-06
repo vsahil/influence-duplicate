@@ -18,7 +18,7 @@ from influence.fully_connected import Fully_Connected
 from load_salary import load_salary, load_salary_partial
 from find_discm_points import entire_test_suite
 
-train = False
+train = True
 full_test = True
 debiased_test = True
 
@@ -34,6 +34,7 @@ decay_epochs = [30000, 40000]
 num_classes = 2
 keep_probs = [1.0, 1.0]
 num_steps = 10000
+num_steps = 10
 
 scheme = 8
 assert(scheme == 8)     # now always
@@ -97,6 +98,7 @@ if not os.path.exists("ranking_points_ordered_method1"):
 # if not train and ranking of influential training points is stored in numpy file, then True
 load_from_numpy = False if train else (True if os.path.exists(ranked_influential_training_points) else False)       
 # assert(load_from_numpy)
+# import ipdb; ipdb.set_trace()
 class0_data, class1_data = entire_test_suite(mini=False)     # False means loads entire data
 if not load_from_numpy:
     if not train:
