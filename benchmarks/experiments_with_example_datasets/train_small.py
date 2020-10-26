@@ -73,29 +73,37 @@ model = Fully_Connected(
     )
 
 model.train(num_steps=num_steps, iter_to_switch_to_batch=10000000, iter_to_switch_to_sgd=20000, save_checkpoints=False, verbose=False)
-train_acc, test_acc = model.print_model_eval()
+model.print_model_eval()
 # exit(0)
 
+
 def entire_test_suite():
-    class0 = np.genfromtxt(f"normalized_race0_smalldataset.csv", delimiter=",")
-    class1 = np.genfromtxt(f"normalized_race1_smalldataset.csv", delimiter=",")
+    class0 = np.genfromtxt("normalized_race0_smalldataset.csv", delimiter=",")
+    class1 = np.genfromtxt("normalized_race1_smalldataset.csv", delimiter=",")
+    class0 = np.unique(class0, axis = 0)
+    class1 = np.unique(class1, axis = 0)
+    assert (class0 == class1)[:,:2].all()       # after dropping race they are all equal. 
+    # import ipdb; ipdb.set_trace()
     return class0, class1
 
 
 class0_data, class1_data = entire_test_suite()     # False means loads entire data
-model.find_discm_examples(class0_data, class1_data, print_file=True, scheme=scheme)
+calculate_bias = False
+num = model.find_discm_examples(class0_data, class1_data, print_file=calculate_bias, scheme=scheme)
+size = len(class0_data)
+print("Discriminating Points: ", num, "Discrimination Percentage: ", num*100.0/size)
 
-# exit(0)
-predicted_loss_diffs = model.get_influence_on_test_loss(
-            [i for i in range(model.discm_data_set.num_examples)], 
-            np.arange(len(model.data_sets.train.labels)),
-            force_refresh=False)
+if calculate_bias:
+    predicted_loss_diffs = model.get_influence_on_test_loss(
+                [i for i in range(model.discm_data_set.num_examples)], 
+                np.arange(len(model.data_sets.train.labels)),
+                force_refresh=False)
 
-sorted_training_points = list(np.argsort(predicted_loss_diffs)[::-1])     # decreasing order of influence among training points
-# print(sorted_training_points)
-training_size = model.data_sets.train.num_examples
-assert(len(sorted_training_points) == training_size)
+    sorted_training_points = list(np.argsort(predicted_loss_diffs)[::-1])     # decreasing order of influence among training points
+    # print(sorted_training_points)
+    training_size = model.data_sets.train.num_examples
+    assert(len(sorted_training_points) == training_size)
 
-with open("sorted_training_points_biased.csv", "a") as f:
-    f.write(str(model_count) + ": " + str(sorted_training_points))
-    f.write("\n")
+    with open("sorted_training_points_biased.csv", "a") as f:
+        f.write(str(model_count) + ": " + str(sorted_training_points))
+        f.write("\n")
